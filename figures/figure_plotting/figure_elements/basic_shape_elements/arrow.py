@@ -364,7 +364,7 @@ def construct_arrow_path_list(
     for (
             (gap_start_side_coordinate_1, gap_start_side_coordinate_2),
             (gap_end_side_coordinate_1, gap_end_side_coordinate_2)) in bound_coordinate_list:
-        ############### TODO
+        ###############
         if gap_start_side_coordinate_1 is None and gap_start_side_coordinate_2 is None \
                 and gap_end_side_coordinate_1 is not None and gap_end_side_coordinate_2 is not None:
             # This is a transition point
@@ -387,7 +387,7 @@ def construct_arrow_path_list(
                 complete_path_step_list.append(PathStep(PathOperation.lineto, current_end_point))
             transition_stop = False
             transition_end_point_list = []
-        ############### TODO
+        ###############
         if gap_end_side_coordinate_1 is None and gap_end_side_coordinate_2 is None:
             finished = True
         else:

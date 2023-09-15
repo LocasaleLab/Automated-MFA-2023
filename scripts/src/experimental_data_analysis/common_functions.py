@@ -43,7 +43,6 @@ def serial_solver(
 #     optimization_num_dict = {}
 #     total_optimization_num = 0
 #     for data_label, mfa_data in mfa_data_dict.items():
-#         # TODO: change the obj_threshold
 #         result_label = result_label_generator(mfa_data, 99999)
 #         loaded_num = final_result_obj.load_previous_results(result_label)
 #         if loaded_num >= each_case_optimization_num:

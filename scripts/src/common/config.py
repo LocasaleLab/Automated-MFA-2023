@@ -115,7 +115,6 @@ def mas_index(flux_name_value_dict):
     akgd_total = flux_name_value_dict['AKGD_m']
     mas_flux = flux_name_value_dict['AKGMAL_m__R'] - flux_name_value_dict['AKGMAL_m']
     cit_trans_net = flux_name_value_dict['CIT_trans__R'] - flux_name_value_dict['CIT_trans']
-    # TODO: Change this order
     # return mas_flux / cit_trans_net
     return cit_trans_net / mas_flux
 
