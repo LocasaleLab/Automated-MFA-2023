@@ -1,0 +1,5 @@
+This dataset is from Ralph J. DeBerardinis, 2017, Cell
+Lactate Metabolism in Human Lung Tumors
+https://doi.org/10.1016/j.cell.2017.09.019
+
+All data are after correction of natural distribution

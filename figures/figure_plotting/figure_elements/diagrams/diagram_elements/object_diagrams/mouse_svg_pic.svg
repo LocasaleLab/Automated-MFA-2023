@@ -1,0 +1,27 @@
+<svg width="478" height="392" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" overflow="hidden"><defs><clipPath id="clip0"><rect x="-67" y="-3" width="478" height="392"/></clipPath></defs>
+<g clip-path="url(#clip0)" transform="translate(67 3)">
+<!-- body -->
+<path d="M405.774 318.069C396.446 339.195 99.4144 367.095 63.143 308.508 54.3228 199.566 151.37 192.287 151.37 192.287 210.471 182.553 342.443 274.27 405.774 318.069Z" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#FFFFFF" fill-rule="evenodd"/>
+<!-- ear1 -->
+<path d="M312.54 225.221C312.202 235.115 303.659 242.845 293.457 242.487 283.256 242.129 275.26 233.817 275.598 223.923 275.936 214.029 284.48 206.298 294.681 206.657 304.883 207.015 312.878 215.326 312.54 225.221Z" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#FFFFFF" fill-rule="evenodd"/>
+<!-- ear2 -->
+<path d="M333.54 237.221C333.202 247.115 324.658 254.845 314.457 254.487 304.256 254.129 296.26 245.817 296.598 235.923 296.936 226.029 305.48 218.298 315.681 218.657 325.883 219.015 333.878 227.326 333.54 237.221Z" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#FFFFFF" fill-rule="evenodd"/>
+<!-- eyes -->
+<path d="M321.568 284.639C321.531 285.743 320.604 286.606 319.5 286.568 318.396 286.53 317.533 285.603 317.571 284.5 317.609 283.396 318.535 282.532 319.638 282.571 320.743 282.608 321.607 283.535 321.568 284.639L321.568 284.639Z" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#A63232" fill-rule="evenodd"/>
+<path d="M318.727 283.156C318.727 284.023 318.024 284.727 317.156 284.727 316.288 284.727 315.584 284.023 315.584 283.156 315.584 282.288 316.288 281.584 317.156 281.584 318.024 281.584 318.727 282.288 318.727 283.156L318.727 283.156Z" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#FFFFFF" fill-rule="evenodd"/>
+<!-- tail -->
+<path d="M64.6529 308.391C-53.4896 363.198 162.831 383.937 166.071 384.747" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
+<!-- beard -->
+<path d="M382.606 315.112C375.034 330.173 362.385 342.737 348.105 354.5" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
+<path d="M381.764 315.455C366.184 312.687 338.968 309.897 308.012 307.1" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
+<path d="M382.29 314.977C367.084 320.558 340.813 324.882 310.985 328.802" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
+<path d="M381.226 316.309C368.974 327.365 348.037 336.408 324.309 344.804" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd"/>
+
+<!-- infusion -->
+<rect x="0" y="50.9999" width="66" height="79.0001" fill="#FCA874"/>
+<rect x="0.499836" y="0.499836" width="66" height="130" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none"/>
+<rect x="10.5002" y="130.5" width="44.9997" height="18.9999" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="#FCA874"/>
+<!-- infusion tube -->
+<path d="M0 0C34.836 0 69.6721 33.1558 69.6721 66.3114 69.6721 99.4672 104.508 132.623 139.344 132.623" stroke="#000000" stroke-width="6.875" stroke-miterlimit="8" fill="none" fill-rule="evenodd" transform="matrix(1.83697e-16 1 1 -1.83697e-16 33.4998 149.5)"/>
+</g>
+</svg>

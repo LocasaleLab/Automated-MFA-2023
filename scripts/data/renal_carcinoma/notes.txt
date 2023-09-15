@@ -1,0 +1,5 @@
+This dataset is from Elizabeth A. Maher, 2018, Cell Metabolism
+Isotope Tracing of Human Clear Cell Renal Cell Carcinomas Demonstrates Suppressed Glucose Oxidation In Vivo
+https://doi.org/10.1016/j.cmet.2018.07.020
+
+All data are after correction of natural distribution
