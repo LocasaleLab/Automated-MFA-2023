@@ -21,3 +21,18 @@ class FigureData(object):
     def load_data(self):
         target_obj = pickle_load(self.save_path)
         return target_obj
+
+
+class BasicFigureData(object):
+    data_prefix = None
+
+    def __init__(self):
+        self.figure_raw_data_dict = {}
+
+    def _return_figure_data(self, data_name):
+        if data_name in self.figure_raw_data_dict:
+            return self.figure_raw_data_dict[data_name]
+        else:
+            current_figure_data = FigureData(self.data_prefix, data_name).load_data()
+            self.figure_raw_data_dict[data_name] = current_figure_data
+            return current_figure_data

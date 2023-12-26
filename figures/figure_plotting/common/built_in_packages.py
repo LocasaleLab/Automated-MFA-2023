@@ -10,8 +10,6 @@ from typing import List, Tuple, Dict
 
 
 class FigureName(enum.Enum):
-    test = 'test'
-    simple_test = 'simple_test'
     figure_1 = '1'
     figure_2 = '2'
     figure_3 = '3'
@@ -23,8 +21,19 @@ class FigureName(enum.Enum):
     figure_s4 = 's4'
     figure_s5 = 's5'
     figure_s6 = 's6'
-    figure_s7 = 's7'
+    all_figures = 'all'
 
     def __str__(self):
         return self.value
+
+    def __eq__(self, other):
+        return self.value.__eq__(other)
+
+    @staticmethod
+    def return_all():
+        return [
+            FigureName.figure_1, FigureName.figure_2, FigureName.figure_3, FigureName.figure_4, FigureName.figure_5,
+            FigureName.figure_s1, FigureName.figure_s2, FigureName.figure_s3, FigureName.figure_s4,
+            FigureName.figure_s5, FigureName.figure_s6,
+        ]
 

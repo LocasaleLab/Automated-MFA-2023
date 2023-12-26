@@ -1,22 +1,12 @@
 from ..common.config import ParameterName, Constant, DataName
 from ..common.classes import Vector
-from ..figure_elements.element_dict import ElementName, element_dict
-from .common_functions import calculate_center_bottom_offset, calculate_subfigure_layout
-from ..common.common_figure_materials import MetabolicNetworkConfig, FigureConfig, PHGDHRawMaterials
+from ..figure_elements.elements import Elements
+from .common_functions import calculate_subfigure_layout
+from ..common.common_figure_materials import MetabolicNetworkConfig, FigureConfig, PHGDHRawMaterials, \
+    CommonFigureString, calculate_center_bottom_offset
 from ..figure_elements.data_figure.basic_data_figure.figure_data_loader import best_solution_data
 
-Subfigure = element_dict[ElementName.Subfigure]
-CompositeFigure = element_dict[ElementName.CompositeFigure]
-DataAcquisitionDiagram = element_dict[ElementName.DataAcquisitionDiagram]
-OptimizationDiagram = element_dict[ElementName.OptimizationDiagram]
-ProtocolDiagram = element_dict[ElementName.ProtocolDiagram]
-TimeLossStack = element_dict[ElementName.TimeLossStack]
-MetabolicNetwork = element_dict[ElementName.MetabolicNetwork]
-MetabolicNetworkWithLegend = element_dict[ElementName.MetabolicNetworkWithLegend]
-RandomOptimizedFluxLayout = element_dict[ElementName.RandomOptimizedFluxLayout]
-RandomOptimizedLossDistanceComparison = element_dict[ElementName.RandomOptimizedLossDistanceComparison]
-OptimumDistributionComparisonDiagram = element_dict[ElementName.OptimumDistributionComparisonDiagram]
-common_data_figure_scale = FigureConfig.common_data_figure_scale
+Subfigure = Elements.Subfigure
 
 
 class SubfigureA(Subfigure):
@@ -24,6 +14,7 @@ class SubfigureA(Subfigure):
     subfigure_title = 'data_acquisition_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        DataAcquisitionDiagram = Elements.DataAcquisitionDiagram
         scale = 0.38
         center = DataAcquisitionDiagram.calculate_center(DataAcquisitionDiagram, scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
@@ -44,6 +35,7 @@ class SubfigureB(Subfigure):
     subfigure_title = 'optimization_process_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        OptimizationDiagram = Elements.OptimizationDiagram
         scale = 0.32
         mode = ParameterName.experimental
         center = OptimizationDiagram.calculate_center(OptimizationDiagram, scale, mode)
@@ -59,6 +51,9 @@ class SubfigureB(Subfigure):
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+MetabolicNetworkWithLegend = Elements.MetabolicNetworkWithLegend
 
 
 class SubfigureC(Subfigure):
@@ -93,14 +88,14 @@ class SubfigureD(Subfigure):
     subfigure_title = 'running_time_and_loss_data'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        scale = common_data_figure_scale
+        scale = FigureConfig.common_data_figure_scale
 
         running_time_and_loss_config_dict = {
             ParameterName.total_width: 0.5463,
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale
         }
-        running_time_and_loss_obj = TimeLossStack(**running_time_and_loss_config_dict)
+        running_time_and_loss_obj = Elements.TimeLossStack(**running_time_and_loss_config_dict)
 
         center = running_time_and_loss_obj.calculate_center(running_time_and_loss_obj, scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, -0.005)
@@ -120,7 +115,7 @@ class SubfigureE(Subfigure):
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
         scale = 0.5
 
-        vertical_protocol_diagram = ProtocolDiagram(**{
+        vertical_protocol_diagram = Elements.ProtocolDiagram(**{
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
             ParameterName.mode: ParameterName.vertical,
@@ -169,62 +164,11 @@ class SubfigureF(Subfigure):
             subfigure_title=self.subfigure_title, background=False)
 
 
-class SubfigureG(Subfigure):
-    subfigure_label = 'g'
-    subfigure_title = 'optimum_diagram'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        scale = 0.25
-
-        optimum_distribution_comparison_diagram_config_dict = {
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale
-        }
-        optimum_distribution_comparison_comparison_obj = OptimumDistributionComparisonDiagram(
-            **optimum_distribution_comparison_diagram_config_dict)
-
-        center = optimum_distribution_comparison_comparison_obj.calculate_center(
-            optimum_distribution_comparison_comparison_obj, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
-        optimum_distribution_comparison_comparison_obj.move_and_scale(bottom_left_offset=center_bottom_offset)
-
-        subfigure_element_dict = {
-            optimum_distribution_comparison_comparison_obj.name: optimum_distribution_comparison_comparison_obj}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size, subfigure_label=self.subfigure_label,
-            subfigure_title=self.subfigure_title, background=False)
-
-
 common_random_optimized_figure_scale = 0.6
 
 
-class SubfigureH(Subfigure):
-    subfigure_label = 'h'
-    subfigure_title = 'visualization_of_random_and_optimized_solutions'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        scale = common_random_optimized_figure_scale
-
-        running_time_and_loss_config_dict = {
-            ParameterName.total_width: 0.7,
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale
-        }
-        random_optimized_flux_comparison_obj = RandomOptimizedFluxLayout(**running_time_and_loss_config_dict)
-
-        center = random_optimized_flux_comparison_obj.calculate_center(random_optimized_flux_comparison_obj, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0.02, -0.005)
-        random_optimized_flux_comparison_obj.move_and_scale(bottom_left_offset=center_bottom_offset)
-
-        subfigure_element_dict = {
-            random_optimized_flux_comparison_obj.name: random_optimized_flux_comparison_obj}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size, subfigure_label=self.subfigure_label,
-            subfigure_title=self.subfigure_title, background=False)
-
-
-class SubfigureI(Subfigure):
-    subfigure_label = 'i'
+class SubfigureG(Subfigure):
+    subfigure_label = 'g'
     subfigure_title = 'distance_between_global_and_local_optima'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
@@ -235,7 +179,7 @@ class SubfigureI(Subfigure):
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale
         }
-        random_optimized_loss_distance_obj = RandomOptimizedLossDistanceComparison(
+        random_optimized_loss_distance_obj = Elements.RandomOptimizedLossDistanceWithDiagramComparison(
             **running_time_and_loss_config_dict)
 
         center = random_optimized_loss_distance_obj.calculate_center(random_optimized_loss_distance_obj, scale)
@@ -249,7 +193,68 @@ class SubfigureI(Subfigure):
             subfigure_title=self.subfigure_title, background=False)
 
 
-class Figure1(element_dict[ElementName.Figure]):
+class SubfigureH(Subfigure):
+    subfigure_label = 'h'
+    subfigure_title = 'flux_comparison'
+
+    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        figure_data_parameter_dict = {
+            ParameterName.figure_title: CommonFigureString.difference_from_best_optimized_solution,
+            ParameterName.data_name: DataName.hct116_cultured_cell_line,
+            ParameterName.with_single_optimized_solutions: False,
+            ParameterName.with_unoptimized_set: False,
+        }
+        scale = 0.4
+        hct116_cultured_cell_line_flux_error_bar_comparison_figure = Elements.OptimizedAllFluxComparisonBarDataFigure(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
+        })
+        center = hct116_cultured_cell_line_flux_error_bar_comparison_figure.calculate_center(
+            scale, **figure_data_parameter_dict)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
+        hct116_cultured_cell_line_flux_error_bar_comparison_figure.move_and_scale(
+            bottom_left_offset=center_bottom_offset)
+
+        subfigure_element_dict = {
+            hct116_cultured_cell_line_flux_error_bar_comparison_figure.name:
+                hct116_cultured_cell_line_flux_error_bar_comparison_figure}
+        super().__init__(
+            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
+            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+class SubfigureI(Subfigure):
+    subfigure_label = 'i'
+    subfigure_title = 'flux_sloppiness_selected_solutions'
+
+    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        sloppiness_diagram_scale = 0.3
+
+        figure_data_parameter_dict = {
+            ParameterName.mode: ParameterName.raw_optimized,
+            ParameterName.figure_title: CommonFigureString.flux_sloppiness_wrap,
+        }
+        scale = sloppiness_diagram_scale
+        flux_sloppiness_figure = Elements.FluxSloppinessDiagram(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
+        })
+        center = flux_sloppiness_figure.calculate_center(flux_sloppiness_figure, scale)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
+        flux_sloppiness_figure.move_and_scale(
+            bottom_left_offset=center_bottom_offset)
+
+        subfigure_element_dict = {
+            flux_sloppiness_figure.name:
+                flux_sloppiness_figure}
+        super().__init__(
+            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
+            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+class Figure1(Elements.Figure):
     figure_label = 'figure_1'
     figure_title = 'Figure 1'
 
@@ -277,11 +282,11 @@ class Figure1(element_dict[ElementName.Figure]):
             (0.27, [
                 (0.28, 'e'),
                 (0.4, 'f'),
-                (0.32, 'g'),
+                (0.32, 'i'),
             ]),
             (0.2, [
-                (0.43, 'h'),
-                (0.58, 'i'),
+                (0.5, 'g'),
+                (0.5, 'h'),
             ]),
         ]
         subfigure_obj_list = calculate_subfigure_layout(

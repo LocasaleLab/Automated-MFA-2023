@@ -81,7 +81,7 @@ class DataFigureAxes(Region):
         self.twin_x_axis = twin_x_axis
         self.twin_y_axis = twin_y_axis
         if broken_y_axis is not None:
-            assert isinstance(broken_y_axis, (tuple, list)) and len(broken_y_axis) == 2
+            assert isinstance(broken_y_axis, (tuple, list)) and np.ndim(broken_y_axis) == 2
         self.broken_y_axis = broken_y_axis
         if (twin_x_axis or twin_y_axis) and broken_y_axis:
             raise ValueError('Twin axis and broken axis cannot appear at the same time!')
@@ -123,25 +123,48 @@ class DataFigureAxes(Region):
         this_layer_transformation = self._generate_scaled_translation_from_axis_location(
             new_rect_loc, height_to_width_ratio)
         if self.broken_y_axis is not None:
-            bottom_top_ratio, top_bottom_ratio = self.broken_y_axis
             new_rect_width, new_rect_height = new_rect_size
-            bottom_rect_size = Vector(new_rect_width, new_rect_height * bottom_top_ratio)
-            bottom_rect_loc = new_rect_loc
-            top_rect_size = Vector(new_rect_width, new_rect_height * (1 - top_bottom_ratio))
-            top_rect_loc = new_rect_loc + Vector(0, new_rect_height * top_bottom_ratio)
-            bottom_axis = fig.add_axes([*bottom_rect_loc, *bottom_rect_size])
-            self._set_axis_parameter(bottom_axis, **self.axis_param_dict)
-            top_axis = fig.add_axes([*top_rect_loc, *top_rect_size])
-            self._set_axis_parameter(top_axis, **self.axis_param_dict)
-            current_axis_list = [bottom_axis, top_axis]
+            y_ratio_pair_list = self.broken_y_axis
+            current_axis_list = []
+            complete_transformation_list = []
+            total_pair_num = len(y_ratio_pair_list)
             current_axis = None
-            top_axis.spines['bottom'].set_visible(False)
-            bottom_axis.spines['top'].set_visible(False)
-            bottom_transformation = this_layer_transformation + complete_transformation
-            this_layer_top_transformation = self._generate_scaled_translation_from_axis_location(
-                top_rect_loc, height_to_width_ratio)
-            top_transformation = this_layer_top_transformation + complete_transformation
-            complete_transformation = (bottom_transformation, top_transformation)
+            for ratio_pair_index, current_y_ratio_pair in enumerate(y_ratio_pair_list):
+                bottom, top = current_y_ratio_pair
+                current_y_ratio = top - bottom
+                current_rect_loc = new_rect_loc + Vector(0, new_rect_height * bottom)
+                current_rect_size = Vector(new_rect_width, new_rect_height * current_y_ratio)
+                new_axis = fig.add_axes([*current_rect_loc, *current_rect_size])
+                self._set_axis_parameter(new_axis, **self.axis_param_dict)
+                current_axis_list.append(new_axis)
+                if ratio_pair_index != 0:
+                    new_axis.spines['bottom'].set_visible(False)
+                if ratio_pair_index != total_pair_num - 1:
+                    new_axis.spines['top'].set_visible(False)
+                this_layer_current_transformation = self._generate_scaled_translation_from_axis_location(
+                    current_rect_loc, height_to_width_ratio)
+                current_transformation = this_layer_current_transformation + complete_transformation
+                complete_transformation_list.append(current_transformation)
+            complete_transformation = complete_transformation_list
+
+            # bottom_top_ratio, top_bottom_ratio = self.broken_y_axis
+            # bottom_rect_size = Vector(new_rect_width, new_rect_height * bottom_top_ratio)
+            # bottom_rect_loc = new_rect_loc
+            # top_rect_size = Vector(new_rect_width, new_rect_height * (1 - top_bottom_ratio))
+            # top_rect_loc = new_rect_loc + Vector(0, new_rect_height * top_bottom_ratio)
+            # bottom_axis = fig.add_axes([*bottom_rect_loc, *bottom_rect_size])
+            # self._set_axis_parameter(bottom_axis, **self.axis_param_dict)
+            # top_axis = fig.add_axes([*top_rect_loc, *top_rect_size])
+            # self._set_axis_parameter(top_axis, **self.axis_param_dict)
+            # current_axis_list = [bottom_axis, top_axis]
+            # current_axis = None
+            # top_axis.spines['bottom'].set_visible(False)
+            # bottom_axis.spines['top'].set_visible(False)
+            # bottom_transformation = this_layer_transformation + complete_transformation
+            # this_layer_top_transformation = self._generate_scaled_translation_from_axis_location(
+            #     top_rect_loc, height_to_width_ratio)
+            # top_transformation = this_layer_top_transformation + complete_transformation
+            # complete_transformation = (bottom_transformation, top_transformation)
         else:
             current_axis = fig.add_axes([*new_rect_loc, *new_rect_size])
             self._set_axis_parameter(current_axis, **self.axis_param_dict)

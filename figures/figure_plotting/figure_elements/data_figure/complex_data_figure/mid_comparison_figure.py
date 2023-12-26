@@ -5,7 +5,7 @@ from ..basic_data_figure.bar_data_figure import MIDComparisonGridBarDataFigure
 
 class MIDComparisonGridBarWithLegendDataFigure(CompositeFigure):
     height_to_width_ratio = 0.8
-    legend_height = 0.05
+    legend_height = 0.06
 
     def __init__(
             self, figure_data_parameter_dict,

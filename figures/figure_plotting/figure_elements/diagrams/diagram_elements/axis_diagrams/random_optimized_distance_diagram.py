@@ -6,17 +6,16 @@ from .protocol_diagram import ProtocolDiagram, ProtocolDiagramConfig
 
 
 class RandomOptimizedDistanceDiagramConfig(ProtocolDiagramConfig):
-    distance_color = CommonFigureMaterials.distance_and_loss_color_dict[ParameterName.distance]
-    distance_color_with_alpha = distance_color.transparency_mix(ColorConfig.higher_alpha)
     loss_dots_config = ProtocolDiagramConfig.loss_dots_config
     arrow_line_config = ProtocolDiagramConfig.arrow_line_config
     text_config = ProtocolDiagramConfig.text_config
-    unoptimized_content_color = ColorConfig.random_flux_color_with_alpha
-    unoptimized_text_color = ColorConfig.random_flux_color
-    global_optimum_color = ColorConfig.global_optimum_color_with_alpha
-    local_optimum_color = ColorConfig.optimized_flux_color_with_alpha
-    to_optimal_distance_content_color = distance_color_with_alpha
-    to_optimal_distance_text_color = distance_color
+    unoptimized_content_color = CommonFigureMaterials.optimum_with_random_color_dict[ParameterName.unoptimized]
+    unoptimized_text_color = CommonFigureMaterials.optimum_with_random_text_color_dict[ParameterName.unoptimized]
+    global_optimum_color = CommonFigureMaterials.optimum_with_random_color_dict[ParameterName.global_optimum]
+    global_optimum_text_color = CommonFigureMaterials.optimum_with_random_text_color_dict[ParameterName.global_optimum]
+    local_optimum_color = CommonFigureMaterials.optimum_with_random_color_dict[ParameterName.local_optimum]
+    to_optimal_distance_content_color = ColorConfig.raw_distance_color_with_alpha
+    to_optimal_distance_text_color = ColorConfig.distance_text_color
 
     dots_radius = 0.015
     bound_box_config = {
@@ -60,7 +59,7 @@ class RandomOptimizedDistanceDiagramConfig(ProtocolDiagramConfig):
     }
     global_optimum_text_config = {
         **selected_text_config,
-        ParameterName.font_color: global_optimum_color,
+        ParameterName.font_color: global_optimum_text_color,
     }
     random_dot_text_config = {
         **selected_text_config,

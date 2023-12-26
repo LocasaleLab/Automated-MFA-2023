@@ -4,13 +4,6 @@ from scripts.src.core.common.config import ParamName
 from ..common.config import Direct as CommonDirect
 
 
-class Direct(object):
-    input_file_name = 'simulated_flux_vector_and_mid_data.py'
-    input_file_path = f'scripts/src/simulated_data/{input_file_name}'
-    output_py_file_direct = 'scripts/model/base_model'
-    output_xlsx_file_direct = f'{CommonDirect.common_submitted_raw_data_direct}/simulated_data'
-
-
 slsqp_solver_config_dict = OptionDict({
     # ParamName.loss_type: ParameterName.mean_squared_loss,
     ParamName.loss_type: ParamName.cross_entropy_loss,

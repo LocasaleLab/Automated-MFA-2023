@@ -2,14 +2,12 @@ from .config import Direct
 from common_and_plotting_functions.functions import pickle_save, pickle_load, check_and_mkdir_of_direct, npz_load, npz_save
 from .built_in_packages import warnings
 from .third_party_packages import np
-
-from scripts.src.core.common.config import CoreConstants
+from .functions import mid_name_process
 
 
 class FinalResult(object):
     def __init__(
-            self, project_output_direct, common_data_output_direct,
-            result_name, target_simulated_flux_value_dict, maximal_save_point=5000):
+            self, project_output_direct, common_data_output_direct, result_name, maximal_save_point=5000):
         self.project_output_direct = project_output_direct
         self.project_common_data_output_direct = common_data_output_direct
         self.result_name = result_name
@@ -38,7 +36,6 @@ class FinalResult(object):
         check_and_mkdir_of_direct(self.metabolic_network_visualization_direct)
         check_and_mkdir_of_direct(self.this_result_submitted_data_output_direct)
 
-        self.simulated_flux_value_dict = target_simulated_flux_value_dict
         self.target_experimental_mid_data_dict = None
         self.emu_name_experimental_name_dict = None
 
@@ -51,9 +48,11 @@ class FinalResult(object):
         self.final_target_experimental_mid_data_dict = {}
 
         self.data_count_dict = {}
+        assert isinstance(maximal_save_point, int)
         self.maximal_save_point = maximal_save_point
 
-    def update_experimental_name_mid_value_dict(self, target_experimental_mid_data_dict, emu_name_experimental_name_dict):
+    def update_experimental_name_mid_value_dict(
+            self, target_experimental_mid_data_dict, emu_name_experimental_name_dict):
         self.target_experimental_mid_data_dict = target_experimental_mid_data_dict
         self.emu_name_experimental_name_dict = emu_name_experimental_name_dict
 
@@ -174,7 +173,10 @@ class FinalResult(object):
         time_array = npz_load(time_array_path, Direct.time_array)
         loss_array = npz_load(loss_array_path, Direct.loss_array)
         raw_predicted_dict = pickle_load(predicted_dict_path)
-        result_information_dict = pickle_load(information_path)
+        try:
+            result_information_dict = pickle_load(information_path)
+        except ValueError:
+            result_information_dict = None
         flux_name_index_dict = pickle_load(flux_name_index_dict_path)
         try:
             raw_target_experimental_mid_data_dict = pickle_load(target_experimental_mid_data_dict_path)
@@ -272,21 +274,21 @@ class FinalResult(object):
             final_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
 
     def iteration(self, current_result_label, process_mid_name=True):
-        def mid_name_process(raw_mid_name):
-            emu_sep = CoreConstants.emu_carbon_list_str_sep
-            modified_str_list = []
-            str_start = 0
-            while True:
-                emu_location = raw_mid_name.find(emu_sep, str_start)
-                if emu_location == -1:
-                    break
-                modified_str_list.append(raw_mid_name[str_start:emu_location])
-                new_start = emu_location + len(emu_sep)
-                while new_start != len(raw_mid_name) and raw_mid_name[new_start] == '1':
-                    new_start += 1
-                str_start = new_start
-            modified_str = ''.join(modified_str_list)
-            return modified_str
+        # def mid_name_process(raw_mid_name):
+        #     emu_sep = CoreConstants.emu_carbon_list_str_sep
+        #     modified_str_list = []
+        #     str_start = 0
+        #     while True:
+        #         emu_location = raw_mid_name.find(emu_sep, str_start)
+        #         if emu_location == -1:
+        #             break
+        #         modified_str_list.append(raw_mid_name[str_start:emu_location])
+        #         new_start = emu_location + len(emu_sep)
+        #         while new_start != len(raw_mid_name) and raw_mid_name[new_start] == '1':
+        #             new_start += 1
+        #         str_start = new_start
+        #     modified_str = ''.join(modified_str_list)
+        #     return modified_str
 
         (
             solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
@@ -328,6 +330,23 @@ class FinalResult(object):
             target_experimental_mid_data_dict = raw_target_experimental_mid_data_dict
         return loss_array, solution_array, flux_name_index_dict, result_information_dict, predicted_data_dict, \
             target_experimental_mid_data_dict, time_array
+
+    def share_data(self, other_final_result_obj):
+        (
+            self.final_loss_data_dict, self.final_solution_data_dict,
+            self.final_flux_name_index_dict,
+            self.final_information_dict,
+            self.final_predicted_data_dict,
+            self.final_target_experimental_mid_data_dict,
+            self.final_time_data_dict
+        ) = (
+            other_final_result_obj.final_loss_data_dict, other_final_result_obj.final_solution_data_dict,
+            other_final_result_obj.final_flux_name_index_dict,
+            other_final_result_obj.final_information_dict,
+            other_final_result_obj.final_predicted_data_dict,
+            other_final_result_obj.final_target_experimental_mid_data_dict,
+            other_final_result_obj.final_time_data_dict
+        )
 
     def load_current_result_label(self, result_label):
         (
@@ -382,6 +401,21 @@ class FinalResult(object):
                 self._save_data(
                     result_label, solution_array, time_array, loss_array, new_predicted_data_dict,
                     result_information_dict, flux_name_index_dict, target_experimental_mid_data_dict)
+
+    def repair_target_experimental_mid_data_dict(self, solver_dict):
+        for result_label, solver_obj in solver_dict.items():
+            loss_array, solution_array, flux_name_index_dict, result_information_dict, predicted_data_dict, \
+                target_experimental_mid_data_dict, time_array = self.iteration(result_label, process_mid_name=False)
+            new_target_experimental_mid_data_dict = {}
+            for raw_target_mid_name, experimental_mid_data_vector in target_experimental_mid_data_dict.items():
+                last_underline_index = raw_target_mid_name.rindex('_')
+                mid_name = raw_target_mid_name[:last_underline_index]
+                case_name = raw_target_mid_name[last_underline_index + 1:]
+                new_target_mid_name = f'{case_name}_{mid_name}'
+                new_target_experimental_mid_data_dict[new_target_mid_name] = experimental_mid_data_vector
+            self._save_data(
+                result_label, solution_array, time_array, loss_array, predicted_data_dict,
+                result_information_dict, flux_name_index_dict, new_target_experimental_mid_data_dict)
 
     def final_process(self, *args):
         pass

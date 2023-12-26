@@ -8,7 +8,8 @@ def arg_setting(subparsers):
     figure_parser = subparsers.add_parser('figure', help='Run figure generation functions')
     figure_name_display = '{}'.format(',  '.join([figure_name.value for figure_name in FigureName]))
     figure_parser.add_argument(
-        'figure_name', nargs='?', type=FigureName, choices=list(FigureName),
+        # 'figure_name', nargs='?', type=FigureName, choices=list(FigureName),
+        'figure_name', nargs='?', type=str,
         help='The figure needs to plot', metavar=figure_name_display)
     figure_parser.add_argument(
         '-t', '--test_mode', action='store_true', default=False,

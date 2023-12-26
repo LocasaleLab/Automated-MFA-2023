@@ -46,7 +46,7 @@ class HistogramDataFigure(DataFigure):
         figure_config_dict = {
             ParameterName.x_label_format_dict: {
                 **axis_label_format_dict,
-                **DataFigureConfig.x_label_width_height_distance_dict_generator(scale),
+                **DataFigureConfig.x_label_format_dict_generator(scale),
                 **(
                     new_figure_config_dict[ParameterName.x_label_format_dict]
                     if ParameterName.x_label_format_dict in new_figure_config_dict else {}
@@ -54,14 +54,14 @@ class HistogramDataFigure(DataFigure):
             },
             ParameterName.x_tick_label_format_dict: {
                 **axis_label_format_dict,
-                **DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale),
+                **DataFigureConfig.x_tick_label_format_dict_generator(scale),
                 **(
                     new_figure_config_dict[ParameterName.x_tick_label_format_dict]
                     if ParameterName.x_tick_label_format_dict in new_figure_config_dict else {}),
             },
             ParameterName.y_label_format_dict: {
                 **axis_label_format_dict,
-                **DataFigureConfig.y_label_width_height_distance_dict_generator(scale),
+                **DataFigureConfig.y_label_format_dict_generator(scale),
                 **(
                     new_figure_config_dict[ParameterName.y_label_format_dict]
                     if ParameterName.y_label_format_dict in new_figure_config_dict else {}
@@ -69,7 +69,7 @@ class HistogramDataFigure(DataFigure):
             },
             ParameterName.y_tick_label_format_dict: {
                 **axis_label_format_dict,
-                **DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale),
+                **DataFigureConfig.y_tick_label_format_dict_generator(scale),
                 **(
                     new_figure_config_dict[ParameterName.y_tick_label_format_dict]
                     if ParameterName.y_tick_label_format_dict in new_figure_config_dict else {}
@@ -171,7 +171,8 @@ def common_figure_config(scale):
             ParameterName.font_size: common_tick_label_text_size,
         },
         ParameterName.text_config_dict: {
-            ParameterName.font: DataFigureConfig.main_text_font,
+            **DataFigureConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
             ParameterName.font_size: common_tick_label_text_size,
             ParameterName.font_color: cutoff_common_color,
             ParameterName.font_weight: FontWeight.bold,
@@ -221,6 +222,7 @@ class TimeLossDistanceHistogramDataFigure(HistogramDataFigure):
         text_list = None
         if figure_class == ParameterName.time_data:
             time_data_dict = time_data.return_data(**figure_data_parameter_dict)
+            del time_data_dict[ParameterName.unoptimized]
             data_dict = time_data_dict
             x_label = CommonFigureString.average_running_time
             # x_ticks_list = [5, 10, 15, 20, 25]
@@ -286,7 +288,7 @@ class TimeLossDistanceHistogramDataFigure(HistogramDataFigure):
             bin_location = np.concatenate(total_bin_list)
             bin_location.sort()
         elif figure_class == ParameterName.solution_distance_data:
-            _, complete_distance_dict, _ = embedded_flux_data.return_data(**figure_data_parameter_dict)
+            _, complete_distance_dict, *_ = embedded_flux_data.return_data(**figure_data_parameter_dict)
             x_label = 'Euclidean distance within each group'
             # x_ticks_list = [0, 5, 10, 15, 20, 25, 30]
             # x_lim = (0, None)

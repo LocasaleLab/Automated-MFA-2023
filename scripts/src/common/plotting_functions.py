@@ -579,19 +579,17 @@ def group_box_distribution_plot(
 
 
 class FigurePlotting(object):
-    def __init__(self, ParameterName, ElementName, element_dict):
+    def __init__(self, ParameterName, Elements):
         self.ParameterName = ParameterName
-        self.ElementName = ElementName
-        self.element_dict = element_dict
-        self.Figure = element_dict[ElementName.Figure]
+        self.Figure = Elements.Figure
+        self.Elements = Elements
 
     def metabolic_flux_model_function(
             self, output_file_path, figure_size,
             input_metabolite_set, c13_labeling_metabolite_set, mid_data_metabolite_set, mixed_mid_data_metabolite_set,
             biomass_metabolite_set, boundary_flux_set, current_reaction_value_dict=None, infusion=False):
         ParameterName = self.ParameterName
-        ElementName = self.ElementName
-        element_dict = self.element_dict
+        Elements = self.Elements
         Figure = self.Figure
         experimental_setting_dict = {
             ParameterName.input_metabolite_set: input_metabolite_set,
@@ -612,7 +610,7 @@ class FigurePlotting(object):
                 ParameterName.reaction_raw_value_dict: current_reaction_value_dict,
                 ParameterName.visualize_flux_value: ParameterName.transparency
             })
-        metabolic_network_obj = element_dict[ElementName.MetabolicNetwork](**metabolic_network_config_dict)
+        metabolic_network_obj = Elements.MetabolicNetwork(**metabolic_network_config_dict)
         current_figure = Figure(
             'Metabolic Network', {'metabolic_network': metabolic_network_obj}, figure_size=figure_size,
             save_path=output_file_path)
@@ -621,8 +619,7 @@ class FigurePlotting(object):
     def mid_prediction_function(
             self, data_name, result_label, mid_name_list, output_direct, figure_config_dict, figure_size):
         ParameterName = self.ParameterName
-        ElementName = self.ElementName
-        element_dict = self.element_dict
+        Elements = self.Elements
         Figure = self.Figure
         # mid_comparison_figure = element_dict[ElementName.MIDComparisonGridBarWithLegendDataFigure](**{
         #     ParameterName.bottom_left_offset: (0.15, 0.15),
@@ -652,7 +649,7 @@ class FigurePlotting(object):
         current_mid_comparison_figure_config_dict[ParameterName.figure_data_parameter_dict].update(
             new_figure_data_parameter_dict)
         current_mid_comparison_figure_config_dict.update(figure_config_dict)
-        mid_comparison_figure = element_dict[ElementName.MIDComparisonGridBarDataFigure](
+        mid_comparison_figure = Elements.MIDComparisonGridBarDataFigure(
             **current_mid_comparison_figure_config_dict)
         output_file_path = f'{output_direct}/{result_label}.pdf'
         current_figure = Figure(
@@ -663,8 +660,7 @@ class FigurePlotting(object):
     def multi_tumor_figure_plotting(
             self, data_name, flux_location_nested_list, output_direct, figure_size):
         ParameterName = self.ParameterName
-        ElementName = self.ElementName
-        element_dict = self.element_dict
+        Elements = self.Elements
         Figure = self.Figure
 
         figure_data_parameter_dict = {
@@ -677,7 +673,7 @@ class FigurePlotting(object):
                 'brain': 'purple',
             }
         }
-        loss_grid_comparison_figure = element_dict[ElementName.FluxComparisonScatterWithTitle](**{
+        loss_grid_comparison_figure = Elements.FluxComparisonScatterWithTitle(**{
             ParameterName.total_width: 0.4,
             ParameterName.bottom_left_offset: (0.15, 0.15),
             ParameterName.scale: 2,

@@ -265,9 +265,11 @@ def draw_head_and_tail(
         arrow_side_unit_vector) = calculate_necessary_vector(head_coordinate, tail_coordinate)
     assert arrow_direction_len > Constant.computation_eps
     if tail_arrow and head_arrow:
-        assert 2 * head_len < arrow_direction_len
+        if 2 * head_len > arrow_direction_len:
+            head_len = arrow_direction_len / 2
     elif tail_arrow or head_arrow:
-        assert head_len < arrow_direction_len
+        if head_len > arrow_direction_len:
+            head_len = arrow_direction_len
 
     head_end_center_coordinate, head_start_point, head_path_step_list = draw_path_step_list(
         head_arrow, head_coordinate, 1, False)

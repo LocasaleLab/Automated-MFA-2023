@@ -1,5 +1,6 @@
 from ..config import DataFigureConfig, ParameterName, Vector, Keywords, np, it, ColorConfig, \
-    move_and_scale_for_dict, common_legend_generator, default_parameter_extract, CommonFigureString
+    move_and_scale_for_dict, common_legend_generator, default_parameter_extract, CommonFigureString, \
+    merge_axis_format_dict, VerticalAlignment
 from .figure_data_loader import raw_model_data, flux_comparison_data, loss_data
 from .data_figure import DataFigure
 from .data_figure_plotting_and_data_output_generator import single_violin_box_distribution_plot, \
@@ -10,8 +11,6 @@ class BasicViolinBoxDataFigure(DataFigure):
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector,
             scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
-        legend = figure_data_parameter_dict[ParameterName.legend]
-        self.legend = legend
         (
             ax_bottom_left_list,
             ax_size_list,
@@ -35,39 +34,23 @@ class BasicViolinBoxDataFigure(DataFigure):
                     ParameterName.box_violin_config_dict,
                 ]
             },
-            ParameterName.x_label_format_dict: {
-                **axis_label_format_dict,
-                **DataFigureConfig.x_label_width_height_distance_dict_generator(scale),
-                **(
-                    new_figure_config_dict[ParameterName.x_label_format_dict]
-                    if ParameterName.x_label_format_dict in new_figure_config_dict else {}
-                ),
-            },
-            ParameterName.x_tick_label_format_dict: {
-                **axis_label_format_dict,
-                **DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale),
-                **(
-                    new_figure_config_dict[ParameterName.x_tick_label_format_dict]
-                    if ParameterName.x_tick_label_format_dict in new_figure_config_dict else {}),
-            },
-            ParameterName.y_label_format_dict: {
-                **axis_label_format_dict,
-                **DataFigureConfig.y_label_width_height_distance_dict_generator(scale),
-                **(
-                    new_figure_config_dict[ParameterName.y_label_format_dict]
-                    if ParameterName.y_label_format_dict in new_figure_config_dict else {}
-                ),
-            },
-            ParameterName.y_tick_label_format_dict: {
-                **axis_label_format_dict,
-                **DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale),
-                ParameterName.axis_tick_label_distance: 0.006 * scale,
-                **(
-                    new_figure_config_dict[ParameterName.y_tick_label_format_dict]
-                    if ParameterName.y_tick_label_format_dict in new_figure_config_dict else {}
-                ),
-            },
-            ParameterName.box_violin_config_dict: new_figure_config_dict[ParameterName.box_violin_config_dict]
+
+            ParameterName.x_label_format_dict: merge_axis_format_dict(
+                axis_label_format_dict, DataFigureConfig.x_label_format_dict_generator(scale),
+                new_figure_config_dict, ParameterName.x_label_format_dict),
+            ParameterName.x_tick_label_format_dict: merge_axis_format_dict(
+                axis_label_format_dict, DataFigureConfig.x_tick_label_format_dict_generator(scale),
+                new_figure_config_dict, ParameterName.x_tick_label_format_dict),
+            ParameterName.y_label_format_dict: merge_axis_format_dict(
+                axis_label_format_dict, DataFigureConfig.y_label_format_dict_generator(scale),
+                new_figure_config_dict, ParameterName.y_label_format_dict),
+            ParameterName.y_tick_label_format_dict: merge_axis_format_dict(
+                {
+                    **axis_label_format_dict,
+                    ParameterName.axis_tick_label_distance: 0.006 * scale,
+                },
+                DataFigureConfig.y_tick_label_format_dict_generator(scale),
+                new_figure_config_dict, ParameterName.y_tick_label_format_dict),
         }
 
         (
@@ -118,10 +101,11 @@ class BasicViolinBoxDataFigure(DataFigure):
                 ParameterName.y_tick_labels_list,
             )]
 
-        if ParameterName.legend in figure_data_parameter_dict:
-            legend = figure_data_parameter_dict[ParameterName.legend]
-        else:
-            legend = False
+        # if ParameterName.legend in figure_data_parameter_dict:
+        #     legend = figure_data_parameter_dict[ParameterName.legend]
+        # else:
+        #     legend = False
+        legend = default_parameter_extract(figure_data_parameter_dict, ParameterName.legend, False)
         if legend:
             legend_config_dict = figure_data_parameter_dict[ParameterName.legend_config_dict]
             legend_obj = common_legend_generator(legend_config_dict, color_dict)
@@ -205,7 +189,7 @@ class TimeLossGridBoxDataFigure(BasicViolinBoxDataFigure):
             y_ticks = None
 
         (
-            raw_loss_value_dict, max_loss_value, analyzed_set_size_list,
+            (raw_loss_value_dict, loss_of_mean_solution_dict), max_loss_value, analyzed_set_size_list,
             selected_min_loss_size_list) = raw_model_data.return_scatter_data(
             figure_class=ParameterName.loss_data, **figure_data_parameter_dict)
 
@@ -235,9 +219,15 @@ class TimeLossGridBoxDataFigure(BasicViolinBoxDataFigure):
         for row_index, selected_min_loss in enumerate(selected_min_loss_size_list):
             for col_index, analyzed_set_size in enumerate(analyzed_set_size_list):
                 try:
-                    raw_loss_array = [np.concatenate(raw_loss_value_dict[selected_min_loss][analyzed_set_size])]
+                    target_nested_list = raw_loss_value_dict[selected_min_loss][analyzed_set_size]
                 except KeyError:
-                    raw_loss_array = [[]]
+                    target_list = []
+                else:
+                    try:
+                        target_list = np.concatenate(target_nested_list)
+                    except ValueError:
+                        target_list = target_nested_list
+                raw_loss_array = [target_list]
                 data_nested_list.append(raw_loss_array)
                 positions_list.append([1])
                 if col_index == 0:
@@ -301,39 +291,6 @@ class FluxComparisonViolinBoxDataFigure(BasicViolinBoxDataFigure):
         ax_total_bottom_left = Vector(0.12, 0.03)
         ax_total_size = Vector(1, 1) - ax_total_bottom_left
         ax_interval = Vector(0.045, 0.035)
-
-        # try:
-        #     common_x_label = figure_data_parameter_dict.pop(ParameterName.common_x_label)
-        # except KeyError:
-        #     common_x_label = 'Cell type'
-        # try:
-        #     common_y_label = figure_data_parameter_dict.pop(ParameterName.common_y_label)
-        # except KeyError:
-        #     common_y_label = 'Flux value'
-        # try:
-        #     preset_y_lim_list = figure_data_parameter_dict.pop(ParameterName.y_lim_list)
-        # except KeyError:
-        #     preset_y_lim_list = None
-        # try:
-        #     preset_y_ticks_list = figure_data_parameter_dict.pop(ParameterName.y_ticks_list)
-        # except KeyError:
-        #     preset_y_ticks_list = None
-        # try:
-        #     preset_x_lim_list = figure_data_parameter_dict.pop(ParameterName.x_lim_list)
-        # except KeyError:
-        #     preset_x_lim_list = None
-        # try:
-        #     display_flux_name_dict = figure_data_parameter_dict.pop(ParameterName.display_flux_name_dict)
-        # except KeyError:
-        #     display_flux_name_dict = {}
-        # try:
-        #     display_group_name_dict = figure_data_parameter_dict.pop(ParameterName.display_group_name_dict)
-        # except KeyError:
-        #     display_group_name_dict = {}
-        # try:
-        #     figure_type = figure_data_parameter_dict.pop(ParameterName.figure_type)
-        # except KeyError:
-        #     figure_type = ParameterName.box
 
         (
             common_x_label, common_y_label,
@@ -701,4 +658,178 @@ class ExperimentalOptimizationLossComparisonBoxDataFigure(BasicViolinBoxDataFigu
         }
         super().__init__(figure_data_parameter_dict, bottom_left, size, **kwargs)
 
+
+class LossDistanceGridBoxDataFigure(BasicViolinBoxDataFigure):
+    def __init__(self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, scale=1, **kwargs):
+        ax_total_bottom_left = Vector(0.12, 0.03)
+        ax_total_size = Vector(1, 1) - ax_total_bottom_left
+        ax_interval = Vector(0.01, 0.015)
+
+        common_y_lim = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.common_y_lim, (0, None), pop=True)
+        default_y_tick_labels = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.default_y_tick_label_list, Keywords.default, pop=True)
+        if default_y_tick_labels != Keywords.default:
+            y_ticks = [float(default_y_tick_label) for default_y_tick_label in default_y_tick_labels]
+        else:
+            y_ticks = None
+
+        figure_data_tuple = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.figure_data, None, pop=True)
+        if figure_data_tuple is None:
+            figure_data_tuple = raw_model_data.return_scatter_data(**figure_data_parameter_dict)
+        (
+            value_dict_list, max_value, complete_analyzed_set_size_list,
+            complete_selected_min_loss_size_list) = figure_data_tuple
+        target_analyzed_set_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.optimized_size, complete_analyzed_set_size_list, pop=True)
+        if isinstance(target_analyzed_set_list, (int, np.int32)):
+            target_analyzed_set_list = [target_analyzed_set_list]
+        target_selected_min_loss_size_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.selection_size, complete_selected_min_loss_size_list, pop=True)
+        if isinstance(target_selected_min_loss_size_list, (int, np.int32)):
+            target_selected_min_loss_size_list = [target_selected_min_loss_size_list]
+        color_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.color_dict, None, pop=True)
+        data_set_num = len(value_dict_list)
+        common_x_tick_label_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.x_tick_labels_list, None, pop=True)
+        if common_x_tick_label_list is not None:
+            x_tick_num = len(common_x_tick_label_list)
+            assert data_set_num % x_tick_num == 0
+            tick_data_set_ratio = data_set_num // x_tick_num
+        else:
+            tick_data_set_ratio = 1
+        common_y_label = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.common_y_label, None, pop=True)
+        if color_dict is None:
+            main_color_list = [ColorConfig.normal_blue] * data_set_num
+            median_color_list = [ColorConfig.orange] * data_set_num
+        else:
+            if len(color_dict) == data_set_num:
+                main_color_list = list(color_dict.values())
+                median_color_list = list(color_dict.values())
+            else:
+                color_list = default_parameter_extract(
+                    figure_data_parameter_dict, ParameterName.color, None, force=True, pop=True)
+                assert len(color_list) == data_set_num
+                main_color_list = color_list
+                median_color_list = color_list
+
+        common_line_width = 0.5
+        box_body_alpha = 0.3
+        common_x_lim = [0.5, data_set_num + 0.5]
+        data_nested_list = []
+        positions_list = []
+        # y_lim = (0, max_value * 1.1)
+        # y_lim = (0, 0.6)
+        # y_lim = (0, 0.6)
+
+        x_label_list = []
+        x_ticks_list = []
+        y_label_list = []
+        x_tick_labels_list = []
+        y_ticks_list = []
+        y_tick_labels_list = []
+
+        row_num = len(target_selected_min_loss_size_list)
+        col_num = len(target_analyzed_set_list)
+        ax_size = (ax_total_size - Vector(col_num - 1, row_num - 1) * ax_interval) / Vector(col_num, row_num)
+        ax_bottom_left_list = []
+        ax_size_list = []
+        # Axes should start from top-left and execute row-first.
+        for row_index, selected_size in enumerate(target_selected_min_loss_size_list):
+            for col_index, analyzed_set_size in enumerate(target_analyzed_set_list):
+                try:
+                    current_value_list = [
+                        value_dict[selected_size][analyzed_set_size] for value_dict in value_dict_list]
+                except KeyError:
+                    raw_value_list = [[] for _ in value_dict_list]
+                else:
+                    raw_value_list = []
+                    for value_list in current_value_list:
+                        try:
+                            raw_value_list.append(np.concatenate(value_list))
+                        except ValueError:
+                            raw_value_list.append(value_list)
+                data_nested_list.append(raw_value_list)
+                current_positions = list(range(1, data_set_num + 1))
+                positions_list.append(current_positions)
+                if col_index == 0:
+                    if common_x_tick_label_list is None:
+                        y_label_list.append(selected_size)
+                    else:
+                        y_label_list.append(common_y_label)
+                    y_tick_labels_list.append(default_y_tick_labels)
+                    y_ticks_list.append(y_ticks)
+                else:
+                    y_label_list.append(None)
+                    y_tick_labels_list.append(None)
+                    y_ticks_list.append([])
+                if row_index != row_num - 1:
+                    x_label_list.append(None)
+                    x_tick_labels_list.append(None)
+                else:
+                    if common_x_tick_label_list is None:
+                        x_label_list.append(analyzed_set_size)
+                        x_tick_labels_list.append(None)
+                    else:
+                        x_label_list.append(None)
+                        x_tick_labels_list.append(common_x_tick_label_list)
+                if common_x_tick_label_list is None:
+                    x_ticks_list.append([])
+                else:
+                    if tick_data_set_ratio > 1:
+                        current_positions = [
+                            (2 * i + tick_data_set_ratio - 1) / tick_data_set_ratio
+                            for i in range(1, data_set_num + 1, tick_data_set_ratio)]
+                    x_ticks_list.append(current_positions)
+                current_bottom_left = ax_total_bottom_left + (ax_size + ax_interval) * Vector(
+                    col_index, row_num - row_index - 1)
+                ax_bottom_left_list.append(current_bottom_left)
+                ax_size_list.append(ax_size)
+
+        figure_config_dict = {
+            ParameterName.x_label_format_dict: merge_axis_format_dict({
+                ParameterName.axis_label_distance: 0.005,
+            }, {}, figure_data_parameter_dict, ParameterName.x_label_format_dict),
+            ParameterName.x_tick_label_format_dict: merge_axis_format_dict({
+                ParameterName.axis_tick_label_distance: 0.01,
+                ParameterName.vertical_alignment: VerticalAlignment.top,
+                ParameterName.font_size: (DataFigureConfig.GroupDataFigure.x_y_axis_tick_label_font_size + 2) * scale
+            }, {}, figure_data_parameter_dict, ParameterName.x_tick_label_format_dict),
+            ParameterName.y_label_format_dict: merge_axis_format_dict({
+                ParameterName.axis_label_distance: 0.03,
+            }, {}, figure_data_parameter_dict, ParameterName.y_label_format_dict),
+            ParameterName.box_violin_config_dict: generate_violin_config_dict(
+                0.6, box_body_alpha, common_line_width, main_color_list, median_color_list),
+            # ParameterName.scatter_param_dict: {
+            #     ParameterName.marker_size: 0.2,
+            #     ParameterName.marker_color: [ColorConfig.data_figure_base_color],
+            # },
+        }
+
+        figure_data_parameter_dict = {
+            ParameterName.figure_type: ParameterName.box,
+            ParameterName.ax_bottom_left_list: ax_bottom_left_list,
+            ParameterName.ax_size_list: ax_size_list,
+            ParameterName.color_dict: color_dict,
+            ParameterName.name_dict: None,
+            ParameterName.figure_config_dict: figure_config_dict,
+
+            ParameterName.data_nested_list: data_nested_list,
+            ParameterName.positions_list: positions_list,
+            ParameterName.cutoff: None,
+            ParameterName.emphasized_flux_list: None,
+            ParameterName.x_lim_list: it.repeat(common_x_lim),
+            ParameterName.y_lim_list: it.repeat(common_y_lim),
+            ParameterName.x_label_list: x_label_list,
+            ParameterName.x_ticks_list: x_ticks_list,
+            ParameterName.y_label_list: y_label_list,
+            ParameterName.x_tick_labels_list: x_tick_labels_list,
+            ParameterName.y_ticks_list: y_ticks_list,
+            ParameterName.y_tick_labels_list: y_tick_labels_list,
+            **figure_data_parameter_dict,
+        }
+        super().__init__(figure_data_parameter_dict, bottom_left, size, scale=scale, **kwargs)
 

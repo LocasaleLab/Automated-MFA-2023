@@ -6,4 +6,5 @@ import matplotlib.artist as martist
 import matplotlib.lines as mlines
 import matplotlib.colors as mcolors
 import matplotlib.transforms as transforms
+from scipy import stats
 import numpy as np

@@ -1,15 +1,33 @@
 from .third_party_packages import np
 from common_and_plotting_functions.config import Direct as ParentDirect, Keywords as ParentKeywords
 
+random_seed = np.random.default_rng(4536251)
+
 
 class Keywords(object):
+    model = 'model'
+    data = 'data'
+    config = 'config'
+    label = 'label'
+    comment = 'comment'
+
+    # Parallel keywords:
+    each_process_optimization_num = 'each_process_optimization_num'
+    max_optimization_each_generation = 'max_optimization_each_generation'
+    thread_num_constraint = 'thread_num_constraint'
+    processes_num = 'processes_num'
+    parallel_test = 'parallel_test'
+
+    predefined_initial_solution_matrix = 'predefined_initial_solution_matrix'
+    unoptimized = 'unoptimized'
+    squared_loss = 'squared_loss'
+    traditional_method = 'traditional_method'
     loss = 'loss'
     test = 'test'
     optimized = 'optimized'
     experimental = 'experimental'
     obj_threshold_key = 'obj_threshold'
     metabolite_name_col = 'Name'
-    unoptimized = 'unoptimized'
     average = 'average'
 
     tca_index = 'tca_index'
@@ -24,9 +42,18 @@ class Keywords(object):
     index_name = 'Index'
     experiments = 'experiments'
 
+    normal_simulated_base_name = 'simulated_flux_vector_and_mid_data'
+    batched_simulated_base_name = 'simulated_batched_flux_vector_and_mid_data'
+    simulated_noise_str = '_with_noise'
+    simulated_flux_name_index_dict = 'flux_name_index_dict'
+    simulated_final_flux_vector_list = 'final_flux_vector_list'
+    simulated_output_mid_data_dict_list = 'output_mid_data_dict_list'
+    simulated_output_all_mid_data_dict_list = 'output_all_mid_data_dict_list'
+
 
 class Direct(object):
     common_submitted_raw_data_direct = ParentDirect.common_submitted_raw_data_direct
+    tmp_data_direct = ParentDirect.figure_raw_data_direct
     flux_result_xlsx_filename = f'{ParentKeywords.flux_raw_data}.xlsx'
     mid_result_xlsx_filename = f'{ParentKeywords.mid_raw_data}.xlsx'
     solver_description_xlsx_filename = f'{ParentKeywords.solver_descriptions}.xlsx'
@@ -45,6 +72,13 @@ class Direct(object):
     predicted_dict = 'predicted_dict'
     flux_name_index_dict = 'flux_name_index_dict'
     experimental_data = 'experimental_data'
+
+    simulated_input_file_name = 'simulated_flux_vector_and_mid_data.py'
+    simulated_input_file_path = f'scripts/src/simulated_data/{simulated_input_file_name}'
+    simulated_output_py_file_direct = 'scripts/data/simulated_data'
+    simulated_data_direct_name = 'simulated_data'
+    simulated_output_xlsx_file_direct = f'{common_submitted_raw_data_direct}/{simulated_data_direct_name}'
+    simulated_output_pickle_direct = simulated_output_py_file_direct
 
 
 class DataType(object):
@@ -126,5 +160,38 @@ index_calculation_func_dict = {
     Keywords.net_r5p_production: net_r5p_production,
     Keywords.mas_index: mas_index,
 }
+
+
+net_flux_list = [
+    ('PGI_c', 'PGI_c__R'),
+    ('FBA_c', 'FBA_c__R'),
+    ('TPI_c', 'TPI_c__R'),
+    ('GAPD_c', 'GAPD_c__R'),
+    ('PGK_c', 'PGK_c__R'),
+    ('PGM_c', 'PGM_c__R'),
+    ('ENO_c', 'ENO_c__R'),
+    ('LDH_c', 'LDH_c__R'),
+    ('MDH_c', 'MDH_c__R'),
+    ('SHMT_c', 'SHMT_c__R'),
+    ('ACONT_m', 'ACONT_m__R'),
+    ('SUCD_m', 'SUCD_m__R'),
+    ('FUMH_m', 'FUMH_m__R'),
+    ('MDH_m', 'MDH_m__R'),
+    ('GLUD_m', 'GLUD_m__R'),
+    ('ASPTA_m', 'ASPTA_m__R'),
+    ('ASPTA_c', 'ASPTA_c__R'),
+    ('RPI_c', 'RPI_c__R'),
+    ('RPE_c', 'RPE_c__R'),
+    ('TKT1_c', 'TKT1_c__R'),
+    ('TKT2_c', 'TKT2_c__R'),
+    ('TALA_c', 'TALA_c__R'),
+    ('PYR_trans', 'PYR_trans__R'),
+    ('ASPGLU_m', 'ASPGLU_m__R'),
+    ('AKGMAL_m', 'AKGMAL_m__R'),
+    ('CIT_trans', 'CIT_trans__R'),
+    ('GLN_trans', 'GLN_trans__R'),
+    ('GLU_trans', 'GLU_trans__R'),
+    ('GPT_c', 'GPT_c__R'),
+]
 
 

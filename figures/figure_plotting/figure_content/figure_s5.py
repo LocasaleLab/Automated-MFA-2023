@@ -1,17 +1,13 @@
 from ..common.config import ParameterName, Constant, DataName
 from ..common.common_figure_materials import CommonFigureMaterials, MouseComparisonMaterials, \
     LungCancerComparisonMaterials, MultipleTumorRawMaterials, MultipleTumorRatioMaterials, FigureConfig, \
-    CommonFigureString
-from ..figure_elements.element_dict import ElementName, element_dict
+    CommonFigureString, calculate_center_bottom_offset
+from ..figure_elements.elements import Elements
 from ..common.color import ColorConfig
-from .common_functions import calculate_center_bottom_offset, calculate_subfigure_layout, \
+from .common_functions import calculate_subfigure_layout, \
     Vector, single_subfigure_layout
 
-Subfigure = element_dict[ElementName.Subfigure]
-OptimizationDiagram = element_dict[ElementName.OptimizationDiagram]
-MetabolicNetworkWithLegend = element_dict[ElementName.MetabolicNetworkWithLegend]
-FluxComparisonScatterWithTitle = element_dict[ElementName.FluxComparisonScatterWithTitle]
-ExperimentDiagram = element_dict[ElementName.ExperimentDiagram]
+Subfigure = Elements.Subfigure
 
 # common_data_figure_scale = FigureConfig.common_data_figure_scale
 common_data_figure_scale = 0.8
@@ -23,6 +19,7 @@ class SubfigureA(Subfigure):
     subfigure_title = 'experimental_data_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        ExperimentDiagram = Elements.ExperimentDiagram
         scale = 0.45
         data_name = DataName.multiple_tumor
         center = ExperimentDiagram.calculate_center(ExperimentDiagram, scale, data_name)
@@ -60,6 +57,9 @@ def multiple_tumor_comparison_dict_generator(config_class):
         ParameterName.class_width: 0.6,
     }
     return common_multiple_tumor_comparison_dict
+
+
+FluxComparisonScatterWithTitle = Elements.FluxComparisonScatterWithTitle
 
 
 class SubfigureB(Subfigure):
@@ -202,7 +202,7 @@ class SubfigureD(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class FigureS5(element_dict[ElementName.Figure]):
+class FigureS5(Elements.Figure):
     figure_label = 'figure_s5'
     figure_title = 'Figure S5'
 

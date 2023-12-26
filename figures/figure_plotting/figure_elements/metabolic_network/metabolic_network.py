@@ -301,12 +301,12 @@ class ModelSensitivityDiagram(CompositeFigure):
 
 
 class DataAvailabilityDiagram(CompositeFigure):
-    def __init__(self, mode=DataName.smaller_data_size, **kwargs):
+    def __init__(self, mode=DataName.smaller_data_size, separate=False, **kwargs):
         (
             text_config_list, round_rectangle_obj_list, total_width, total_height
         ) = data_availability_sensitivity_layout_generator(
             mode, ModelDataSensitivityDataFigureConfig.title_with_order_prefix[mode],
-            ModelDataSensitivityDataFigureConfig.group_id_name_dict)
+            ModelDataSensitivityDataFigureConfig.group_id_name_dict, separate)
 
         self.total_width = total_width
         self.total_height = total_height

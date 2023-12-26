@@ -1,6 +1,8 @@
 from scripts.src.common.config import Color, Keywords, Direct, DataType
 from common_and_plotting_functions.functions import check_and_mkdir_of_direct
 from scripts.src.common.plotting_functions import multi_row_col_bar_plot
+from scripts.src.common.functions import data_param_list_generator_func_template, collect_results_func_template, \
+    special_result_label_converter
 
 from scripts.data.common_functions import common_data_loader
 
@@ -15,8 +17,8 @@ user_defined_model = model_loader(ModelList.base_model_with_glc_tca_buffer)
 mfa_model_obj = common_model_constructor(user_defined_model)
 
 name = 'lung_tumor_invivo_infusion'
-output_folder = '{}/{}'.format(Direct.output_direct, name)
-raw_data_folder = '{}/{}'.format(output_folder, Direct.raw_flux_analysis)
+# output_folder = '{}/{}'.format(Direct.output_direct, name)
+# raw_data_folder = '{}/{}'.format(output_folder, Direct.raw_flux_analysis)
 multi_tumor_comparison = True
 
 
@@ -37,103 +39,16 @@ class SpecificParameter(object):
     }
 
 
-complete_data_param_raw_list = [
+average_data_param_raw_list = [
     {
         keyword.experiments: keyword.human,
         '': [
-            # {
-            #     keyword.patient: 'K003',
-            #     '': [
-            #         {
-            #             keyword.tissue: keyword.lung,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #         {
-            #             keyword.tissue: keyword.tumor,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #     ],
-            # },
-            # {
-            #     keyword.patient: 'K004',
-            #     '': [
-            #         {
-            #             keyword.tissue: keyword.lung,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #         {
-            #             keyword.tissue: keyword.tumor,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #     ],
-            # },
-            # {
-            #     keyword.patient: 'K026',
-            #     '': [
-            #         {
-            #             keyword.tissue: keyword.lung,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #         {
-            #             keyword.tissue: keyword.tumor,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #     ],
-            # },
-            # {
-            #     keyword.patient: 'K024',
-            #     '': [
-            #         {
-            #             keyword.tissue: keyword.lung,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #         {
-            #             keyword.tissue: keyword.tumor,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #                 ]
-            #         },
-            #     ],
-            # },
             {
                 keyword.patient: 'K1028',
                 '': [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -142,9 +57,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -158,9 +70,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -169,15 +78,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
-                            # {
-                            #     keyword.index: 3,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -191,9 +91,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -202,18 +99,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
-                            # {
-                            #     keyword.index: 3,
-                            # },
-                            # {
-                            #     keyword.index: 4,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -227,9 +112,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -238,13 +120,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            #
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -258,9 +133,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -269,9 +141,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -285,9 +154,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -296,12 +162,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -315,9 +175,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -331,9 +188,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -342,12 +196,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -361,9 +209,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -372,12 +217,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -391,9 +230,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -402,12 +238,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -421,9 +251,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -432,12 +259,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -451,9 +272,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -462,9 +280,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -478,9 +293,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -489,12 +301,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -508,9 +314,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -519,9 +322,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -535,9 +335,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -546,12 +343,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
-                            # {
-                            #     keyword.index: 2,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -565,9 +356,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -576,9 +364,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -592,9 +377,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -603,9 +385,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -619,9 +398,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.lung,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -630,9 +406,6 @@ complete_data_param_raw_list = [
                     {
                         keyword.tissue: keyword.tumor,
                         '': [
-                            # {
-                            #     keyword.index: 1,
-                            # },
                             {
                                 keyword.index: Keywords.average,
                             },
@@ -640,142 +413,10 @@ complete_data_param_raw_list = [
                     },
                 ],
             },
-            # {
-            #     keyword.patient: 'K2049',
-            #     '': [
-            #         {
-            #             keyword.tissue: keyword.lung,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #             ]
-            #         },
-            #         {
-            #             keyword.tissue: keyword.tumor,
-            #             '': [
-            #                 {
-            #                     keyword.index: 1,
-            #                 },
-            #             ]
-            #         },
-            #     ],
-            # },
-        ]
-    },
-    {
-        keyword.experiments: keyword.mouse_lung_vs_tumor,
-        '': [
-            {
-                keyword.tissue: keyword.lung,
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                    {
-                        keyword.index: 4,
-                    },
-                    {
-                        keyword.index: 5,
-                    },
-                ]
-            },
-            {
-                keyword.tissue: keyword.flank,
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                    {
-                        keyword.index: 4,
-                    },
-                ]
-            },
-            {
-                keyword.tissue: keyword.tumor,
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                    {
-                        keyword.index: 4,
-                    },
-                ]
-            },
-        ]
-    },
-    {
-        keyword.experiments: keyword.mouse_tumor_ko,
-        '': [
-            {
-                keyword.tissue: 'HCC15',
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                    {
-                        keyword.index: 4,
-                    },
-                    {
-                        keyword.index: 5,
-                    },
-                ]
-            },
-            {
-                keyword.tissue: 'MCT1KO',
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                ]
-            },
-            {
-                keyword.tissue: 'MCT4KO',
-                '': [
-                    {
-                        keyword.index: 1,
-                    },
-                    {
-                        keyword.index: 2,
-                    },
-                    {
-                        keyword.index: 3,
-                    },
-                ]
-            },
         ]
     },
 ]
+
 
 important_flux_list = [
     ('FBA_c', 'FBA_c__R'),
@@ -839,27 +480,18 @@ def data_param_list_generator(param_raw_list):
     return current_param_list
 
 
-data_param_raw_list = complete_data_param_raw_list
-total_param_list = data_param_list_generator(data_param_raw_list)
-empty_patient_key = ''
+# data_param_raw_list = complete_data_param_raw_list
+data_param_raw_list = average_data_param_raw_list
+# total_param_list = data_param_list_generator(data_param_raw_list)
+keyword_list = [keyword.experiments, keyword.patient, keyword.tissue, keyword.index]
+total_param_list = data_param_list_generator_func_template(keyword_list)(average_data_param_raw_list)
 
 
-def collect_results(final_data_obj):
-    final_mapping_dict = {}
-    for param_dict in total_param_list:
-        experiment_name = param_dict[keyword.experiments]
-        if experiment_name == keyword.human:
-            patient_id = param_dict[keyword.patient]
-        else:
-            patient_id = keyword.empty_patient_key
-        tissue_name = param_dict[keyword.tissue]
-        repeat_index = param_dict[keyword.index]
-        project_name = data_wrap_obj.project_name_generator(experiment_name, tissue_name, repeat_index, patient_id)
-        final_mapping_dict[project_name] = (experiment_name, patient_id, tissue_name, repeat_index)
-        final_data_obj.load_current_result_label(project_name)
-        if Keywords.obj_threshold_key in final_data_obj.final_information_dict[project_name]:
-            del final_data_obj.final_information_dict[project_name][Keywords.obj_threshold_key]
-    return final_mapping_dict
+def project_name_generator(experiment_name, patient_id, tissue_name, repeat_index):
+    return data_wrap_obj.project_name_generator(experiment_name, tissue_name, repeat_index, patient_id)
+
+
+collect_results = collect_results_func_template(project_name_generator, total_param_list, keyword_list)
 
 
 def flux_comparison_parameter_generator(final_solution_data_dict, final_flux_name_index_dict):
@@ -874,8 +506,8 @@ def flux_comparison_parameter_generator(final_solution_data_dict, final_flux_nam
     final_color_dict = {}
     comparison_name_tissue_dict = {
         keyword.human: [keyword.lung, keyword.tumor],
-        keyword.mouse_lung_vs_tumor: [keyword.lung, keyword.flank, keyword.tumor],
-        keyword.mouse_tumor_ko: [keyword.hcc15, keyword.mct1ko, keyword.mct4ko]
+        # keyword.mouse_lung_vs_tumor: [keyword.lung, keyword.flank, keyword.tumor],
+        # keyword.mouse_tumor_ko: [keyword.hcc15, keyword.mct1ko, keyword.mct4ko]
     }
     for comparison_name, current_tissue_name_list in comparison_name_tissue_dict.items():
         data_dict_for_plotting = {}
@@ -912,36 +544,10 @@ def flux_comparison_parameter_generator(final_solution_data_dict, final_flux_nam
                 common_flux_comparison_func(
                     current_important_flux_list, current_flux_name_index_dict[index_num],
                     current_data_array, data_dict_for_plotting, key_name)
-
-                # for flux_name in current_important_flux_list:
-                #     if isinstance(flux_name, str):
-                #         single_flux = True
-                #         flux_title = flux_name
-                #     elif isinstance(flux_name, tuple) or isinstance(flux_name, list):
-                #         single_flux = False
-                #         flux_title = '{} - {}'.format(flux_name[0], flux_name[1])
-                #     else:
-                #         raise ValueError()
-                #     if single_flux:
-                #         flux_index = common_flux_name_index_dict[flux_name]
-                #         calculated_flux_array = current_data_array[:, flux_index]
-                #     else:
-                #         flux_index1 = common_flux_name_index_dict[flux_name[0]]
-                #         flux_index2 = common_flux_name_index_dict[flux_name[1]]
-                #         calculated_flux_array = (
-                #                 current_data_array[:, flux_index1] - current_data_array[:, flux_index2])
-                #     if flux_title not in data_dict_for_plotting:
-                #         data_dict_for_plotting[flux_title] = {}
-                #     data_dict_for_plotting[flux_title][key_name] = calculated_flux_array
         final_dict_for_flux_comparison_plotting[comparison_name] = data_dict_for_plotting
         final_color_dict[comparison_name] = color_dict
         final_key_name_parameter_dict[comparison_name] = key_name_parameter_dict
     return final_dict_for_flux_comparison_plotting, final_key_name_parameter_dict, final_color_dict
-
-
-def result_output_dataframe_dict_generator(complete_result_dict):
-    pass
-    # return {'Sheet1': pd.DataFrame()}
 
 
 def experimental_data_plotting(

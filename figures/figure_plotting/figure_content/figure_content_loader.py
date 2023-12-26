@@ -2,13 +2,7 @@ from figures.figure_plotting.common.built_in_packages import FigureName
 
 
 def figure_content_loader(figure_name):
-    if figure_name == FigureName.test:
-        # from .test import content as raw_content_list
-        from .figure_test import FigureTest as Figure
-    elif figure_name == FigureName.simple_test:
-        # from .simple_test import content as raw_content_list
-        from .figure_test import FigureSimpleTest as Figure
-    elif figure_name == FigureName.figure_1:
+    if figure_name == FigureName.figure_1:
         from .figure_1 import Figure1 as Figure
     elif figure_name == FigureName.figure_s1:
         from .figure_s1 import FigureS1 as Figure
@@ -30,10 +24,12 @@ def figure_content_loader(figure_name):
         from .figure_s5 import FigureS5 as Figure
     elif figure_name == FigureName.figure_s6:
         from .figure_s6 import FigureS6 as Figure
-    elif figure_name == FigureName.figure_s7:
-        from .figure_s7 import FigureS7 as Figure
     else:
-        raise ValueError()
-    # return raw_content_list
+        try:
+            from .other_test_figures import test_figure_content_loader
+        except ImportError:
+            raise ValueError()
+        else:
+            Figure = test_figure_content_loader(figure_name)
     return Figure()
 

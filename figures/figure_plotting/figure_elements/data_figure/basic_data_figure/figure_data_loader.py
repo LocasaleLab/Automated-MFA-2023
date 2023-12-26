@@ -1,35 +1,30 @@
-import numpy as np
-
-from common_and_plotting_functions.figure_data_format import FigureData
+from common_and_plotting_functions.figure_data_format import BasicFigureData
 from common_and_plotting_functions.core_plotting_functions import heatmap_and_box3d_parameter_preparation
 from common_and_plotting_functions.config import FigureDataKeywords
 
-from ..config import ParameterName, DataName, ModelDataSensitivityDataFigureConfig, Keywords
-
-
-class BasicFigureData(object):
-    data_prefix = None
-
-    def __init__(self):
-        self.figure_raw_data_dict = {}
-
-    def _return_figure_data(self, data_name):
-        if data_name in self.figure_raw_data_dict:
-            return self.figure_raw_data_dict[data_name]
-        else:
-            current_figure_data = FigureData(self.data_prefix, data_name).load_data()
-            self.figure_raw_data_dict[data_name] = current_figure_data
-            return current_figure_data
+from ..config import np, ParameterName, DataName, ModelDataSensitivityDataFigureConfig, Keywords
 
 
 class RawModelAnalysisFigureData(BasicFigureData):
     data_prefix = FigureDataKeywords.raw_model_distance
+    optimization_from_averaged_solutions_set = {
+        DataName.optimization_from_solutions_raw_data,
+        DataName.optimization_from_solutions_all_data,
+        DataName.optimization_from_solutions_batched_raw_data,
+        DataName.optimization_from_solutions_batched_all_data
+    }
+    optimization_from_batched_predefined_flux_set = {
+        DataName.optimization_from_batched_raw_data,
+        DataName.optimization_from_batched_all_data,
+        DataName.optimization_from_solutions_batched_raw_data,
+        DataName.optimization_from_solutions_batched_all_data
+    }
 
     def __init__(self):
         super().__init__()
         self.processed_data_dict = {}
 
-    def _figure_data_preprocess(self, data_name, figure_class, flux_name=None):
+    def _figure_data_preprocess(self, data_name, figure_class, flux_name=None, calculate_mean=True):
         target_items = None
         processed = False
         if data_name in self.processed_data_dict:
@@ -55,14 +50,89 @@ class RawModelAnalysisFigureData(BasicFigureData):
             if figure_class == ParameterName.loss_data:
                 max_loss_value = current_data_obj.max_loss_value
                 raw_loss_value_dict = current_data_obj.raw_loss_value_dict
+                if data_name in self.optimization_from_averaged_solutions_set:
+                    loss_of_initial_raw_selected_solutions_dict = current_data_obj.loss_of_initial_raw_selected_solutions_dict
+                    loss_of_initial_averaged_solutions_dict = current_data_obj.loss_of_initial_averaged_solutions_dict
+                    data_tuple = (
+                        loss_of_initial_raw_selected_solutions_dict,
+                        loss_of_initial_averaged_solutions_dict, raw_loss_value_dict)
+                else:
+                    loss_of_mean_solution_dict = current_data_obj.loss_of_mean_solution_dict
+                    data_tuple = (raw_loss_value_dict, loss_of_mean_solution_dict)
                 target_items = (
-                    raw_loss_value_dict, max_loss_value, analyzed_set_size_list,
+                    data_tuple, max_loss_value, analyzed_set_size_list,
                     selected_min_loss_size_list)
+            elif figure_class == ParameterName.raw_flux_diff_vector:
+                raw_selected_diff_vector_dict = current_data_obj.raw_selected_diff_vector_dict
+                flux_name_list = current_data_obj.common_flux_name_list
+                if data_name in self.optimization_from_averaged_solutions_set:
+                    initial_raw_selected_diff_vector_dict = current_data_obj.initial_raw_selected_diff_vector_dict
+                    initial_averaged_diff_vector_dict = current_data_obj.initial_averaged_diff_vector_dict
+                    data_tuple = (
+                        initial_raw_selected_diff_vector_dict,
+                        initial_averaged_diff_vector_dict, raw_selected_diff_vector_dict)
+                else:
+                    selected_averaged_diff_vector_dict = current_data_obj.selected_averaged_diff_vector_dict
+                    data_tuple = (raw_selected_diff_vector_dict, selected_averaged_diff_vector_dict)
+                target_items = (data_tuple, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list)
+            elif figure_class == ParameterName.flux_relative_distance and flux_name == ParameterName.all_flux:
+                all_selected_net_relative_error_dict = current_data_obj.net_all_selected_relative_error_dict
+                flux_name_list = current_data_obj.common_flux_name_list
+                if data_name in self.optimization_from_averaged_solutions_set:
+                    initial_raw_selected_relative_error_dict = current_data_obj.net_relative_error_of_initial_raw_selected_dict
+                    initial_averaged_relative_error_dict = current_data_obj.net_relative_error_of_initial_averaged_solutions_dict
+                    data_tuple = (
+                        initial_raw_selected_relative_error_dict,
+                        initial_averaged_relative_error_dict, all_selected_net_relative_error_dict)
+                else:
+                    selected_averaged_net_relative_error_dict = current_data_obj.net_selected_averaged_relative_error_dict
+                    data_tuple = (all_selected_net_relative_error_dict, selected_averaged_net_relative_error_dict)
+                target_items = (data_tuple, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list)
             else:
                 if figure_class == ParameterName.net_euclidean_distance:
-                    data_dict = current_data_obj.final_net_euclidian_distance_dict
-                    maximal_raw_euclidian_distance = current_data_obj.maximal_net_euclidian_distance
-                    scatter_y_lim_pair = (0, maximal_raw_euclidian_distance * 1.1)
+                    # data_dict = current_data_obj.final_net_euclidian_distance_dict
+                    maximal_euclidian_distance = current_data_obj.maximal_net_euclidian_distance
+                    all_distance_data_dict = current_data_obj.final_net_all_select_euclidian_distance_dict
+                    if data_name in self.optimization_from_averaged_solutions_set:
+                        net_euclidian_distance_of_initial_raw_selected_dict = (
+                            current_data_obj.net_euclidian_distance_of_initial_raw_selected_dict)
+                        net_euclidian_distance_of_initial_averaged_solutions_dict = (
+                            current_data_obj.net_euclidian_distance_of_initial_averaged_solutions_dict)
+                        data_dict = (
+                            net_euclidian_distance_of_initial_raw_selected_dict,
+                            net_euclidian_distance_of_initial_averaged_solutions_dict, all_distance_data_dict)
+                    else:
+                        distance_of_mean_data_dict = current_data_obj.final_net_euclidian_distance_dict
+                        data_dict = (all_distance_data_dict, distance_of_mean_data_dict)
+                    if data_name in self.optimization_from_batched_predefined_flux_set:
+                        net_distance_between_different_simulated_flux_dict = (
+                            current_data_obj.net_distance_between_different_simulated_flux_dict)
+                        data_dict = (net_distance_between_different_simulated_flux_dict, *data_dict)
+                    scatter_y_lim_pair = (0, maximal_euclidian_distance * 1.1)
+                    percentage = False
+                    # maximal_euclidian_distance = current_data_obj.maximal_net_euclidian_distance * 1.1
+                    # target_items = (
+                    #     (raw_distance_data_dict, distance_of_mean_data_dict), maximal_euclidian_distance,
+                    #     analyzed_set_size_list, selected_min_loss_size_list)
+                elif figure_class == ParameterName.raw_distance:
+                    maximal_euclidian_distance = current_data_obj.maximal_raw_euclidian_distance
+                    all_distance_data_dict = current_data_obj.final_raw_all_select_euclidian_distance_dict
+                    if data_name in self.optimization_from_averaged_solutions_set:
+                        euclidian_distance_of_initial_raw_selected_dict = (
+                            current_data_obj.raw_euclidian_distance_of_initial_raw_selected_dict)
+                        euclidian_distance_of_initial_averaged_solutions_dict = (
+                            current_data_obj.raw_euclidian_distance_of_initial_averaged_solutions_dict)
+                        data_dict = (
+                            euclidian_distance_of_initial_raw_selected_dict,
+                            euclidian_distance_of_initial_averaged_solutions_dict, all_distance_data_dict)
+                    else:
+                        distance_of_mean_data_dict = current_data_obj.final_raw_euclidian_distance_dict
+                        data_dict = (all_distance_data_dict, distance_of_mean_data_dict)
+                    if data_name in self.optimization_from_batched_predefined_flux_set:
+                        distance_between_different_simulated_flux_dict = (
+                            current_data_obj.raw_distance_between_different_simulated_flux_dict)
+                        data_dict = (distance_between_different_simulated_flux_dict, *data_dict)
+                    scatter_y_lim_pair = (0, maximal_euclidian_distance * 1.1)
                     percentage = False
                 elif figure_class == ParameterName.flux_absolute_distance:
                     data_dict = current_data_obj.final_flux_absolute_distance_dict[flux_name]
@@ -91,12 +161,20 @@ class RawModelAnalysisFigureData(BasicFigureData):
                         std_matrix.append(each_std_matrix)
                     heatmap_mean_lim_pair = None
                     std_value_text_format = mean_value_text_format = None
-                else:
+                elif calculate_mean:
+                    if isinstance(data_dict, tuple):
+                        mean_data_dict = data_dict[1]
+                    else:
+                        mean_data_dict = data_dict
                     (
                         mean_matrix, std_matrix, heatmap_mean_lim_pair,
-                        mean_value_text_format) = heatmap_and_box3d_parameter_preparation(data_dict, percentage)
+                        mean_value_text_format) = heatmap_and_box3d_parameter_preparation(mean_data_dict, percentage)
                     # std_value_text_format = HeatmapValueFormat.scientific_format
                     std_value_text_format = mean_value_text_format
+                else:
+                    mean_matrix = std_matrix = None
+                    heatmap_mean_lim_pair = (None, None)
+                    mean_value_text_format = std_value_text_format = ''
                 heatmap_std_lim_pair = (0, None)
                 target_items = (mean_matrix, heatmap_mean_lim_pair, mean_value_text_format), \
                     (std_matrix, heatmap_std_lim_pair, std_value_text_format), \
@@ -111,6 +189,13 @@ class RawModelAnalysisFigureData(BasicFigureData):
             selected_min_loss_size_list) = self._figure_data_preprocess(data_name, figure_class)
         return raw_loss_value_dict, max_loss_value, analyzed_set_size_list, \
             selected_min_loss_size_list
+
+    def return_diff_vector_data(self, data_name, **kwargs):
+        (
+            data_dict, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
+        ) = self._figure_data_preprocess(
+            data_name, figure_class=ParameterName.raw_flux_diff_vector)
+        return data_dict, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
 
     def return_heatmap_data(
             self, data_name, figure_class, flux_name=None, mean_or_std=ParameterName.mean, **kwargs):
@@ -127,11 +212,12 @@ class RawModelAnalysisFigureData(BasicFigureData):
 
     def return_scatter_data(self, data_name, figure_class, flux_name=None, **kwargs):
         (
-            *_, data_dict, scatter_y_lim_pair, x_label_index_dict, y_label_index_dict) = self._figure_data_preprocess(
-            data_name, figure_class, flux_name)
+            *_, data_dict, scatter_y_lim_pair,
+            x_label_index_dict, y_label_index_dict) = self._figure_data_preprocess(
+            data_name, figure_class, flux_name, calculate_mean=False)
         return data_dict, scatter_y_lim_pair, x_label_index_dict, y_label_index_dict
 
-    def return_all_flux_data(self, data_name, **kwargs):
+    def return_all_flux_data_old(self, data_name, **kwargs):
         (
             mean_parameter_list, std_parameter_list, analyzed_set_size_list, selected_min_loss_size_list,
             common_flux_name_list, *_) = self._figure_data_preprocess(
@@ -140,6 +226,13 @@ class RawModelAnalysisFigureData(BasicFigureData):
         std_data_matrix_list, *_ = std_parameter_list
         return mean_data_matrix_list, std_data_matrix_list, common_flux_name_list, analyzed_set_size_list, \
             selected_min_loss_size_list
+
+    def return_all_flux_data(self, data_name, **kwargs):
+        (
+            *_, data_dict, scatter_y_lim_pair,
+            x_label_index_dict, y_label_index_dict) = self._figure_data_preprocess(
+            data_name, figure_class=ParameterName.flux_relative_distance, flux_name=ParameterName.all_flux)
+        return data_dict, scatter_y_lim_pair, x_label_index_dict, y_label_index_dict
 
 
 raw_model_data = RawModelAnalysisFigureData()
@@ -253,6 +346,16 @@ class FluxComparisonFigureData(BasicFigureData):
     def __init__(self):
         super().__init__()
         self.processed_data_dict = {}
+        self.renal_carcinoma_data_set = {
+            DataName.renal_carcinoma_invivo_infusion,
+            DataName.renal_carcinoma_invivo_infusion_traditional_method,
+            DataName.renal_carcinoma_invivo_infusion_squared_loss
+        }
+        self.colon_cancer_data_set = {
+            DataName.colon_cancer_cell_line,
+            DataName.colon_cancer_cell_line_traditional_method,
+            DataName.colon_cancer_cell_line_squared_loss
+        }
 
     def _data_reader(self, data_name, comparison_name):
         data_obj = self._return_figure_data(data_name)
@@ -277,11 +380,11 @@ class FluxComparisonFigureData(BasicFigureData):
                 final_flux_data_dict = self._multiple_tumor_flux_comparison_data_preprocess()
                 scatter_line_figure = ParameterName.normal_scatter_figure
             elif (data_name == DataName.lung_tumor_invivo_infusion and comparison_name == 'human') or \
-                    (data_name == DataName.renal_carcinoma_invivo_infusion and comparison_name == 'tumor_vs_kidney'):
+                    (data_name in self.renal_carcinoma_data_set and comparison_name == 'tumor_vs_kidney'):
                 final_flux_data_dict = self._point_to_point_flux_comparison_data_preprocess(
                     data_name, comparison_name, mean, same_patient=True)
                 scatter_line_figure = ParameterName.scatter_line_figure
-            elif data_name == DataName.colon_cancer_cell_line:
+            elif data_name in self.colon_cancer_data_set:
                 final_flux_data_dict = self._point_to_point_flux_comparison_data_preprocess(
                     data_name, comparison_name, mean)
                 scatter_line_figure = ParameterName.colon_cancer_scatter_line_figure
@@ -429,18 +532,24 @@ class EmbeddedFluxData(BasicFigureData):
         self.processed_data_dict = {}
 
     def _figure_data_preprocess(self, data_name):
-        if data_name not in self.processed_data_dict:
+        if data_name in self.processed_data_dict:
+            content_tuple = self.processed_data_dict[data_name]
+        else:
             current_data_obj = self._return_figure_data(data_name)
             embedded_flux_data_dict = current_data_obj.embedded_flux_data_dict
             complete_distance_dict = current_data_obj.complete_distance_dict
             separated_distance_and_loss_dict = current_data_obj.separated_distance_and_loss_dict
-            self.processed_data_dict[data_name] = (
-                embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict)
-        else:
-            (
-                embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict
-            ) = self.processed_data_dict[data_name]
-        return embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict
+            flux_name_list = current_data_obj.flux_name_list
+            content_tuple = (
+                embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict, flux_name_list)
+            self.processed_data_dict[data_name] = content_tuple
+        return content_tuple
+        # if data_name not in self.processed_data_dict:
+        # else:
+        #     (
+        #         embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict
+        #     ) = self.processed_data_dict[data_name]
+        # return embedded_flux_data_dict, complete_distance_dict, separated_distance_and_loss_dict
 
     def return_data(self, data_name, **kwargs):
         return self._figure_data_preprocess(data_name)

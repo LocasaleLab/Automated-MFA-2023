@@ -1,5 +1,5 @@
 from ..config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, TextBox, \
-    CommonFigureString, default_parameter_extract, CommonFigureMaterials
+    CommonFigureString, default_parameter_extract, CommonFigureMaterials, CommonElementConfig
 from ..basic_data_figure.violin_box_data_figure import BasicViolinBoxDataFigure, \
     ExperimentalOptimizationLossComparisonBoxDataFigure
 
@@ -46,8 +46,9 @@ class ExperimentalOptimizationLossComparison(CompositeFigure):
         bottom_line = 0
 
         common_text_config_dict = {
-            ParameterName.font: DataFigureConfig.main_text_font,
-            ParameterName.z_order: DataFigureConfig.figure_text_z_order,
+            **CommonElementConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
+            # ParameterName.z_order: DataFigureConfig.figure_text_z_order,
             ParameterName.font_size: DataFigureConfig.GroupDataFigure.x_y_axis_label_font_size,
             ParameterName.font_weight: FontWeight.bold,
             ParameterName.text_box: False,

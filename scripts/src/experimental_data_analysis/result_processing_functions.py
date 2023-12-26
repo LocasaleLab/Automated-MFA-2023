@@ -1,16 +1,21 @@
 from scripts.src.common.classes import FinalResult
+from scripts.src.common.functions import net_flux_matrix_generator, calculate_raw_and_net_distance, \
+    special_result_label_converter, analyze_simulated_flux_value_dict
 from scripts.src.common.plotting_functions import group_violin_box_distribution_plot, group_bar_plot, \
     scatter_plot_for_simulated_result, FigurePlotting
-from scripts.src.common.config import Color, Direct, Keywords
-from scripts.src.common.third_party_packages import np, pd, manifold, decomposition
+from scripts.src.common.config import Color, Keywords, net_flux_list, random_seed
+from scripts.src.common.third_party_packages import np, manifold, decomposition
 from scripts.src.common.result_processing_functions import experimental_mid_prediction
+
+from scripts.data.simulated_data.simulated_data_loader import simulated_data_loader
 
 from common_and_plotting_functions.functions import check_and_mkdir_of_direct
 from common_and_plotting_functions.figure_data_format import FigureData
 from common_and_plotting_functions.config import FigureDataKeywords
 from common_and_plotting_functions.core_plotting_functions import cmap_mapper_generator, shape_category_list
 from ..common.result_processing_functions import loss_data_distribution_plotting, reconstruct_and_filter_data_dict, \
-    time_distribution_plotting, result_verification
+    time_distribution_plotting, result_verification, multiple_repeat_result_processing, \
+    traditional_method_result_selection
 from ..common.result_output_functions import output_raw_flux_data, output_predicted_mid_data
 
 from . import config
@@ -23,11 +28,11 @@ def initialize_figure_plotting():
     if figure_plotting is not None:
         return
     from figures.figure_plotting.common.config import ParameterName
-    from figures.figure_plotting.figure_elements.element_dict import element_dict, ElementName
-    figure_plotting = FigurePlotting(ParameterName, ElementName, element_dict)
+    from figures.figure_plotting.figure_elements.elements import Elements
+    figure_plotting = FigurePlotting(ParameterName, Elements)
 
 
-def result_label_generator(mfa_data, obj_threshold):
+def result_label_generator(mfa_data, obj_threshold=None):
     if obj_threshold == Keywords.unoptimized:
         return f'{mfa_data.data_name}__{Keywords.unoptimized}'
     else:
@@ -36,8 +41,11 @@ def result_label_generator(mfa_data, obj_threshold):
 
 class CurrentFinalResult(FinalResult):
     def __init__(
-            self, project_output_direct, common_data_output_direct, result_name, data_model_object):
-        super(CurrentFinalResult, self).__init__(project_output_direct, common_data_output_direct, result_name, None)
+            self, project_output_direct=config.Direct.output_direct,
+            common_data_output_direct=config.Direct.common_data_direct,
+            result_name=None, data_model_object=None):
+        super(CurrentFinalResult, self).__init__(
+            project_output_direct, common_data_output_direct, result_name)
         self.data_model_object = data_model_object
 
     def final_process(self, result_process_func, solver_dict):
@@ -55,11 +63,25 @@ def normal_result_process(final_result_obj, final_mapping_dict, solver_dict):
     final_flux_name_index_dict = final_result_obj.final_flux_name_index_dict
     final_target_experimental_mid_data_dict = final_result_obj.final_target_experimental_mid_data_dict
 
+    print(f'Result processing for {result_name}')
     if config.verify_result:
         result_verification(solver_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict)
+    loss_percentile = config.loss_percentile
+    if config.repeat_each_analyzed_set:
+        if result_name.value == 'lung_tumor_invivo_infusion':
+            repeat_time_each_analyzed_set = 3
+            optimization_num = 6666
+        else:
+            repeat_time_each_analyzed_set = config.repeat_time_each_analyzed_set
+            optimization_num = 20000
+        final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict = multiple_repeat_result_processing(
+            solver_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+            repeat_division_num=repeat_time_each_analyzed_set, each_optimization_num=optimization_num,
+            loss_percentile=loss_percentile)
+        loss_percentile = None
     subset_index_dict = loss_data_distribution_plotting(
         result_name, final_loss_data_dict,
-        output_direct=final_result_obj.this_result_output_direct, loss_percentile=config.loss_percentile)
+        output_direct=final_result_obj.this_result_output_direct, loss_percentile=loss_percentile)
     important_flux_display(
         result_name, final_solution_data_dict, final_mapping_dict,
         data_model_object, final_flux_name_index_dict,
@@ -96,7 +118,121 @@ def normal_result_process(final_result_obj, final_mapping_dict, solver_dict):
                 result_name, final_result_obj.flux_comparison_output_direct)
 
 
+def traditional_method_result_process(final_result_obj, final_mapping_dict, solver_dict):
+    data_model_object = final_result_obj.data_model_object
+    final_information_dict = final_result_obj.final_information_dict
+    result_name = final_result_obj.result_name
+    final_loss_data_dict = final_result_obj.final_loss_data_dict
+    final_solution_data_dict = final_result_obj.final_solution_data_dict
+    final_predicted_data_dict = final_result_obj.final_predicted_data_dict
+    final_flux_name_index_dict = final_result_obj.final_flux_name_index_dict
+
+    print(f'Result processing for {result_name}')
+    if config.traditional_repeat_each_analyzed_set:
+        (
+            final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict
+        ) = traditional_method_result_selection(
+            final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+            config.traditional_method_total_num,
+            repeat_time_each_analyzed_set=config.repeat_time_each_analyzed_set)
+    else:
+        (
+            final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict
+        ) = traditional_method_result_selection(
+            final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+            config.traditional_method_total_num, select_num=config.traditional_method_select_num)
+    subset_index_dict = loss_data_distribution_plotting(
+        result_name, final_loss_data_dict,
+        output_direct=final_result_obj.this_result_output_direct)
+    modified_final_mapping_dict = {
+        key: value[:-1] for key, value in final_mapping_dict.items()
+    }
+    important_flux_display(
+        result_name, final_solution_data_dict, modified_final_mapping_dict,
+        data_model_object, final_flux_name_index_dict,
+        final_result_obj.flux_comparison_output_direct, subset_index_dict=subset_index_dict)
+
+
 def hct116_result_process(final_result_obj, final_mapping_dict, solver_dict):
+    def return_target_data_dict(squared_loss=False):
+        if squared_loss:
+            target_mid_prediction_dict = squared_mid_prediction_dict
+            target_loss_data_dict = squared_loss_data_dict
+            target_solution_data_dict = squared_solution_data_dict
+            target_time_data_dict = squared_time_data_dict
+        else:
+            target_mid_prediction_dict = normal_mid_prediction_dict
+            target_loss_data_dict = normal_loss_data_dict
+            target_solution_data_dict = normal_solution_data_dict
+            target_time_data_dict = normal_time_data_dict
+        return target_loss_data_dict, target_solution_data_dict, target_mid_prediction_dict, target_time_data_dict
+
+    def filter_and_update_data_dicts(
+            input_data_label, output_class_label, output_mid_data_label, selected_num=None,
+            mid_prediction_selected_num=None, loss_evaluation_solver=None):
+        filtered_loss_data_array = raw_loss_data_dict[input_data_label]
+        filtered_solution_data_array = raw_solution_data_dict[input_data_label]
+        current_predicted_data_dict = raw_final_predicted_data_dict[input_data_label]
+        if input_data_label in raw_time_data_dict:
+            filtered_time_data_array = raw_time_data_dict[input_data_label]
+        else:
+            filtered_time_data_array = None
+        current_total_size = len(raw_loss_data_dict[input_data_label])
+        if selected_num is not None and selected_num < current_total_size:
+            random_index = random_seed.choice(current_total_size, selected_num, replace=False)
+            filtered_solution_data_array = filtered_solution_data_array[random_index, :]
+            filtered_loss_data_array = filtered_loss_data_array[random_index]
+            if filtered_time_data_array is not None:
+                filtered_time_data_array = filtered_time_data_array[random_index]
+        else:
+            random_index = None
+        if mid_prediction_selected_num is not None:
+            if random_index is not None:
+                if len(random_index) < mid_prediction_selected_num:
+                    raise ValueError()
+                elif len(random_index) > mid_prediction_selected_num:
+                    random_index = random_seed.choice(random_index, mid_prediction_selected_num, replace=False)
+            else:
+                random_index = random_seed.choice(current_total_size, mid_prediction_selected_num, replace=False)
+        filtered_predicted_data_dict = {}
+        for mid_title, current_predicted_data_array_list in current_predicted_data_dict.items():
+            current_predicted_data_array = np.array(current_predicted_data_array_list)
+            if random_index is not None:
+                current_predicted_data_array = current_predicted_data_array[random_index, :]
+            filtered_predicted_data_dict[mid_title] = current_predicted_data_array
+        (
+            target_loss_data_dict, target_solution_data_dict, target_mid_prediction_dict, target_time_data_dict
+        ) = return_target_data_dict(loss_evaluation_solver is not None)
+        target_mid_prediction_dict[output_class_label] = {output_mid_data_label: filtered_predicted_data_dict}
+        target_loss_data_dict[output_class_label] = filtered_loss_data_array
+        target_solution_data_dict[output_class_label] = filtered_solution_data_array
+        if filtered_time_data_array is not None:
+            target_time_data_dict[output_class_label] = filtered_time_data_array / parallel_num
+
+    def load_and_save_previous_result(
+            input_data_label, output_class_label, loss_evaluation_solver=None):
+        (
+            input_loss_data_dict, input_solution_data_dict, input_mid_prediction_dict, input_time_data_dict
+        ) = return_target_data_dict(False)
+        (
+            target_loss_data_dict, target_solution_data_dict, target_mid_prediction_dict, target_time_data_dict
+        ) = return_target_data_dict(loss_evaluation_solver is not None)
+        target_mid_prediction_dict[output_class_label] = {
+            output_class_label: input_mid_prediction_dict[input_data_label]}
+        input_solution_data_array = input_solution_data_dict[input_data_label]
+        target_solution_data_dict[output_class_label] = input_solution_data_array
+        if loss_evaluation_solver is not None:
+            loss_value_list = []
+            for flux_vector in input_solution_data_array:
+                current_loss = loss_evaluation_solver.obj_eval(flux_vector)
+                loss_value_list.append(current_loss)
+            output_loss_data_array = np.array(loss_value_list)
+        else:
+            output_loss_data_array = input_loss_data_dict[input_data_label]
+        target_loss_data_dict[output_class_label] = output_loss_data_array
+        if input_data_label in input_time_data_dict:
+            target_time_data_dict[output_class_label] = input_time_data_dict[input_data_label]
+
     optimized_num_for_analysis = 400
     unoptimized_num_for_mid_prediction = 400
     # unoptimized_num_for_embedding = 500
@@ -112,68 +248,86 @@ def hct116_result_process(final_result_obj, final_mapping_dict, solver_dict):
     raw_loss_data_dict = final_result_obj.final_loss_data_dict
     raw_solution_data_dict = final_result_obj.final_solution_data_dict
     raw_time_data_dict = final_result_obj.final_time_data_dict
-    mid_prediction_dict = {}
-    loss_data_dict = {}
-    solution_data_dict = {}
-    time_data_dict = {}
-    flux_name_index_dict = None
+    simulated_flux_value_dict, *_ = simulated_data_loader()
+    loaded_result_label_dict = {}
+    normal_mid_prediction_dict = {}
+    normal_loss_data_dict = {}
+    normal_solution_data_dict = {}
+    normal_time_data_dict = {}
+    squared_mid_prediction_dict = {}
+    squared_solution_data_dict = {}
+    squared_loss_data_dict = {}
+    squared_time_data_dict = {}
+    common_flux_name_index_dict = None
     for result_label, (
-            experiments_key, condition_key, repeat_index, unoptimized_result_label) in final_mapping_dict.items():
-        if unoptimized_result_label is not None:
-            total_size = len(raw_loss_data_dict[unoptimized_result_label])
-            random_unoptimized_index = np.random.choice(total_size, unoptimized_num_for_mid_prediction, replace=False)
-            current_predicted_data_dict = raw_final_predicted_data_dict[unoptimized_result_label]
-            filtered_predicted_data_dict = {}
-            for mid_title, current_predicted_data_array_list in current_predicted_data_dict.items():
-                filtered_predicted_data_dict[mid_title] = np.array(current_predicted_data_array_list)[
-                    random_unoptimized_index, :]
-            mid_prediction_dict[Keywords.unoptimized] = {result_label: filtered_predicted_data_dict}
-            loss_data_dict[Keywords.unoptimized] = raw_loss_data_dict[unoptimized_result_label]
-            solution_data_dict[Keywords.unoptimized] = raw_solution_data_dict[unoptimized_result_label]
-        total_size = len(raw_loss_data_dict[result_label])
-        if total_size > optimized_num_for_analysis:
-            random_optimized_index = np.random.choice(total_size, optimized_num_for_analysis, replace=False)
-            filtered_predicted_data_dict = {}
-            for mid_title, current_predicted_data_array_list in raw_final_predicted_data_dict[result_label].items():
-                filtered_predicted_data_dict[mid_title] = np.array(current_predicted_data_array_list)[
-                    random_optimized_index, :]
-            filtered_loss_data = raw_loss_data_dict[result_label][random_optimized_index]
-            filtered_solution_data = raw_solution_data_dict[result_label][random_optimized_index, :]
-            filtered_time_data = raw_time_data_dict[result_label][random_optimized_index]
+            experiments_key, condition_key, repeat_index, unoptimized_label, squared_loss_label
+    ) in final_mapping_dict.items():
+        if result_label in loaded_result_label_dict:
+            continue
+        loss_evaluation_solver = None
+        if unoptimized_label is not None:
+            unoptimized_result_label = result_label
+            optimized_result_label = special_result_label_converter(result_label, Keywords.unoptimized, decipher=True)
+
+            filter_and_update_data_dicts(
+                unoptimized_result_label, Keywords.unoptimized, optimized_result_label, selected_num=None,
+                mid_prediction_selected_num=unoptimized_num_for_mid_prediction)
+            loaded_result_label_dict[unoptimized_result_label] = None
+        elif squared_loss_label is not None:
+            optimized_result_label = result_label
+            raw_result_label = special_result_label_converter(result_label, Keywords.squared_loss, decipher=True)
+            unoptimized_result_label = special_result_label_converter(raw_result_label, Keywords.unoptimized)
+            loss_evaluation_solver = solver_dict[result_label]
+            load_and_save_previous_result(
+                Keywords.unoptimized, Keywords.unoptimized, loss_evaluation_solver)
         else:
-            filtered_predicted_data_dict = raw_final_predicted_data_dict[result_label]
-            filtered_loss_data = raw_loss_data_dict[result_label]
-            filtered_solution_data = raw_solution_data_dict[result_label]
-            filtered_time_data = raw_time_data_dict[result_label]
-        mid_prediction_dict[Keywords.optimized] = {result_label: filtered_predicted_data_dict}
-        loss_data_dict[Keywords.optimized] = filtered_loss_data
-        solution_data_dict[Keywords.optimized] = filtered_solution_data
-        current_time_data_array = filtered_time_data
-        time_data_dict[Keywords.optimized] = current_time_data_array / parallel_num
-        if flux_name_index_dict is None:
-            flux_name_index_dict = final_result_obj.final_flux_name_index_dict[result_label]
+            optimized_result_label = result_label
+            unoptimized_result_label = special_result_label_converter(optimized_result_label, Keywords.unoptimized)
+
+        if optimized_result_label not in loaded_result_label_dict:
+            filter_and_update_data_dicts(
+                optimized_result_label, Keywords.optimized, optimized_result_label,
+                selected_num=optimized_num_for_analysis, loss_evaluation_solver=loss_evaluation_solver)
+            loaded_result_label_dict[optimized_result_label] = None
+        # if unoptimized_result_label not in loaded_result_label_dict:
+        #     filter_and_update_data_dicts(
+        #         unoptimized_result_label, Keywords.unoptimized, optimized_result_label, selected_num=None,
+        #         mid_prediction_selected_num=unoptimized_num_for_mid_prediction,
+        #         loss_evaluation_solver=loss_evaluation_solver)
+        #     loaded_result_label_dict[unoptimized_result_label] = None
+
+        if common_flux_name_index_dict is None:
+            common_flux_name_index_dict = final_result_obj.final_flux_name_index_dict[optimized_result_label]
+        else:
+            new_flux_name_index_dict = final_result_obj.final_flux_name_index_dict[optimized_result_label]
+            assert len(new_flux_name_index_dict) == len(common_flux_name_index_dict)
     if config.verify_result:
         result_verification(solver_dict, raw_solution_data_dict, raw_loss_data_dict, raw_final_predicted_data_dict)
-    # time_distribution_plotting(
-    #     result_name, time_data_dict, final_result_obj.this_result_output_direct)
-    # experimental_mid_prediction(
-    #     result_name, mid_prediction_dict,
-    #     final_result_obj.final_target_experimental_mid_data_dict, final_result_obj.mid_prediction_output_direct)
-    # loss_data_distribution_plotting(
-    #     result_name, loss_data_dict, final_result_obj.this_result_output_direct)
-    # best_solution_generator(
-    #     result_name, loss_data_dict[Keywords.optimized], solution_data_dict[Keywords.optimized],
-    #     flux_name_index_dict)
-    # output_predicted_mid_data(
-    #     final_result_obj.mid_prediction_result_output_xlsx_path, raw_loss_data_dict, raw_final_predicted_data_dict,
-    #     final_result_obj.final_target_experimental_mid_data_dict, final_information_dict, subset_index_dict=None)
-    # output_raw_flux_data(
-    #     final_result_obj.flux_result_output_xlsx_path, raw_loss_data_dict,
-    #     raw_solution_data_dict, final_result_obj.final_flux_name_index_dict,
-    #     final_information_dict, subset_index_dict=None, other_label_column_dict=None)
+    time_distribution_plotting(
+        result_name, normal_time_data_dict, final_result_obj.this_result_output_direct)
+    experimental_mid_prediction(
+        result_name, normal_mid_prediction_dict,
+        final_result_obj.final_target_experimental_mid_data_dict, final_result_obj.mid_prediction_output_direct)
+    loss_data_distribution_plotting(
+        result_name, normal_loss_data_dict, final_result_obj.this_result_output_direct)
+    best_solution_generator(
+        result_name, normal_loss_data_dict[Keywords.optimized], normal_solution_data_dict[Keywords.optimized],
+        common_flux_name_index_dict)
+    output_predicted_mid_data(
+        final_result_obj.mid_prediction_result_output_xlsx_path, raw_loss_data_dict, raw_final_predicted_data_dict,
+        final_result_obj.final_target_experimental_mid_data_dict, final_information_dict, subset_index_dict=None)
+    output_raw_flux_data(
+        final_result_obj.flux_result_output_xlsx_path, raw_loss_data_dict,
+        raw_solution_data_dict, final_result_obj.final_flux_name_index_dict,
+        final_information_dict, subset_index_dict=None, other_label_column_dict=None)
     solution_embedding_and_visualization(
-        result_name, solution_data_dict, loss_data_dict, final_result_obj.this_result_output_direct,
+        result_name, normal_solution_data_dict, normal_loss_data_dict, final_result_obj.this_result_output_direct,
+        common_flux_name_index_dict, simulated_flux_value_dict,
         optimized_num_for_embedding, unoptimized_num_for_embedding)
+    solution_embedding_and_visualization(
+        result_name, squared_solution_data_dict, squared_loss_data_dict, final_result_obj.this_result_output_direct,
+        common_flux_name_index_dict, simulated_flux_value_dict,
+        optimized_num_for_embedding, unoptimized_num_for_embedding, squared_loss=True)
 
 
 def best_solution_generator(result_name, loss_data_vector, solution_data_matrix, flux_name_index_dict):
@@ -186,27 +340,65 @@ def best_solution_generator(result_name, loss_data_vector, solution_data_matrix,
 
 
 def solution_embedding_and_visualization(
-        result_name, solution_data_dict, loss_data_dict, output_direct, optimized_embedding_num=None,
-        unoptimized_embedding_num=None):
+        result_name, solution_data_dict, loss_data_dict, output_direct, common_flux_name_index_dict,
+        simulated_flux_value_dict, optimized_embedding_num=None, unoptimized_embedding_num=None, squared_loss=False):
     def calculate_distance_between_best_solutions_and_random_fluxes(
             optimized_flux_solution, optimized_loss_array, unoptimized_flux_solution, unoptimized_loss_array):
         # num_of_optimized_solutions = 5
         num_of_optimized_solutions = 400
         best_flux_solution = optimized_flux_solution[0, :]
+        # vertical_best_flux_solution = net_flux_matrix @ best_flux_solution.reshape([-1, 1])
         target_optimized_flux_solution = optimized_flux_solution[:num_of_optimized_solutions, :]
         target_optimized_loss_array = optimized_loss_array[:num_of_optimized_solutions]
-        distance_to_optimized_flux_solution = np.linalg.norm(
-            best_flux_solution - target_optimized_flux_solution, axis=1)
-        distance_to_unoptimized_flux_solution = np.linalg.norm(
-            best_flux_solution - unoptimized_flux_solution, axis=1)
+        # difference_vector_to_optimized_flux_solution = target_optimized_flux_solution - best_flux_solution
+        # difference_vector_to_unoptimized_flux_solution = unoptimized_flux_solution - best_flux_solution
+        # distance_to_optimized_flux_solution = np.linalg.norm(
+        #     difference_vector_to_optimized_flux_solution, axis=1)
+        # distance_to_unoptimized_flux_solution = np.linalg.norm(
+        #     difference_vector_to_unoptimized_flux_solution, axis=1)
+        # distance_to_optimized_flux_solution = np.linalg.norm(
+        #     best_flux_solution - target_optimized_flux_solution, axis=1)
+        # distance_to_unoptimized_flux_solution = np.linalg.norm(
+        #     best_flux_solution - unoptimized_flux_solution, axis=1)
+        # return {
+        #     Keywords.optimized: (
+        #         difference_vector_to_optimized_flux_solution, distance_to_optimized_flux_solution,
+        #         target_optimized_loss_array),
+        #     Keywords.unoptimized: (
+        #         difference_vector_to_unoptimized_flux_solution, distance_to_unoptimized_flux_solution,
+        #         unoptimized_loss_array)
+        # }
+        core_best_flux_solution = best_flux_solution[normal_core_flux_index_array]
+        vertical_net_best_flux_solution = net_flux_matrix @ best_flux_solution.reshape([-1, 1])
+        (
+            raw_target_optimized_distance, raw_target_optimized_diff_vector,
+            filtered_net_target_optimized_distance, filtered_net_target_optimized_diff_vector
+        ) = calculate_raw_and_net_distance(
+            target_optimized_flux_solution, net_flux_matrix, core_best_flux_solution,
+            reduced=False, vertical_net_target_flux_vector=vertical_net_best_flux_solution,
+            core_flux_index_array=normal_core_flux_index_array)
+        (
+            raw_unoptimized_distance, raw_unoptimized_diff_vector,
+            filtered_net_unoptimized_distance, filtered_net_unoptimized_diff_vector
+        ) = calculate_raw_and_net_distance(
+            unoptimized_flux_solution, net_flux_matrix, core_best_flux_solution,
+            reduced=False, vertical_net_target_flux_vector=vertical_net_best_flux_solution,
+            core_flux_index_array=normal_core_flux_index_array)
         return {
-            Keywords.optimized: (distance_to_optimized_flux_solution, target_optimized_loss_array),
-            Keywords.unoptimized: (distance_to_unoptimized_flux_solution, unoptimized_loss_array)
+            Keywords.optimized: (
+                filtered_net_target_optimized_diff_vector, raw_target_optimized_distance,
+                filtered_net_target_optimized_distance, target_optimized_loss_array),
+            Keywords.unoptimized: (
+                filtered_net_unoptimized_diff_vector, raw_unoptimized_distance,
+                filtered_net_unoptimized_distance, unoptimized_loss_array)
         }
 
     min_value = None
     max_value = 8
     cmap = 'copper'
+
+    if squared_loss:
+        result_name = f'{result_name}_{Keywords.squared_loss}'
 
     embedding_solution_index_dict = {}
     if optimized_embedding_num is None:
@@ -223,6 +415,10 @@ def solution_embedding_and_visualization(
                 len(loss_data_dict[Keywords.unoptimized]), unoptimized_embedding_num, replace=False)}
         )
 
+    # net_flux_matrix, flux_name_list, _, filtered_solution_flux_index = net_flux_matrix_generator(
+    #     net_flux_list, common_flux_name_index_dict, simulated_flux_value_dict)
+    *_, formal_flux_name_list, net_flux_matrix, normal_core_flux_index_array = analyze_simulated_flux_value_dict(
+        simulated_flux_value_dict, net_flux_list, normal_flux_name_index_dict=common_flux_name_index_dict)
     scatter_data_dict = {}
     size_dict = {Keywords.optimized: 10, Keywords.unoptimized: 3}
     new_loss_data_dict = {}
@@ -259,6 +455,7 @@ def solution_embedding_and_visualization(
         complete_solution_data_list.append(solution_data_array)
         scatter_data_dict[result_label] = (
             color_array, size_dict[result_label], shape_category_list[index])
+
     complete_solution_data_array = np.vstack(complete_solution_data_list)
     embedded_flux_matrix = learn_obj.fit_transform(complete_solution_data_array)
     embedded_flux_data_dict = {}
@@ -266,15 +463,18 @@ def solution_embedding_and_visualization(
         current_embedded_flux_matrix = embedded_flux_matrix[start:end]
         embedded_flux_data_dict[result_label] = current_embedded_flux_matrix
         scatter_data_dict[result_label] = (current_embedded_flux_matrix, *scatter_data_dict[result_label])
-    scatter_plot_for_simulated_result(scatter_data_dict, output_direct=output_direct, color_mapper=color_mapper)
     separated_distance_and_loss_dict = calculate_distance_between_best_solutions_and_random_fluxes(
         filtered_solution_data_dict[Keywords.optimized], filtered_loss_data_dict[Keywords.optimized],
         filtered_solution_data_dict[Keywords.unoptimized], filtered_loss_data_dict[Keywords.unoptimized])
+    if not squared_loss:
+        scatter_plot_for_simulated_result(scatter_data_dict, output_direct=output_direct, color_mapper=color_mapper)
+
     embedding_visualization_raw_data = FigureData(FigureDataKeywords.embedding_visualization, result_name)
     embedding_visualization_raw_data.save_data(
         embedded_flux_data_dict=embedded_flux_data_dict,
         complete_distance_dict=complete_distance_dict,
         separated_distance_and_loss_dict=separated_distance_and_loss_dict,
+        flux_name_list=formal_flux_name_list,
     )
 
 

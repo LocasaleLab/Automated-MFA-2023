@@ -3,10 +3,87 @@ from common_and_plotting_functions.figure_data_format import FigureData
 from common_and_plotting_functions.config import FigureDataKeywords
 
 from .third_party_packages import np
-from .plotting_functions import group_violin_box_distribution_plot, group_bar_plot
-from .config import Keywords
+from .plotting_functions import group_violin_box_distribution_plot, group_bar_plot, multi_row_col_bar_plot
+from .config import Keywords, Color, random_seed
+from .functions import mid_name_process, add_empty_obj
 
-from scripts.src.core.solver.solver_construction_functions.solver_constructor import common_solver_constructor
+
+def experimental_data_plotting_func_template(
+        target_emu_name_nested_list, major_minor_key_analysis_func,
+        major_key_file_name_func=lambda major_key: f'target_metabolites_{major_key}_labeling'):
+    def sort_dict_and_remove_sorting_index(raw_dict):
+        ordered_list = list(raw_dict.items())
+        ordered_list.sort(key=lambda x: x[1][0])
+        new_dict = {}
+        for key, (value_index, value) in ordered_list:
+            new_dict[key] = value
+        return new_dict
+
+    def convert_tmp_data_to_final_data_dict(tmp_data_dict):
+        final_data_dict = {}
+        for major_key, each_major_key_tmp_data_dict in tmp_data_dict.items():
+            final_data_dict[major_key] = {}
+            for metabolite_name, each_metabolite_data_dict in each_major_key_tmp_data_dict.items():
+                final_data_dict[major_key][metabolite_name] = sort_dict_and_remove_sorting_index(
+                    each_metabolite_data_dict)
+        return final_data_dict
+
+    def experimental_data_plotting(
+            complete_experimental_mid_data_obj_dict, complete_result_information_dict, output_direct):
+        tmp_mid_data_dict = {}
+        tmp_raw_data_dict = {}
+        color_dict = {}
+        for result_label, experimental_mid_data_obj_dict in complete_experimental_mid_data_obj_dict.items():
+            result_information_dict = complete_result_information_dict[result_label]
+            major_key, minor_key_list, minor_key_str, current_color, order_index = major_minor_key_analysis_func(
+                result_information_dict)
+            if minor_key_list[-1] == Keywords.average:
+                continue
+            for metabolite_name, mid_data_obj in experimental_mid_data_obj_dict.items():
+                current_tmp_mid_data_dict = add_empty_obj(tmp_mid_data_dict, dict, major_key, metabolite_name)
+                current_tmp_raw_data_dict = add_empty_obj(tmp_raw_data_dict, dict, major_key, metabolite_name)
+                current_tmp_mid_data_dict[minor_key_str] = (order_index, mid_data_obj.data_vector)
+                current_tmp_raw_data_dict[minor_key_str] = (order_index, mid_data_obj.raw_data_vector)
+                if minor_key_str not in color_dict:
+                    color_dict[minor_key_str] = current_color
+        mid_data_dict_for_plotting = convert_tmp_data_to_final_data_dict(tmp_mid_data_dict)
+        raw_data_dict_for_plotting = convert_tmp_data_to_final_data_dict(tmp_raw_data_dict)
+
+        target_row_num = len(target_emu_name_nested_list)
+        target_col_num = len(target_emu_name_nested_list[0])
+        for major_key, each_labeling_mid_data_dict_for_plotting in mid_data_dict_for_plotting.items():
+            each_labeling_raw_data_dict_for_plotting = raw_data_dict_for_plotting[major_key]
+            for raw_data in (False, True):
+                if raw_data:
+                    parent_direct = 'raw_data'
+                    complete_data_dict = each_labeling_raw_data_dict_for_plotting
+                    ylim = (0, None)
+                else:
+                    parent_direct = 'mid_data'
+                    complete_data_dict = each_labeling_mid_data_dict_for_plotting
+                    ylim = (0, 1)
+                current_title = major_key_file_name_func(major_key)
+                current_cell_line_output_direct = '{}/{}'.format(output_direct, parent_direct)
+                check_and_mkdir_of_direct(current_cell_line_output_direct)
+                multi_row_col_bar_plot(
+                    complete_data_dict, target_emu_name_nested_list, target_row_num, target_col_num,
+                    error_bar_data_dict=None, color_dict=color_dict, title_dict=None,
+                    output_direct=current_cell_line_output_direct, current_title=current_title, ylim=ylim,
+                    xlabel_list=None, figsize=None, legend=False)
+
+    return experimental_data_plotting
+
+
+def select_solutions(loss_array, loss_percentile=None, select_num=None, index_start=0):
+    index_array = np.argsort(loss_array)
+    total_num = loss_array.shape[0]
+    target_num = total_num
+    if loss_percentile is not None:
+        target_num = int(loss_percentile * total_num + 0.9999)
+    elif select_num is not None:
+        target_num = select_num
+    filtered_index = index_array[:target_num]
+    return filtered_index + index_start
 
 
 def time_distribution_plotting(
@@ -36,14 +113,7 @@ def loss_data_distribution_plotting(
         subset_index_dict = {}
         filtered_loss_data_dict = {}
         for result_label, loss_array in loss_data_dict.items():
-            index_array = np.argsort(loss_array)
-            total_num = loss_array.shape[0]
-            target_num = total_num
-            if loss_percentile is not None:
-                target_num = int(loss_percentile * total_num + 0.9999)
-            elif select_num is not None:
-                target_num = select_num
-            filtered_index = index_array[:target_num]
+            filtered_index = select_solutions(loss_array, loss_percentile, select_num)
             subset_index_dict[result_label] = filtered_index
             filtered_loss_data_dict[result_label] = loss_array[filtered_index]
         if output_direct is not None:
@@ -61,6 +131,21 @@ def loss_data_distribution_plotting(
             loss_data_dict=loss_data_dict,
             filtered_loss_data_dict=filtered_loss_data_dict)
     return subset_index_dict
+
+
+def mid_name_list_generator_for_multiple_labeling_substrate(raw_metabolite_list, labeling_substrate_name_list):
+    final_metabolite_list = []
+    for labeling_substrate_name in labeling_substrate_name_list:
+        for raw_metabolite_row in raw_metabolite_list:
+            combined_metabolite_row = []
+            for raw_metabolite_name in raw_metabolite_row:
+                if raw_metabolite_name is None:
+                    combined_metabolite_name = None
+                else:
+                    combined_metabolite_name = f'{labeling_substrate_name}_{raw_metabolite_name}'
+                combined_metabolite_row.append(combined_metabolite_name)
+            final_metabolite_list.append(combined_metabolite_row)
+    return final_metabolite_list
 
 
 def experimental_mid_prediction(
@@ -209,3 +294,98 @@ def result_verification(solver_dict, final_solution_data_dict, final_loss_data_d
             calculated_predicted_mid_list.append(calculated_mid_data_dict)
             pass
 
+
+def multiple_repeat_result_processing(
+        solver_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_mid_data_dict,
+        repeat_division_num=1, each_optimization_num=None, loss_percentile=None, select_num=None):
+    def index_start_end_generator(total_num, batch_num, optimization_num, start_index=0):
+        if optimization_num is not None:
+            base_num = optimization_num
+            if batch_num is None:
+                batch_num = total_num // base_num
+        else:
+            base_num = total_num // batch_num
+        remainder = total_num % base_num
+        size_list = [base_num] * batch_num
+        current_start_index = start_index
+        for current_size in size_list:
+            current_end_index = current_start_index + current_size
+            yield current_start_index, current_end_index
+            current_start_index = current_end_index
+
+    new_loss_data_dict = {}
+    new_final_solution_data_dict = {}
+    new_final_predicted_mid_data_dict = {}
+
+    for result_label, loss_array in final_loss_data_dict.items():
+        if isinstance(repeat_division_num, dict):
+            this_result_repeat_division = repeat_division_num[result_label]
+        elif isinstance(repeat_division_num, int):
+            this_result_repeat_division = repeat_division_num
+        elif repeat_division_num is None:
+            this_result_repeat_division = None
+        else:
+            raise TypeError
+        if isinstance(each_optimization_num, dict):
+            this_result_optimization_num = each_optimization_num[result_label]
+        elif isinstance(each_optimization_num, int):
+            this_result_optimization_num = each_optimization_num
+        elif each_optimization_num is None:
+            this_result_optimization_num = None
+        else:
+            raise TypeError
+        solver_obj = solver_dict[result_label]
+        solution_array = final_solution_data_dict[result_label]
+        predicted_mid_data_dict = final_predicted_mid_data_dict[result_label]
+        new_loss_list = []
+        new_solution_list = []
+        new_mid_data_dict = {}
+        total_solution_num = len(loss_array)
+        for index_start, index_end in index_start_end_generator(
+                total_solution_num, this_result_repeat_division, this_result_optimization_num):
+            this_repeat_loss_array = loss_array[index_start:index_end]
+            filtered_index = select_solutions(this_repeat_loss_array, loss_percentile, select_num, index_start)
+            mean_solution_array = np.mean(solution_array[filtered_index, :], 0)
+            calculated_loss = solver_obj.obj_eval(mean_solution_array)
+            calculated_mid_data_dict = solver_obj.predict(mean_solution_array)
+            new_solution_list.append(mean_solution_array)
+            new_loss_list.append(calculated_loss)
+            for mid_title, predicted_mid_array in calculated_mid_data_dict.items():
+                processed_mid_title = mid_name_process(mid_title)
+                if processed_mid_title not in new_mid_data_dict:
+                    new_mid_data_dict[processed_mid_title] = []
+                new_mid_data_dict[processed_mid_title].append(predicted_mid_array)
+        new_loss_data_dict[result_label] = np.array(new_loss_list)
+        new_final_solution_data_dict[result_label] = np.array(new_solution_list)
+        new_final_predicted_mid_data_dict[result_label] = new_mid_data_dict
+
+    return new_final_solution_data_dict, new_loss_data_dict, new_final_predicted_mid_data_dict
+
+
+def traditional_method_result_selection(
+        final_solution_data_dict, final_loss_data_dict, final_predicted_mid_data_dict, each_case_result_num,
+        repeat_time_each_analyzed_set=1, select_num=1):
+    new_loss_data_dict = {}
+    new_final_solution_data_dict = {}
+    new_final_predicted_mid_data_dict = {}
+    total_selected_num_in_all_repeat = each_case_result_num * repeat_time_each_analyzed_set
+    for result_label, loss_array in final_loss_data_dict.items():
+        total_solution_num = len(loss_array)
+        solution_array = final_solution_data_dict[result_label]
+        predicted_mid_data_dict = final_predicted_mid_data_dict[result_label]
+        all_random_selected_index_array = random_seed.choice(total_solution_num, total_selected_num_in_all_repeat)
+        filtered_index_list = []
+        for repeat_index in range(repeat_time_each_analyzed_set):
+            current_random_selected_index = all_random_selected_index_array[
+                repeat_index * each_case_result_num:repeat_index * each_case_result_num + each_case_result_num]
+            filtered_local_index = select_solutions(loss_array[current_random_selected_index], select_num=select_num)
+            filtered_index_list.extend(current_random_selected_index[filtered_local_index])
+        filtered_index = np.array(filtered_index_list)
+        new_loss_data_dict[result_label] = loss_array[filtered_index]
+        new_final_solution_data_dict[result_label] = solution_array[filtered_index, :]
+        new_mid_data_dict = {}
+        for mid_title, predicted_mid_array in predicted_mid_data_dict.items():
+            processed_mid_title = mid_name_process(mid_title)
+            new_mid_data_dict[processed_mid_title] = [predicted_mid_array[index_i] for index_i in filtered_index]
+        new_final_predicted_mid_data_dict[result_label] = new_mid_data_dict
+    return new_final_solution_data_dict, new_loss_data_dict, new_final_predicted_mid_data_dict

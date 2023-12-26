@@ -1,7 +1,5 @@
-import numpy as np
-
 from .classes import Vector, VerticalAlignment, HorizontalAlignment, FontWeight
-from .config import Keywords, ParameterName, DataName
+from .config import Keywords, ParameterName, DataName, np
 from .color import ColorConfig, ZOrderConfig, TextConfig
 # from ..figure_elements.metabolic_network.config import network_height_to_width_ratio
 
@@ -53,8 +51,6 @@ class CommonElementConfig(object):
 
     common_text_config = {
         ParameterName.font: TextConfig.main_text_font,
-        ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
-        ParameterName.horizontal_alignment: HorizontalAlignment.center,
         ParameterName.z_order: ZOrderConfig.default_text_z_order,
     }
 
@@ -93,23 +89,74 @@ class CommonFigureString(object):
     mean = 'Mean'
     std = 'STD'
 
+    random_solutions = 'Random solutions'
+    optimized_solution = 'Optimized solutions'
+    optimized_solution_wrap = 'Optimized\nsolutions'
+    best_optimized_solution = 'Best optimized solution'
+    global_optimum = 'Global optimal point'
+    local_optimum = 'Local optimal point'
+    random_point = 'Random point'
+    selected_solution = 'Selected solutions'
+    selected_solution_wrap = 'Selected\nsolutions'
+    averaged_solution = 'Averaged solutions'
+    averaged_solution_wrap = 'Averaged\nsolutions'
+    reoptimized_solution = 'Re-optimized solutions'
+    reoptimized_solution_wrap = 'Re-optimized\nsolutions'
+    different_simulated_solution_distance_wrap = 'Distance between\nsimulated solutions'
+
+    best = 'Best'
+    number = 'No.'
+    top = 'Top'
+    random_fluxes = 'Random fluxes'
+    random_fluxes_wrap = 'Random\nfluxes'
+    difference = 'Difference'
+    difference_from_best_optimized_solution = 'Difference from the best optimized solution'
+    difference_from_known_flux = 'Difference from the predefined flux'
+    relative_error_to_known_flux = 'Relative error from the predefined flux'
+
     initial_points = f'${math_n}$ initial points'
     n_optimized_solutions = f'${math_n}$ optimized solutions'
     m_selected_solutions = f'${math_m}$ selected solutions'
     best_solution = r'Best solution'
 
+    complete_data = 'Complete data'
     experimental_available_mid_data = 'Experimentally-available MID data'
+    experimental_available_mid_data_wrap2 = 'Experimentally-available\nMID data'
     experimental_available_mid_data_wrap = 'Experimentally\navailable MID data'
     experimental_available_mid_data_double_wrap = 'Experimentally\navailable\nMID data'
     all_available_mid_data = 'All-available MID data'
     all_available_compartmental_data = 'All available compartmental MID data'
     all_available_compartmental_data_wrap = 'All available\ncompartmental MID data'
     all_available_compartmental_data_double_wrap = 'All available\ncompartmental\nMID data'
+    all_compartmentalized_data_wrap = 'Compartmentalized MIDs\nof all metabolites'
+    all_compartmentalized_data = 'Compartmentalized MIDs of all metabolites'
+    performance_metric = 'Performance metrics'
+    in_all_data = 'in all-available MID dataset'
+    in_raw_data = 'in experimentally-available MID dataset'
+    experimental_compartmentalized_data = 'Compartmentalized MIDs of common metabolites'
+    experimental_compartmentalized_data_wrap = 'Compartmentalized MIDs\nof common metabolites'
+    experimental_mixed_data = 'Mixed MIDs of common metabolites'
+    experimental_mixed_data_wrap = 'Mixed MIDs\nof common metabolites'
+    few_data = 'Few data'
+    medium_data = 'Medium data'
+    data_without_ppp = 'Exclude PPP'
+    data_without_aa = 'Exclude AA'
+    data_without_tca = 'Exclude TCA'
+    ppp_metabolites = 'Metabolites in PPP'
+    aa_metabolites = 'Metabolites in AA'
+    tca_metabolites = 'Metabolites in TCA'
+    compartmentalized_experimental_data = 'Experimentally compartmental data'
+    compartmentalized_experimental_data_wrap = 'Experimentally\ncompartmental data'
     precise_mid_data = 'Precise MID data'
     noised_mid_data = 'Noised MID data'
     loss = 'Loss'
     euclidean_distance = 'Euclidean distance'
+    distance = 'Distance'
+    net_euclidean_distance = f'Net {euclidean_distance}'
+    net_euclidean_distance_to_parameters = f'Influence of ${math_m}$ and ${math_n}$ to net {euclidean_distance}'
+    net_euclidean_distance_to_parameters_all_data = f'{net_euclidean_distance_to_parameters} {in_all_data}'
     relative_error = 'Relative error'
+    relative_ratio = 'Relative ratio'
     patient_id = 'Patient ID'
     cell_line = 'Cell line'
     comparison_between_kidney_and_carcinoma = 'Comparison between normal kidney\ntissue and kidney carcinoma'
@@ -123,10 +170,10 @@ class CommonFigureString(object):
     combine_consecutive_reactions_wrap = 'Combine\nconsecutive\nreactions'
     miss_branch_pathways = 'Omit branch pathways'
     miss_branch_pathways_wrap = 'Omit branch\npathways'
-    smaller_data_size = 'Limited available MID'
-    smaller_data_size_wrap = 'Limited\navailable MID'
-    data_without_pathway = 'Pathway enrichment'
-    data_without_pathway_wrap = 'Pathway\nenrichment'
+    smaller_data_size = 'Evenly distributed MID'
+    smaller_data_size_wrap = 'Evenly\ndistributed MID'
+    data_without_pathway = 'Pathway-specific MID exclusion'
+    data_without_pathway_wrap = 'Pathway-specific\nMID exclusion'
     compartmental_data = 'Compartmental MID measurement'
     compartmental_data_wrap = 'Compartmental\nMID measurement'
 
@@ -137,6 +184,11 @@ class CommonFigureString(object):
     model_sensitivity = 'Model sensitivity'
     data_sensitivity = 'Data sensitivity'
     config_sensitivity = 'Configuration sensitivity'
+
+    performance_metric_in_all_data = f'{performance_metric} {in_all_data}'
+    performance_metric_in_raw_data = f'{performance_metric} {in_raw_data}'
+    difference_from_known_flux_all_data = f'{difference_from_known_flux} {in_all_data}'
+    difference_from_known_flux_raw_data = f'{difference_from_known_flux} {in_raw_data}'
 
     experimental_data = 'Experimental data'
     all_data = 'All data'
@@ -200,9 +252,25 @@ class CommonFigureString(object):
     cma_tca_ratio = f'CMA / {tca_flux}'
     cma_ama_ratio = 'CMA / AMA'
 
+    unconstrained_fluxes = 'Unconstrained fluxes'
+    unconstrained_fluxes_wrap = 'Unconstrained\nfluxes'
+    constrained_fluxes = 'Constrained fluxes'
+    constrained_fluxes_wrap = 'Constrained\nfluxes'
+    flux_sloppiness_wrap = 'Flux variability\nin optimized solutions'
+    # selected_sloppiness = 'Flux sloppiness in selected solutions'
+    # average_sloppiness = 'Flux sloppiness in averaged solutions'
+
     @staticmethod
     def fixed_flux_string_generator(fixed_value):
         return 'Fixed value: {:.1f}'.format(fixed_value)
+
+    @staticmethod
+    def optimization_selection_title_constructor(optimization_size, selection_size):
+        target_str = (
+            f'${CommonFigureString.math_n} = {optimization_size}$, '
+            f'${CommonFigureString.math_m} = {selection_size}$, '
+            f'${CommonFigureString.m_over_n} = {int(optimization_size / selection_size)}' r'^{-1}$')
+        return target_str
 
 
 class MetabolicNetworkConfig(object):
@@ -282,7 +350,7 @@ class MetabolicNetworkConfig(object):
 
 
 class ProtocolSearchingMaterials(object):
-    all_data_target_optimization_size = 5000
+    all_data_target_optimization_size = 20000
     all_data_target_selection_size = 100
     all_data_target_selection_ratio = all_data_target_selection_size / all_data_target_optimization_size
 
@@ -401,15 +469,15 @@ class ModelDataSensitivityDataFigureConfig(object):
         DataName.smaller_data_size: CommonFigureString.smaller_data_size_wrap_with_order_prefix,
         DataName.data_without_pathway: CommonFigureString.data_without_pathway_wrap_with_order_prefix,
         DataName.compartmental_data: CommonFigureString.compartmental_data_wrap_with_order_prefix,
-        DataName.few_data: 'Few data',
-        DataName.medium_data: 'Medium data',
+        DataName.few_data: CommonFigureString.few_data,
+        DataName.medium_data: CommonFigureString.medium_data,
         # DataName.data_without_ppp: 'Without PPP',
         # DataName.data_without_aa: 'Without AA',
         # DataName.data_without_tca: 'Without TCA',
-        DataName.data_without_ppp: 'Remove PPP',
-        DataName.data_without_aa: 'Remove AA',
-        DataName.data_without_tca: 'Remove TCA',
-        DataName.medium_data_without_combination: 'Experimental compartmental data',
+        DataName.data_without_ppp: CommonFigureString.data_without_ppp,
+        DataName.data_without_aa: CommonFigureString.data_without_aa,
+        DataName.data_without_tca: CommonFigureString.data_without_tca,
+        DataName.medium_data_without_combination: CommonFigureString.compartmentalized_experimental_data,
         DataName.different_constant_flux: CommonFigureString.different_constant_flux_wrap_with_order_prefix,
         DataName.different_constant_flux_with_noise: CommonFigureString.different_constant_flux_wrap_with_order_prefix,
         DataName.different_flux_range: CommonFigureString.different_flux_range_wrap_with_order_prefix,
@@ -699,13 +767,31 @@ class DataSensitivityMetabolicNetworkConfig(object):
         ['GLC_c', 'PYR_c/m', 'LAC_c', 'SUC_m', ],
         ['ASP_c/m', 'SER_c', 'GLY_c', 'GLU_c/m', ]
     ]
+    few_data_vertical_list = [
+        ['GLC_c', 'PYR_c/m',],
+        ['LAC_c', 'SUC_m',],
+        ['ASP_c/m', 'GLU_c/m',],
+        ['SER_c', 'GLY_c', ]
+    ]
     medium_data_list = [
         ['2PG_c/3PG_c', 'CIT_c/m/ICIT_m', ],
         ['ALA_c', 'AKG_c', 'RIB5P_c', 'ASN_c', ],
     ]
+    medium_data_vertical_list = [
+        ['2PG_c/3PG_c',],
+        ['CIT_c/m/ICIT_m', ],
+        ['ALA_c', 'AKG_c',],
+        ['RIB5P_c', 'ASN_c', ],
+    ]
     experimentally_available_data_list = [
         ['G6P_c/F6P_c', 'FBP_c', 'ERY4P_c', 'DHAP_c', ],
         ['PEP_c', 'MAL_c/m', 'AKG_m', 'GLN_c/m', ],
+    ]
+    experimentally_available_data_vertical_list = [
+        ['G6P_c/F6P_c', 'FBP_c',],
+        ['ERY4P_c', 'DHAP_c',],
+        ['PEP_c', 'MAL_c/m',],
+        ['AKG_m', 'GLN_c/m', ],
     ]
     other_data_example_list = [
         ['OAC_c/m', 'ACCOA_c/m']
@@ -757,8 +843,7 @@ class DataSensitivityMetabolicNetworkConfig(object):
         ['GLN_c/m'],
     ]
 
-    experimentally_available_data_list_without_compartments = [
-        [''],
+    experimentally_available_data_list_without_compartments_core = [
         ['PYR_c/m'],
         ['ASP_c/m'],
         ['GLU_c/m'],
@@ -769,20 +854,13 @@ class DataSensitivityMetabolicNetworkConfig(object):
         ['G6P_c/F6P_c'],
         ['MAL_c/m'],
         ['GLN_c/m'],
+    ]
+    experimentally_available_data_list_without_compartments = [
+        [''],
+        *experimentally_available_data_list_without_compartments_core,
         [''],
     ]
-    # experimentally_available_data_list_with_compartments = [
-    #     ['PYR_c', 'PYR_m'],
-    #     ['ASP_c', 'ASP_m'],
-    #     ['GLU_c', 'GLU_m'],
-    #     ['2PG_c', '3PG_c'],
-    #     ['CIT_c', 'CIT_m', 'ICIT_m'],
-    #     ['G6P_c', 'F6P_c'],
-    #     ['MAL_c', 'MAL_m'],
-    #     ['GLN_c', 'GLN_m'],
-    # ]
-    experimentally_available_data_list_with_compartments = [
-        [''],
+    experimentally_available_data_list_with_compartments_core = [
         ['PYR_c + PYR_m'],
         ['ASP_c + ASP_m'],
         ['GLU_c + GLU_m'],
@@ -793,13 +871,23 @@ class DataSensitivityMetabolicNetworkConfig(object):
         ['G6P_c + F6P_c'],
         ['MAL_c + MAL_m'],
         ['GLN_c + GLN_m'],
+    ]
+    experimentally_available_data_list_with_compartments = [
+        [''],
+        *experimentally_available_data_list_with_compartments_core,
         [''],
     ]
-    all_available_data_list_with_compartments = [
+    all_available_data_list_with_compartments_core = [
         ['Other compartmentally\nmeasured metabolites\nsuch as:'],
         [''],
         ['OAC_c + OAC_m'],
         ['ACCOA_c + ACCOA_m'],
+    ]
+    all_available_data_list_with_compartments = [
+        [''],
+        [''],
+        *all_available_data_list_with_compartments_core,
+        [''],
     ]
 
     different_constant_flux_string_list = [
@@ -830,12 +918,18 @@ larger_index_lim = (-2.05, 2.05)
 larger_index_ticks = (-2, -1, 0, 1, 2)
 
 
-def attach_feature_to_flux_name_list(flux_name_list, target_feature_dict):
+def attach_feature_to_flux_name_list(flux_name_list, target_feature_dict, old_target_feature_list=None):
     target_feature_list = []
-    for row_list in flux_name_list:
+    for row_index, row_list in enumerate(flux_name_list):
         current_row_target_feature_list = []
-        for flux_name in row_list:
-            current_row_target_feature_list.append(target_feature_dict[flux_name])
+        for flux_index, flux_name in enumerate(row_list):
+            if flux_name not in target_feature_dict:
+                if old_target_feature_list is not None:
+                    current_row_target_feature_list.append(old_target_feature_list[row_index][flux_index])
+                else:
+                    raise ValueError()
+            else:
+                current_row_target_feature_list.append(target_feature_dict[flux_name])
         target_feature_list.append(current_row_target_feature_list)
     return target_feature_list
 
@@ -843,23 +937,40 @@ def attach_feature_to_flux_name_list(flux_name_list, target_feature_dict):
 class CommonFigureMaterials(object):
     common_color_dict = {
         ParameterName.unoptimized: ColorConfig.random_flux_color,
-        ParameterName.optimized: ColorConfig.optimized_flux_color,
-        ParameterName.experimental: ColorConfig.experimental_flux_color,
+        # ParameterName.optimized: ColorConfig.optimized_flux_color,
+        # ParameterName.experimental: ColorConfig.experimental_flux_color,
+        ParameterName.optimized: ColorConfig.selected_solution_text_color,
+        ParameterName.experimental: ColorConfig.averaged_solution_text_color,
     }
 
+    default_flux_error_bar_color = ColorConfig.averaged_solution_text_color
     mid_comparison_color_dict = common_color_dict
 
-    random_fluxes_str = 'Random solution'
-    optimized_solution_str = 'Optimized solution'
-    best_optimized_solution_str = 'Best optimized solution'
-    global_optimum_str = 'Global optimal point'
-    local_optimum_str = 'Local optimal point'
-    random_point_str = 'Random point'
+    # random_fluxes_str = 'Random solutions'
+    # optimized_solution_str = 'Optimized solution(s)'
+    # best_optimized_solution_str = 'Best optimized solution'
+    # global_optimum_str = 'Global optimal point'
+    # local_optimum_str = 'Local optimal point'
+    # random_point_str = 'Random point'
+    random_fluxes_str = CommonFigureString.random_solutions
+    optimized_solution_str = CommonFigureString.optimized_solution
+    best_optimized_solution_str = CommonFigureString.best_optimized_solution
+    global_optimum_str = CommonFigureString.global_optimum
+    local_optimum_str = CommonFigureString.local_optimum
+    random_point_str = CommonFigureString.random_point
+
+    selected_solution_str = CommonFigureString.selected_solution
+    averaged_solution_str = CommonFigureString.averaged_solution
+    reoptimized_solution_str = CommonFigureString.reoptimized_solution
+    selected_solution_wrap_str = CommonFigureString.selected_solution_wrap
+    averaged_solution_wrap_str = CommonFigureString.averaged_solution_wrap
+    reoptimized_solution_wrap_str = CommonFigureString.reoptimized_solution_wrap
+    different_simulated_solution_distance_wrap_str = CommonFigureString.different_simulated_solution_distance_wrap
 
     mid_comparison_name_dict = {
+        ParameterName.unoptimized: 'MID from random flux',
         ParameterName.optimized: 'Optimized MID',
         ParameterName.experimental: 'Target experimental MID',
-        ParameterName.unoptimized: 'MID from random flux',
     }
     # histogram_color_dict = {
     #     key: common_color_dict[key] for key in (ParameterName.unoptimized, Keywords.optimized)
@@ -870,7 +981,7 @@ class CommonFigureMaterials(object):
     }
 
     optimum_color_dict = {
-        ParameterName.local_optimum: ColorConfig.optimized_flux_color_with_alpha,
+        ParameterName.local_optimum: ColorConfig.selected_solution_color,
         ParameterName.global_optimum: ColorConfig.global_optimum_color_with_alpha,
     }
     optimum_with_random_color_dict = {
@@ -879,7 +990,7 @@ class CommonFigureMaterials(object):
     }
     optimum_with_random_text_color_dict = {
         ParameterName.unoptimized: ColorConfig.random_flux_color,
-        ParameterName.local_optimum: ColorConfig.optimized_flux_color,
+        ParameterName.local_optimum: ColorConfig.selected_solution_text_color,
         ParameterName.global_optimum: ColorConfig.global_optimum_color,
     }
     optimum_name_dict = {
@@ -893,6 +1004,46 @@ class CommonFigureMaterials(object):
         ParameterName.global_optimum: best_optimized_solution_str,
     }
 
+    def select_average_solution_name_color_dict(
+            self, with_reoptimization=False, different_simulated_data=False, wrap_name=True):
+        if wrap_name:
+            selected_solution_str = self.selected_solution_wrap_str
+            averaged_solution_str = self.averaged_solution_wrap_str
+            reoptimized_solution_str = self.reoptimized_solution_wrap_str
+        else:
+            selected_solution_str = self.selected_solution_str
+            averaged_solution_str = self.averaged_solution_str
+            reoptimized_solution_str = self.reoptimized_solution_str
+        different_simulated_solution_distance_wrap_str = self.different_simulated_solution_distance_wrap_str
+
+        base_name_dict = {
+            ParameterName.selected: selected_solution_str,
+            ParameterName.averaged: averaged_solution_str,
+        }
+        base_color_dict = {
+            ParameterName.selected: ColorConfig.selected_solution_text_color,
+            ParameterName.averaged: ColorConfig.averaged_solution_text_color,
+        }
+        if with_reoptimization:
+            base_name_dict = {
+                **base_name_dict,
+                ParameterName.optimized: reoptimized_solution_str,
+            }
+            base_color_dict = {
+                **base_color_dict,
+                ParameterName.optimized: ColorConfig.reoptimized_solution_text_color,
+            }
+        if different_simulated_data:
+            base_name_dict = {
+                ParameterName.different_simulated_distance: different_simulated_solution_distance_wrap_str,
+                **base_name_dict,
+            }
+            base_color_dict = {
+                ParameterName.different_simulated_distance: ColorConfig.different_simulated_distance,
+                **base_color_dict,
+            }
+        return base_name_dict, base_color_dict
+
     time_loss_name_dict = {
         ParameterName.optimized: optimized_solution_str,
         ParameterName.unoptimized: random_fluxes_str
@@ -901,11 +1052,22 @@ class CommonFigureMaterials(object):
     distance_and_loss_color_dict = {
         ParameterName.loss: ColorConfig.loss_color,
         # ParameterName.distance: ColorConfig.to_optimal_distance_arrow_color,
-        ParameterName.distance: ColorConfig.experimental_flux_color,
+        ParameterName.distance: ColorConfig.raw_distance_color,
+        # ParameterName.raw_distance: ColorConfig.raw_distance_color,
+        ParameterName.net_distance: ColorConfig.net_distance_color,
+    }
+    distance_and_loss_legend_color_dict = {
+        # **{
+        #     key: value.add_transparency(ColorConfig.alpha_for_bar_plot)
+        #     for key, value in distance_and_loss_color_dict.items()},
+        **distance_and_loss_color_dict,
+        ParameterName.net_distance: ColorConfig.net_distance_legend_color,
     }
     distance_and_loss_name_dict = {
         ParameterName.loss: 'Loss of solution',
-        ParameterName.distance: 'Euclidean distance to\nthe best optimized solution'
+        ParameterName.distance: 'Euclidean distance (all fluxes)',
+        # ParameterName.raw_distance: 'Euclidean distance to\nthe best optimized solution',
+        ParameterName.net_distance: 'Euclidean distance (net fluxes)',
     }
 
     default_mid_name_list = [
@@ -964,151 +1126,6 @@ class PHGDHRawMaterials(object):
     }
 
 
-class ColonCancerRawMaterials(object):
-    target_mid_name_list = [
-        ['GLC_c', 'E4P_c', 'PEP_c', 'PYR_c+PYR_m', ],
-        ['LAC_c', 'CIT_c+CIT_m+ICIT_m', 'AKG_c+AKG_m', 'GLU_c+GLU_m'],
-        ['SUC_m', 'FUM_m', 'MAL_c+MAL_m', 'ASP_c+ASP_m']
-    ]
-    flux_name_location_list = [
-        ['GLC_input', 'GLN_input'],
-        ['LDH_c - LDH_c__R', 'CS_m'],
-        # , 'ACITL_c'
-        ['cancer_index', 'tca_index'],
-    ]
-    display_flux_name_dict = common_display_flux_dict
-    y_lim_dict = {
-        'GLC_input': (0, 250),
-        'GLN_input': (0, 250),
-        'HEX_c': (0, 500),
-        'LDH_c - LDH_c__R': (-20, 400),
-        'CS_m': (-10, 300),
-        'CIT_trans__R - CIT_trans': (-40, 200),
-        'AKGMAL_m__R - AKGMAL_m': (-10, 150),
-        'MDH_c - MDH_c__R': (-300, 100),
-        'ACITL_c': (-40, 250),
-        'PEPCK_c': (-2, 60),
-        'cancer_index': common_index_lim,
-        'non_canonical_tca_index': common_index_lim,
-        'tca_index': common_index_lim,
-        # 'mas_index': (-20, 150),
-        'mas_index': (-10, 30),
-    }
-    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, y_lim_dict)
-    y_ticks_dict = {
-        'GLC_input': (0, 50, 100, 150, 200, 250),
-        'GLN_input': (0, 50, 100, 150, 200, 250),
-        'HEX_c': (0, 100, 200, 300, 400, 500),
-        'LDH_c - LDH_c__R': (0, 100, 200, 300, 400),
-        'CS_m': (0, 100, 200, 300),
-        'CIT_trans__R - CIT_trans': (0, 50, 100, 150, 200),
-        'AKGMAL_m__R - AKGMAL_m': (0, 50, 100, 150),
-        'MDH_c - MDH_c__R': (-300, -200, -100, 0, 100),
-        'ACITL_c': (0, 100, 200),
-        'PEPCK_c': (0, 20, 40, 60),
-        'cancer_index': common_index_ticks,
-        'non_canonical_tca_index': common_index_ticks,
-        'tca_index': common_index_ticks,
-        # 'mas_index': (0, 50, 100, 150),
-        'mas_index': [-10, 0, 10, 20, 30],
-    }
-    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, y_ticks_dict)
-    cell_line_name_list = [
-        'SW48-P2',
-        'SW948-P3',
-        'HCT116-P3',
-        'NCI-H5087',
-        'SW620-P3',
-        'HT29',
-        'HCT8-P5',
-        'SW480',
-    ]
-    cell_line_display_name_dict = {
-        'SW48-P2': 'SW48',
-        'SW948-P3': 'SW948',
-        'HCT116-P3': 'HCT116',
-        'NCI-H5087': 'NCI',
-        'SW620-P3': 'SW620',
-        'HT29': 'HT29',
-        'HCT8-P5': 'HCT8',
-        'SW480': 'SW480',
-    }
-    hct116_high_str = 'HCT116 normal glucose'
-    mid_name_dict = {
-        ParameterName.optimized: f'{hct116_high_str}\nOptimized MID',
-        ParameterName.experimental: f'{hct116_high_str}\nExperimental MID',
-    }
-    mid_color_dict = {
-        ParameterName.optimized: CommonFigureMaterials.mid_comparison_color_dict[ParameterName.optimized],
-        ParameterName.experimental: CommonFigureMaterials.mid_comparison_color_dict[ParameterName.experimental],
-    }
-    color_dict = {
-        Keywords.high_glucose: ColorConfig.normal_blue,
-        Keywords.low_glucose: ColorConfig.orange,
-    }
-    name_dict = {
-        Keywords.high_glucose: 'Normal glucose',
-        Keywords.low_glucose: 'Low glucose',
-    }
-    loss_y_lim = [0, 6.50001]
-    loss_y_ticks = np.arange(*loss_y_lim, 0.5)
-    loss_y_tick_labels = ['{:.1f}'.format(y_tick) for y_tick in loss_y_ticks]
-    metabolic_network_config_dict = {
-        **MetabolicNetworkConfig.common_diagram_network_setting_dict,
-        ParameterName.boundary_flux_set: 'ASP_input',
-        # ParameterName.reaction_raw_value_dict: {'ASP_input': 100},
-        ParameterName.reaction_text_dict: {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)},
-        ParameterName.absolute_value_output_value_dict: {
-            0: 0.03,
-            20: 0.4,
-            50: 0.65,
-            100: 0.7,
-            200: 0.9,
-            500: 1,
-        }
-    }
-    normal_network_fixed_flux_string_dict = {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)}
-    common_diagram_network_config_dict = {
-        **MetabolicNetworkConfig.common_diagram_network_setting_dict,
-        ParameterName.boundary_flux_set: 'ASP_input',
-        # ParameterName.reaction_raw_value_dict: {'ASP_input': 100},
-        # ParameterName.reaction_text_dict: {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)},
-    }
-    diagram_network_config_dict = {
-        ParameterName.normal_network: {
-            **common_diagram_network_config_dict,
-            ParameterName.reaction_text_dict: {
-                **normal_network_fixed_flux_string_dict,
-                **MetabolicNetworkConfig.normal_network_display_text_dict,
-            },
-        },
-        ParameterName.exchange_network: {
-            **common_diagram_network_config_dict,
-            **MetabolicNetworkConfig.exchange_diagram_network_config,
-            ParameterName.reaction_text_dict: MetabolicNetworkConfig.exchange_network_display_text_dict,
-        }
-    }
-    data_flux_network_config_dict = {
-        **MetabolicNetworkConfig.common_data_flux_network_setting_dict,
-        ParameterName.absolute_value_output_value_dict: {
-            0: 0.05,
-            50: 0.55,
-            200: 0.8,
-            350: 1,
-        }
-    }
-
-
-class ColonCancerRatioMaterials(ColonCancerRawMaterials):
-    flux_name_location_list = [
-        ['CIT_trans__R - CIT_trans', 'AKGMAL_m__R - AKGMAL_m'],
-        ['non_canonical_tca_index', 'mas_index'],
-    ]
-    display_flux_name_dict = common_display_flux_dict
-    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_lim_dict)
-    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_ticks_dict)
-
-
 class KidneyCarcinomaRawMaterials(object):
     # flux_name_location_list = [
     #     ['GLC_input', 'LDH_c - LDH_c__R', 'CIT_trans - CIT_trans__R', 'MDH_c - MDH_c__R', ],
@@ -1136,7 +1153,7 @@ class KidneyCarcinomaRawMaterials(object):
         ['LDH_c - LDH_c__R', 'CS_m'],
         ['cancer_index', 'tca_index'],
     ]
-    loss_y_lim = [0, 0.250001]
+    loss_y_lim = [0, 0.300001]
     loss_y_ticks = np.arange(*loss_y_lim, 0.05)
     loss_y_tick_labels = ['{:.2f}'.format(y_tick) for y_tick in loss_y_ticks]
     display_flux_name_dict = common_display_flux_dict
@@ -1238,6 +1255,11 @@ class KidneyCarcinomaRawMaterials(object):
         **MetabolicNetworkConfig.common_data_flux_network_setting_dict,
         ParameterName.absolute_value_output_value_dict: flux_value_mapper_dict
     }
+    p_value_y_value_list = [
+        [0.88, 0.88],
+        [0.88, 0.88],
+        [0.88, 0.13],
+    ]
 
 
 class KidneyCarcinomaRatioMaterials(KidneyCarcinomaRawMaterials):
@@ -1252,6 +1274,38 @@ class KidneyCarcinomaRatioMaterials(KidneyCarcinomaRawMaterials):
     display_flux_name_dict = common_display_flux_dict
     y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, KidneyCarcinomaRawMaterials.y_lim_dict)
     y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, KidneyCarcinomaRawMaterials.y_ticks_dict)
+    p_value_y_value_list = [
+        [0.88, 0.13],
+        [0.88, 0.13],
+    ]
+
+
+class KidneyCarcinomaRawSupMaterials(KidneyCarcinomaRawMaterials):
+    y_lim_dict = {
+        'GLC_input': (0, 450),
+        'GLN_input': (0, 260),
+        'LDH_c - LDH_c__R': (-100, 450),
+        'AKGMAL_m__R - AKGMAL_m': (-310, 310)
+    }
+    y_lim_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaRawMaterials.flux_name_location_list, y_lim_dict, KidneyCarcinomaRawMaterials.y_lim_list)
+    y_ticks_dict = {
+        'GLC_input': (0, 100, 200, 300, 400),
+        'GLN_input': (0, 50, 100, 150, 200, 250),
+        'LDH_c - LDH_c__R': (-100, 0, 100, 200, 300, 400),
+        'AKGMAL_m__R - AKGMAL_m': (-300, -200, -100, 0, 100, 200, 300)
+    }
+    y_ticks_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaRawMaterials.flux_name_location_list, y_ticks_dict, KidneyCarcinomaRawMaterials.y_ticks_list)
+
+
+class KidneyCarcinomaRatioSupMaterials(KidneyCarcinomaRatioMaterials):
+    y_lim_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaRatioMaterials.flux_name_location_list,
+        KidneyCarcinomaRawSupMaterials.y_lim_dict, KidneyCarcinomaRatioMaterials.y_lim_list)
+    y_ticks_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaRatioMaterials.flux_name_location_list,
+        KidneyCarcinomaRawSupMaterials.y_ticks_dict, KidneyCarcinomaRatioMaterials.y_ticks_list)
 
 
 class MultipleTumorRawMaterials(object):
@@ -1417,4 +1471,257 @@ class LungCancerComparisonMaterials(object):
         Keywords.lung: ColorConfig.normal_blue,
         Keywords.tumor: ColorConfig.orange,
     }
+
+
+class ColonCancerRawMaterials(object):
+    target_mid_name_list = [
+        ['GLC_c', 'E4P_c', 'PEP_c', 'PYR_c+PYR_m', ],
+        ['LAC_c', 'CIT_c+CIT_m+ICIT_m', 'AKG_c+AKG_m', 'GLU_c+GLU_m'],
+        ['SUC_m', 'FUM_m', 'MAL_c+MAL_m', 'ASP_c+ASP_m']
+    ]
+    flux_name_location_list = [
+        ['GLC_input', 'GLN_input'],
+        ['LDH_c - LDH_c__R', 'CS_m'],
+        # , 'ACITL_c'
+        ['cancer_index', 'tca_index'],
+    ]
+    display_flux_name_dict = common_display_flux_dict
+    y_lim_dict = {
+        'GLC_input': (0, 250),
+        'GLN_input': (0, 300),
+        'HEX_c': (0, 500),
+        'LDH_c - LDH_c__R': (-20, 400),
+        'CS_m': (-10, 300),
+        'CIT_trans__R - CIT_trans': (-40, 200),
+        'AKGMAL_m__R - AKGMAL_m': (-10, 200),
+        'MDH_c - MDH_c__R': (-300, 100),
+        'ACITL_c': (-40, 250),
+        'PEPCK_c': (-2, 60),
+        'cancer_index': common_index_lim,
+        'non_canonical_tca_index': common_index_lim,
+        'tca_index': common_index_lim,
+        # 'mas_index': (-20, 150),
+        'mas_index': (-10, 30),
+    }
+    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, y_lim_dict)
+    y_ticks_dict = {
+        'GLC_input': (0, 50, 100, 150, 200, 250),
+        'GLN_input': (0, 50, 100, 150, 200, 250, 300),
+        'HEX_c': (0, 100, 200, 300, 400, 500),
+        'LDH_c - LDH_c__R': (0, 100, 200, 300, 400),
+        'CS_m': (0, 100, 200, 300),
+        'CIT_trans__R - CIT_trans': (0, 50, 100, 150, 200),
+        'AKGMAL_m__R - AKGMAL_m': (0, 50, 100, 150, 200),
+        'MDH_c - MDH_c__R': (-300, -200, -100, 0, 100),
+        'ACITL_c': (0, 100, 200),
+        'PEPCK_c': (0, 20, 40, 60),
+        'cancer_index': common_index_ticks,
+        'non_canonical_tca_index': common_index_ticks,
+        'tca_index': common_index_ticks,
+        # 'mas_index': (0, 50, 100, 150),
+        'mas_index': [-10, 0, 10, 20, 30],
+    }
+    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, y_ticks_dict)
+    cell_line_name_list = [
+        'SW48-P2',
+        'SW948-P3',
+        'HCT116-P3',
+        'NCI-H5087',
+        'SW620-P3',
+        'HT29',
+        'HCT8-P5',
+        'SW480',
+    ]
+    cell_line_display_name_dict = {
+        'SW48-P2': 'SW48',
+        'SW948-P3': 'SW948',
+        'HCT116-P3': 'HCT116',
+        'NCI-H5087': 'NCI',
+        'SW620-P3': 'SW620',
+        'HT29': 'HT29',
+        'HCT8-P5': 'HCT8',
+        'SW480': 'SW480',
+    }
+    hct116_high_str = 'HCT116 normal glucose'
+    mid_name_dict = {
+        ParameterName.optimized: f'{hct116_high_str}\nOptimized MID',
+        ParameterName.experimental: f'{hct116_high_str}\nExperimental MID',
+    }
+    mid_color_dict = {
+        ParameterName.optimized: CommonFigureMaterials.mid_comparison_color_dict[ParameterName.optimized],
+        ParameterName.experimental: CommonFigureMaterials.mid_comparison_color_dict[ParameterName.experimental],
+    }
+    color_dict = {
+        Keywords.high_glucose: ColorConfig.normal_blue,
+        Keywords.low_glucose: ColorConfig.orange,
+    }
+    name_dict = {
+        Keywords.high_glucose: 'Normal glucose',
+        Keywords.low_glucose: 'Low glucose',
+    }
+    loss_y_lim = [0, 7.0001]
+    loss_y_ticks = np.arange(*loss_y_lim, 1)
+    loss_y_tick_labels = ['{:.1f}'.format(y_tick) for y_tick in loss_y_ticks]
+    metabolic_network_config_dict = {
+        **MetabolicNetworkConfig.common_diagram_network_setting_dict,
+        ParameterName.boundary_flux_set: 'ASP_input',
+        # ParameterName.reaction_raw_value_dict: {'ASP_input': 100},
+        ParameterName.reaction_text_dict: {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)},
+        ParameterName.absolute_value_output_value_dict: {
+            0: 0.03,
+            20: 0.4,
+            50: 0.65,
+            100: 0.7,
+            200: 0.9,
+            500: 1,
+        }
+    }
+    normal_network_fixed_flux_string_dict = {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)}
+    common_diagram_network_config_dict = {
+        **MetabolicNetworkConfig.common_diagram_network_setting_dict,
+        ParameterName.boundary_flux_set: 'ASP_input',
+        # ParameterName.reaction_raw_value_dict: {'ASP_input': 100},
+        # ParameterName.reaction_text_dict: {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)},
+    }
+    diagram_network_config_dict = {
+        ParameterName.normal_network: {
+            **common_diagram_network_config_dict,
+            ParameterName.reaction_text_dict: {
+                **normal_network_fixed_flux_string_dict,
+                **MetabolicNetworkConfig.normal_network_display_text_dict,
+            },
+        },
+        ParameterName.exchange_network: {
+            **common_diagram_network_config_dict,
+            **MetabolicNetworkConfig.exchange_diagram_network_config,
+            ParameterName.reaction_text_dict: MetabolicNetworkConfig.exchange_network_display_text_dict,
+        }
+    }
+    data_flux_network_config_dict = {
+        **MetabolicNetworkConfig.common_data_flux_network_setting_dict,
+        ParameterName.absolute_value_output_value_dict: {
+            0: 0.05,
+            50: 0.55,
+            200: 0.8,
+            350: 1,
+        }
+    }
+    p_value_y_value_list = [
+        [0.9, 0.9],
+        [0.9, 0.9],
+        [0.9, 0.1],
+    ]
+    p_value_cap_parameter_dict = {
+        ParameterName.height: 0.02,
+        ParameterName.width: 0.07,
+        ParameterName.text_y_offset: 0.02,
+        ParameterName.cap_y_offset: 0.015,
+    }
+    supplementary_text_format_dict = {
+        ParameterName.font_size: 4,
+    }
+
+
+class ColonCancerRatioMaterials(ColonCancerRawMaterials):
+    flux_name_location_list = [
+        ['CIT_trans__R - CIT_trans', 'AKGMAL_m__R - AKGMAL_m'],
+        ['non_canonical_tca_index', 'mas_index'],
+    ]
+    display_flux_name_dict = common_display_flux_dict
+    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_lim_dict)
+    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_ticks_dict)
+    p_value_y_value_list = [
+        [0.9, 0.9],
+        [0.9, 0.9],
+    ]
+
+
+class ColonCancerRawSupMaterials(ColonCancerRawMaterials):
+    p_value_y_value_list = [
+        [0.9, 0.9],
+        [0.9, 0.9],
+        [0.95, 0.95],
+    ]
+
+
+class ColonCancerRatioSupMaterials(ColonCancerRatioMaterials):
+    p_value_y_value_list = [
+        [0.9, 0.9],
+        [0.9, 0.9],
+    ]
+
+
+def calculate_center_bottom_offset(insider_center: Vector, outsider_size: Vector):
+    return outsider_size / 2 - insider_center
+
+
+def p_value_parameters_processing_func(config_class):
+    extra_parameter_dict = {}
+    try:
+        extra_parameter_dict[ParameterName.p_value_y_value_list] = config_class.p_value_y_value_list
+    except AttributeError:
+        pass
+    try:
+        extra_parameter_dict[ParameterName.p_value_cap_parameter_dict] = config_class.p_value_cap_parameter_dict
+    except AttributeError:
+        pass
+    try:
+        extra_parameter_dict[ParameterName.supplementary_text_format_dict] = config_class.supplementary_text_format_dict
+    except AttributeError:
+        pass
+    return extra_parameter_dict
+
+
+def kidney_carcinoma_comparison_dict_generator(config_class):
+    common_kidney_carcinoma_comparison_dict = {
+        ParameterName.data_name: DataName.renal_carcinoma_invivo_infusion,
+        ParameterName.comparison_name: 'tumor_vs_kidney',
+        ParameterName.flux_name_list: config_class.flux_name_location_list,
+        ParameterName.mean: False,
+        ParameterName.display_flux_name_dict: config_class.display_flux_name_dict,
+        ParameterName.y_lim_list: config_class.y_lim_list,
+        ParameterName.y_ticks_list: config_class.y_ticks_list,
+        ParameterName.display_group_name_dict: config_class.class_display_name_dict,
+        ParameterName.name_dict: config_class.name_dict,
+        ParameterName.color_dict: config_class.color_dict,
+        ParameterName.legend: True,
+        ParameterName.common_x_label: CommonFigureString.patient_id,
+        ParameterName.compare_one_by_one: True,
+        ParameterName.scatter_line: False,
+        ParameterName.error_bar: True,
+    }
+    common_kidney_carcinoma_comparison_dict.update(p_value_parameters_processing_func(config_class))
+    return common_kidney_carcinoma_comparison_dict
+
+
+def colon_cancer_comparison_dict_generator(config_class):
+    common_colon_cancer_comparison_dict = {
+        # ParameterName.figure_title: Title.comparison_between_normal_flank_tumor,
+        ParameterName.data_name: DataName.colon_cancer_cell_line,
+        ParameterName.comparison_name: 'high_low_glucose',
+        ParameterName.mean: False,
+        ParameterName.flux_name_list: config_class.flux_name_location_list,
+        ParameterName.display_flux_name_dict: config_class.display_flux_name_dict,
+        ParameterName.y_lim_list: config_class.y_lim_list,
+        ParameterName.y_ticks_list: config_class.y_ticks_list,
+        ParameterName.display_group_name_dict: config_class.cell_line_display_name_dict,
+        ParameterName.name_dict: config_class.name_dict,
+        ParameterName.color_dict: config_class.color_dict,
+        ParameterName.legend: True,
+        ParameterName.common_x_label: CommonFigureString.cell_line,
+        ParameterName.compare_one_by_one: True,
+        ParameterName.scatter_line: False,
+        ParameterName.error_bar: True,
+        ParameterName.figure_config_dict: {
+            ParameterName.x_tick_label_format_dict: {
+                ParameterName.font_size: 5,
+                ParameterName.angle: 15,
+            },
+            ParameterName.y_label_format_dict: {
+                ParameterName.axis_label_distance: 0.035
+            }
+        }
+    }
+    common_colon_cancer_comparison_dict.update(p_value_parameters_processing_func(config_class))
+    return common_colon_cancer_comparison_dict
 

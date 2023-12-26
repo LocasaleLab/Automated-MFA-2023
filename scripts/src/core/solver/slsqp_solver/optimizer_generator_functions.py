@@ -3,7 +3,7 @@ from ...common.packages import np
 from ...common.functions import full_emu_name_constructor, np_log_eps, np_list_conv
 
 from ..solver_construction_functions.common_construct_functions import target_emu_name_list_generator, \
-    all_target_emu_name_metabolite_name_dict_generator, apply_mix_equation
+    all_target_emu_name_metabolite_name_dict_generator, apply_mix_equation, calculate_optimal_entropy
 
 float_type = CoreConstants.float_type
 eps_for_log = CoreConstants.eps_for_log
@@ -141,7 +141,7 @@ def loss_and_mix_operation_list_generator(
     target_mid_data_dict = {}
     # target_emu_experimental_data_name_dict = {}
     emu_name_experimental_name_dict = {}
-    optimal_cross_entropy = 0
+    experimental_mid_data_vector_list = []
     new_emu_index_dict = {target_emu_name: (index, None) for index, target_emu_name in enumerate(target_emu_name_list)}
     for experimental_mid_data_name, mix_equation in nested_mix_equation_dict.items():
         current_experimental_mid_data_obj = experimental_mid_data_obj_dict[experimental_mid_data_name]
@@ -153,8 +153,8 @@ def loss_and_mix_operation_list_generator(
         target_mid_data_dict[emu_name] = current_experimental_mid_data_vector
         # target_emu_experimental_data_name_dict[emu_name] = current_experimental_mid_data_obj.name
         emu_name_experimental_name_dict[emu_name] = current_experimental_mid_data_obj.name
-        optimal_cross_entropy += np_log_eps(
-            current_experimental_mid_data_vector, current_experimental_mid_data_vector, eps_for_log)
+        experimental_mid_data_vector_list.append(current_experimental_mid_data_vector)
+    optimal_cross_entropy = calculate_optimal_entropy(experimental_mid_data_vector_list, eps_for_log)
     return optimal_cross_entropy, target_mid_data_dict, emu_name_experimental_name_dict
 
 

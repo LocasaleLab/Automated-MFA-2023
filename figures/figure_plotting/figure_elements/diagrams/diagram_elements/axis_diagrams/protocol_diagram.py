@@ -5,6 +5,14 @@ from ..config import Vector, Circle, Arrow, Brace, Line
 from .axis_diagram import AxisDiagram, Rectangle, AxisDiagramConfig
 
 
+def generate_arrow_tails_with_shrink_ratio(tail_dot_center, head_dot_center, dots_radius):
+    vector1 = head_dot_center - tail_dot_center
+    shrink_ratio = (vector1.length - dots_radius) / vector1.length
+    updated_head_dot_center = tail_dot_center + vector1 * shrink_ratio
+    updated_tail_dot_center = head_dot_center + (tail_dot_center - head_dot_center) * shrink_ratio
+    return updated_tail_dot_center, updated_head_dot_center
+
+
 class ProtocolDiagramConfig(AxisDiagramConfig):
     bound_box_z_order = AxisDiagramConfig.bound_box_z_order
     dash_line_z_order = AxisDiagramConfig.dash_line_z_order
@@ -13,6 +21,14 @@ class ProtocolDiagramConfig(AxisDiagramConfig):
     arrow_z_order = dash_line_z_order
     text_order = AxisDiagramConfig.text_order
     text_config = AxisDiagramConfig.text_config
+
+    initial_solution_color = ColorConfig.random_flux_color_with_alpha
+    selected_solution_color = ColorConfig.selected_solution_color
+    selected_solution_text_color = ColorConfig.selected_solution_text_color
+    averaged_solution_color = ColorConfig.averaged_solution_color
+    averaged_solution_text_color = ColorConfig.averaged_solution_text_color
+    reoptimized_solution_color = ColorConfig.reoptimized_solution_color
+    reoptimized_solution_text_color = ColorConfig.reoptimized_solution_text_color
 
     common_edge_width = 7
     common_edge_config = {
@@ -27,8 +43,12 @@ class ProtocolDiagramConfig(AxisDiagramConfig):
     dash_line_config = {
         **common_edge_config,
         ParameterName.z_order: dash_line_z_order,
-        ParameterName.edge_color: ColorConfig.medium_blue,
+        # ParameterName.edge_color: ColorConfig.medium_blue,
         ParameterName.edge_style: LineStyle.thin_dash,
+    }
+    selected_dashed_line_config = {
+        **dash_line_config,
+        ParameterName.edge_color: selected_solution_color,
     }
     arrow_line_config = {
         ParameterName.stem_width: 0.008,
@@ -42,10 +62,18 @@ class ProtocolDiagramConfig(AxisDiagramConfig):
     }
     brace_config = {
         **common_edge_config,
-        ParameterName.edge_color: ColorConfig.normal_blue,
+        # ParameterName.edge_color: ColorConfig.normal_blue,
         ParameterName.z_order: content_z_order,
         ParameterName.radius: 0.05,
         ParameterName.edge_width: 5
+    }
+    initial_brace_config = {
+        **brace_config,
+        ParameterName.edge_color: initial_solution_color
+    }
+    selected_brace_config = {
+        **brace_config,
+        ParameterName.edge_color: selected_solution_color
     }
     brace_height = 0.05
     label_text_font_size = 45
@@ -62,23 +90,48 @@ class ProtocolDiagramConfig(AxisDiagramConfig):
         ParameterName.font_size: 35,
     }
 
-    selected_text_font_size = 40
-    selected_text_height = 0.1
-    selected_text_config = {
+    dots_text_font_size = 40
+    dots_text_height = 0.1
+    dots_text_config = {
         **text_config,
-        ParameterName.font_size: selected_text_font_size,
-        ParameterName.font_color: ColorConfig.normal_blue,
+        ParameterName.font_size: dots_text_font_size,
         ParameterName.width: 0.2,
-        ParameterName.height: selected_text_height,
+        ParameterName.height: dots_text_height,
         ParameterName.font_weight: FontWeight.bold,
+    }
+    selected_text_config = {
+        **dots_text_config,
+        # ParameterName.font_color: ColorConfig.normal_blue,
+        ParameterName.font_color: selected_solution_text_color,
+    }
+    averaged_text_config = {
+        **dots_text_config,
+        ParameterName.font_color: averaged_solution_text_color
+    }
+    known_flux_text_config = {
+        **dots_text_config,
+        ParameterName.font_color: ColorConfig.normal_blue,
+    }
+    reoptimized_text_color = {
+        **dots_text_config,
+        ParameterName.font_color: reoptimized_solution_text_color,
     }
 
     dots_radius = 0.02
     loss_dots_config = {
         ParameterName.radius: dots_radius,
-        ParameterName.face_color: ColorConfig.normal_blue,
+        # ParameterName.face_color: ColorConfig.normal_blue,
         ParameterName.edge_width: None,
         ParameterName.z_order: content_z_order,
+    }
+    initial_loss_dots_config = {
+        **loss_dots_config,
+        # ParameterName.face_color: ColorConfig.normal_blue
+        ParameterName.face_color: ColorConfig.random_flux_color_with_alpha
+    }
+    selected_loss_dots_config = {
+        **loss_dots_config,
+        ParameterName.face_color: selected_solution_color
     }
     unselected_loss_docts_config = {
         **loss_dots_config,
@@ -86,7 +139,8 @@ class ProtocolDiagramConfig(AxisDiagramConfig):
     }
     average_dots_config = {
         **loss_dots_config,
-        ParameterName.face_color: ColorConfig.dark_blue,
+        # ParameterName.face_color: ColorConfig.dark_blue,
+        ParameterName.face_color: averaged_solution_color
     }
 
     known_flux_vertical_line_config = {
@@ -184,10 +238,11 @@ class InitialDistributionDiagram(ProtocolDiagram):
         box_height = self.box_size.y
 
         flux_dot_list = []
+        initial_dots_config = ProtocolDiagramConfig.initial_loss_dots_config
         for sample_coordinate in sample_coordinate_list:
             sample_real_location = self.box_transform(sample_coordinate, inplace=False)
             flux_dot_list.append(Circle(**{
-                **ProtocolDiagramConfig.loss_dots_config,
+                **initial_dots_config,
                 ParameterName.center: sample_real_location,
             }))
         box_center_x = self.box_transform(raw_x=0.5)
@@ -197,12 +252,12 @@ class InitialDistributionDiagram(ProtocolDiagram):
         brace_right = self.box_transform(raw_x=1)
         text_bottom = brace_head_y + 0
         flux_dot_list.append(Brace(**{
-            **ProtocolDiagramConfig.brace_config,
+            **ProtocolDiagramConfig.initial_brace_config,
             ParameterName.head: Vector(box_center_x, brace_head_y),
             ParameterName.right_tail: Vector(brace_left, brace_tail_y),
             ParameterName.left_tail: Vector(brace_right, brace_tail_y),
         }))
-        selected_text_height = ProtocolDiagramConfig.selected_text_height
+        selected_text_height = ProtocolDiagramConfig.dots_text_height
         text_config_list = [
             {
                 **ProtocolDiagramConfig.brace_text_config,
@@ -236,13 +291,16 @@ class LossDistributionDiagramConfig(object):
     relative_error_y_loc_list = [
         0.54071287, 0.09208063, 0.66914014, 0.12797837,
         0.28899508, 0.38628004]
-    selected_color = ColorConfig.normal_blue
+    # selected_color = ColorConfig.normal_blue
+    selected_color = ProtocolDiagramConfig.selected_solution_color
+    selected_text_color = ProtocolDiagramConfig.selected_solution_text_color
     unselected_color = ColorConfig.gray
 
     @staticmethod
     def add_loss_dot_and_text(
             loss_dot_loc_list, text_str_list, box_size, common_loss_dot_loc, common_text_loc,
-            color, loss_dot_list, loss_dots_config, text_config_list, selected_text_config, horizontal_or_vertical):
+            color, text_color, loss_dot_list, loss_dots_config, text_config_list, common_text_config,
+            horizontal_or_vertical):
         for dot_loc, text_string in zip(loss_dot_loc_list, text_str_list):
             if horizontal_or_vertical == ParameterName.vertical:
                 real_loc = dot_loc * box_size.y
@@ -261,9 +319,9 @@ class LossDistributionDiagramConfig(object):
             }))
             if text_string is not None:
                 text_config_list.append({
-                    **selected_text_config,
+                    **common_text_config,
                     ParameterName.string: text_string,
-                    ParameterName.font_color: color,
+                    ParameterName.font_color: text_color,
                     ParameterName.center: text_center,
                 })
 
@@ -281,17 +339,14 @@ class LossDistributionDiagramConfig(object):
         LossDistributionDiagramConfig.add_loss_dot_and_text(
             selected_loss_dot_loc_list, selected_text_list, box_size,
             common_loss_dot_loc, common_text_loc,
-            LossDistributionDiagramConfig.selected_color, loss_dot_list, loss_dots_config,
+            LossDistributionDiagramConfig.selected_color, LossDistributionDiagramConfig.selected_text_color,
+            loss_dot_list, loss_dots_config,
             text_config_list, selected_text_config, horizontal_or_vertical)
-        # if not selected_figure:
-        #     unselected_dot_color = LossDistributionDiagramConfig.selected_color
-        # else:
-        #     unselected_dot_color = LossDistributionDiagramConfig.unselected_color
         unselected_dot_color = LossDistributionDiagramConfig.unselected_color
         LossDistributionDiagramConfig.add_loss_dot_and_text(
             unselected_loss_dot_loc_list, unselected_text_list, box_size,
             common_loss_dot_loc, common_text_loc,
-            unselected_dot_color, loss_dot_list, loss_dots_config,
+            unselected_dot_color, unselected_dot_color, loss_dot_list, loss_dots_config,
             text_config_list, selected_text_config, horizontal_or_vertical)
         if len(selected_loss_dot_loc_list) == 1:
             return selected_loss_dot_loc_list[0], None
@@ -306,18 +361,35 @@ class LossDistributionDiagram(ProtocolDiagram):
     box_size = Vector(total_width - 0.1, total_height)
     box_bottom_left = Vector(0.1, 0)
 
-    def __init__(self, selected=False, mode=ParameterName.loss_data, **kwargs):
-        total_loss_dot_y_loc_list = LossDistributionDiagramConfig.total_loss_dot_loc_list
-        total_text_list = LossDistributionDiagramConfig.total_text_list
-        euclidean_distance_y_loc_list = LossDistributionDiagramConfig.euclidean_distance_y_loc_list
-        relative_error_y_loc_list = LossDistributionDiagramConfig.relative_error_y_loc_list
+    @staticmethod
+    def _total_width_height(mode, height):
         if mode == ParameterName.loss_data:
             total_width = 0.4
         elif mode == ParameterName.net_euclidean_distance or mode == ParameterName.flux_relative_distance:
             total_width = 0.3
         else:
             raise ValueError()
+        if height == ParameterName.normal:
+            total_height = 1.2
+        elif height == ParameterName.low_height:
+            total_height = 1
+        else:
+            raise ValueError()
+        return total_width, total_height
+
+    @staticmethod
+    def calculate_center(self, scale, mode=ParameterName.loss_data, height=ParameterName.normal, *args):
+        total_width, total_height = self._total_width_height(mode, height)
+        return Vector(total_width, total_height) / 2 * scale
+
+    def __init__(self, selected=False, mode=ParameterName.loss_data, height=ParameterName.normal, **kwargs):
+        total_loss_dot_y_loc_list = LossDistributionDiagramConfig.total_loss_dot_loc_list
+        total_text_list = LossDistributionDiagramConfig.total_text_list
+        euclidean_distance_y_loc_list = LossDistributionDiagramConfig.euclidean_distance_y_loc_list
+        relative_error_y_loc_list = LossDistributionDiagramConfig.relative_error_y_loc_list
+        total_width, total_height = self._total_width_height(mode, height)
         self.total_width = total_width
+        self.total_height = total_height
         self.height_to_width_ratio = self.total_height / total_width
         self.box_size = Vector(total_width - 0.1, self.total_height)
 
@@ -359,16 +431,16 @@ class LossDistributionDiagram(ProtocolDiagram):
             ParameterName.angle: 90,
         }, ]
 
-        selected_text_config = {
-            **ProtocolDiagramConfig.selected_text_config,
+        dots_text_config = {
+            **ProtocolDiagramConfig.dots_text_config,
             ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
             ParameterName.horizontal_alignment: HorizontalAlignment.center,
-            ParameterName.font_color: ColorConfig.normal_blue,
+            # ParameterName.font_color: ColorConfig.normal_blue,
             ParameterName.width: 0.2,
             ParameterName.height: 0.1,
         }
         loss_dot_list = []
-        loss_dots_config = ProtocolDiagramConfig.loss_dots_config
+        initial_loss_dots_config = ProtocolDiagramConfig.initial_loss_dots_config
         if mode == ParameterName.loss_data:
             if selected:
                 select_num = LossDistributionDiagramConfig.normal_select_num
@@ -379,13 +451,13 @@ class LossDistributionDiagram(ProtocolDiagram):
             raw_min_selected_y_loc, raw_max_selected_y_loc = \
                 LossDistributionDiagramConfig.draw_selected_or_unselected_loss_diagram(
                     total_loss_dot_y_loc_list, total_text_list, select_num,
-                    self.box_size, common_loss_dot_x_loc, common_text_x_loc, loss_dot_list, loss_dots_config,
-                    text_config_list, selected_text_config, ParameterName.vertical)
+                    self.box_size, common_loss_dot_x_loc, common_text_x_loc, loss_dot_list, initial_loss_dots_config,
+                    text_config_list, dots_text_config, ParameterName.vertical)
             min_selected_y_loc = self.box_transform(raw_y=raw_min_selected_y_loc * box_height / box_width)
             max_selected_y_loc = self.box_transform(raw_y=raw_max_selected_y_loc * box_height / box_width)
             head_y = (min_selected_y_loc + max_selected_y_loc) / 2
             brace_config = {
-                **ProtocolDiagramConfig.brace_config,
+                **ProtocolDiagramConfig.selected_brace_config,
                 ParameterName.head: Vector(brace_head_x, head_y),
                 ParameterName.right_tail: Vector(brace_tail_x, max_selected_y_loc),
                 ParameterName.left_tail: Vector(brace_tail_x, min_selected_y_loc),
@@ -399,7 +471,7 @@ class LossDistributionDiagram(ProtocolDiagram):
                     ParameterName.center: text_center,
                     ParameterName.width: box_height,
                     ParameterName.vertical_alignment: VerticalAlignment.top,
-                    ParameterName.height: ProtocolDiagramConfig.selected_text_height,
+                    ParameterName.height: ProtocolDiagramConfig.dots_text_height,
                     ParameterName.angle: 90,
                     ParameterName.text_box: False,
                 }
@@ -414,7 +486,7 @@ class LossDistributionDiagram(ProtocolDiagram):
             for dot_y_loc in loss_dot_y_loc_list:
                 real_y_loc = dot_y_loc * self.box_size.y
                 loss_dot_list.append(Circle(**{
-                    **loss_dots_config,
+                    **initial_loss_dots_config,
                     ParameterName.center: Vector(common_central_dot_x_loc, real_y_loc),
                 }))
         # y_tick_loc_list = np.linspace(0.03, 0.97, 6) * self.box_size.y
@@ -465,29 +537,29 @@ class HorizontalLossDistributionDiagram(ProtocolDiagram):
                 ParameterName.height: box_bottom - axis_label_distance,
             },
         ]
-        selected_text_config = {
-            **ProtocolDiagramConfig.selected_text_config,
+        dots_text_config = {
+            **ProtocolDiagramConfig.dots_text_config,
             ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
             ParameterName.horizontal_alignment: HorizontalAlignment.center,
             ParameterName.font_color: ColorConfig.normal_blue,
             ParameterName.width: 0.2,
             ParameterName.height: 0.1,
         }
-        loss_dots_config = ProtocolDiagramConfig.loss_dots_config
+        initial_loss_dots_config = ProtocolDiagramConfig.initial_loss_dots_config
 
         if selected:
             select_num = LossDistributionDiagramConfig.best_select_num
             brace_text_string = CommonFigureString.best_solution
             text_center = Vector(best_solution_x_loc + 0.05, text_center_y)
             loss_dot_list.append(Line(**{
-                **ProtocolDiagramConfig.brace_config,
+                **ProtocolDiagramConfig.selected_brace_config,
                 ParameterName.start: Vector(best_solution_x_loc, brace_head_y),
                 ParameterName.end: Vector(best_solution_x_loc, brace_tail_y),
             }))
         else:
             select_num = LossDistributionDiagramConfig.total_num
             loss_dot_list.append(Brace(**{
-                **ProtocolDiagramConfig.brace_config,
+                **ProtocolDiagramConfig.selected_brace_config,
                 ParameterName.head: Vector(head_x, brace_head_y),
                 ParameterName.right_tail: Vector(brace_left, brace_tail_y),
                 ParameterName.left_tail: Vector(brace_right, brace_tail_y),
@@ -497,8 +569,8 @@ class HorizontalLossDistributionDiagram(ProtocolDiagram):
 
         LossDistributionDiagramConfig.draw_selected_or_unselected_loss_diagram(
             total_loss_dot_x_loc_list, total_text_list, select_num,
-            self.box_size, common_loss_dot_y_loc, common_text_y_loc, loss_dot_list, loss_dots_config,
-            text_config_list, selected_text_config, ParameterName.horizontal)
+            self.box_size, common_loss_dot_y_loc, common_text_y_loc, loss_dot_list, initial_loss_dots_config,
+            text_config_list, dots_text_config, ParameterName.horizontal)
 
         text_config_list.append(
             {
@@ -506,7 +578,7 @@ class HorizontalLossDistributionDiagram(ProtocolDiagram):
                 ParameterName.string: brace_text_string,
                 ParameterName.center: text_center,
                 ParameterName.width: box_width,
-                ParameterName.height: ProtocolDiagramConfig.selected_text_height,
+                ParameterName.height: ProtocolDiagramConfig.dots_text_height,
             }
         )
 
@@ -530,6 +602,7 @@ class AverageDiagram(ProtocolDiagram):
         ]
         average_coordinate = np.mean(sample_coordinate_list, axis=0)
         known_flux_coordinate = Vector(0.4, 0.55)
+        reoptimized_solution_coordinate = Vector(0.45, 0.59)
         dots_radius = ProtocolDiagramConfig.dots_radius
         box_width = self.box_size.x
         box_height = self.box_size.y
@@ -539,8 +612,12 @@ class AverageDiagram(ProtocolDiagram):
 
         if mode == ParameterName.simulated:
             title_string = 'Euclidean distance'
-        elif mode == ParameterName.sensitivity or mode == ParameterName.experimental:
+        elif (
+                mode == ParameterName.sensitivity or mode == ParameterName.experimental
+                or mode == ParameterName.simulated_reoptimization):
             title_string = 'Average of selected solutions'
+        elif mode == ParameterName.optimization_from_average_solutions:
+            title_string = 'Optimization'
         else:
             raise ValueError()
         title_height = 0.1
@@ -587,38 +664,40 @@ class AverageDiagram(ProtocolDiagram):
         flux_dot_list = []
         line_config_list = []
         average_real_location = self.box_transform(average_coordinate, inplace=False)
-        for sample_coordinate in sample_coordinate_list:
-            sample_real_location = self.box_transform(sample_coordinate, inplace=False)
-            flux_dot_list.append(Circle(**{
-                **ProtocolDiagramConfig.loss_dots_config,
-                ParameterName.center: sample_real_location,
-            }))
-            line_config_list.append({
-                **ProtocolDiagramConfig.dash_line_config,
-                ParameterName.start: average_real_location,
-                ParameterName.end: sample_real_location
-            })
-        text_config_list.extend([
-            {
-                **ProtocolDiagramConfig.selected_text_config,
-                ParameterName.string: 'A',
-                ParameterName.center: self.box_transform(sample_coordinate_list[0], inplace=False) + Vector(-0.05, 0),
-            },
-            {
-                **ProtocolDiagramConfig.selected_text_config,
-                ParameterName.string: 'B',
-                ParameterName.center: self.box_transform(sample_coordinate_list[2], inplace=False) + Vector(0.05, 0),
-            }
-        ])
+        selected_text_config = ProtocolDiagramConfig.selected_text_config
+        if mode != ParameterName.optimization_from_average_solutions:
+            for sample_coordinate in sample_coordinate_list:
+                sample_real_location = self.box_transform(sample_coordinate, inplace=False)
+                flux_dot_list.append(Circle(**{
+                    **ProtocolDiagramConfig.selected_loss_dots_config,
+                    ParameterName.center: sample_real_location,
+                }))
+                line_config_list.append({
+                    **ProtocolDiagramConfig.selected_dashed_line_config,
+                    ParameterName.start: average_real_location,
+                    ParameterName.end: sample_real_location
+                })
+            text_config_list.extend([
+                {
+                    **selected_text_config,
+                    ParameterName.string: 'A',
+                    ParameterName.center: self.box_transform(sample_coordinate_list[0], inplace=False) + Vector(-0.05, 0),
+                },
+                {
+                    **selected_text_config,
+                    ParameterName.string: 'B',
+                    ParameterName.center: self.box_transform(sample_coordinate_list[2], inplace=False) + Vector(0.05, 0),
+                }
+            ])
         flux_dot_list.append(Circle(**{
             **ProtocolDiagramConfig.average_dots_config,
             ParameterName.center: average_real_location,
         }))
         text_config_list.append(
             {
-                **ProtocolDiagramConfig.selected_text_config,
+                **ProtocolDiagramConfig.averaged_text_config,
                 ParameterName.string: 'Average',
-                ParameterName.font_size: ProtocolDiagramConfig.selected_text_font_size - 5,
+                ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size - 5,
                 ParameterName.center: average_real_location + Vector(-0.13, 0.01),
                 ParameterName.horizontal_alignment: HorizontalAlignment.right,
             }
@@ -626,33 +705,57 @@ class AverageDiagram(ProtocolDiagram):
         if mode == ParameterName.simulated or mode == ParameterName.sensitivity:
             known_real_location = self.box_transform(known_flux_coordinate, inplace=False)
             flux_dot_list.append(Circle(**{
-                **ProtocolDiagramConfig.loss_dots_config,
+                **ProtocolDiagramConfig.initial_loss_dots_config,
                 ParameterName.face_color: ColorConfig.slightly_light_orange,
                 ParameterName.center: known_real_location,
             }))
             text_config_list.append(
                 {
-                    **ProtocolDiagramConfig.selected_text_config,
+                    **ProtocolDiagramConfig.known_flux_text_config,
                     ParameterName.string: CommonFigureString.known_flux,
-                    ParameterName.font_size: ProtocolDiagramConfig.selected_text_font_size + 10,
+                    ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size + 10,
                     ParameterName.center: known_real_location + Vector(-0.05, 0),
-                    ParameterName.font_color: ColorConfig.orange,
                 }
             )
             if mode == ParameterName.simulated:
-                vector1 = known_real_location - average_real_location
-                shrink_ratio = (vector1.length - dots_radius) / vector1.length
-                updated_known_real_location = average_real_location + vector1 * shrink_ratio
-                updated_average_real_location = known_real_location + \
-                                                (average_real_location - known_real_location) * shrink_ratio
+                # vector1 = known_real_location - average_real_location
+                # shrink_ratio = (vector1.length - dots_radius) / vector1.length
+                # updated_known_real_location = average_real_location + vector1 * shrink_ratio
+                # updated_average_real_location = known_real_location + \
+                #                                 (average_real_location - known_real_location) * shrink_ratio
+                updated_known_real_location, updated_average_real_location = generate_arrow_tails_with_shrink_ratio(
+                    known_real_location, average_real_location, dots_radius)
                 flux_dot_list.append(
                     Arrow(**{
                         **ProtocolDiagramConfig.arrow_line_config,
                         ParameterName.tail: updated_known_real_location,
                         ParameterName.head: updated_average_real_location,
-                    })
-                )
-
+                    }))
+        elif mode == ParameterName.optimization_from_average_solutions:
+            reoptimized_solution_real_location = self.box_transform(reoptimized_solution_coordinate, inplace=False)
+            flux_dot_list.append(Circle(**{
+                **ProtocolDiagramConfig.loss_dots_config,
+                ParameterName.face_color: ColorConfig.reoptimized_solution_color,
+                ParameterName.center: reoptimized_solution_real_location,
+            }))
+            text_config_list.append(
+                {
+                    **ProtocolDiagramConfig.reoptimized_text_color,
+                    ParameterName.string: CommonFigureString.reoptimized_solution_wrap,
+                    ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size - 5,
+                    ParameterName.center: reoptimized_solution_real_location + Vector(-0.03, 0.09),
+                }
+            )
+            updated_average_real_location, updated_reoptimized_solution_real_location = generate_arrow_tails_with_shrink_ratio(
+                average_real_location, reoptimized_solution_real_location, dots_radius)
+            flux_dot_list.append(
+                Arrow(**{
+                    **ProtocolDiagramConfig.arrow_line_config,
+                    ParameterName.tail_arrow: False,
+                    ParameterName.face_color: ColorConfig.reoptimized_solution_color,
+                    ParameterName.tail: updated_average_real_location,
+                    ParameterName.head: updated_reoptimized_solution_real_location,
+                }))
         super().__init__(
             flux_dot_list, line_config_list=line_config_list, text_config_list=text_config_list, **kwargs)
 
@@ -682,7 +785,7 @@ class HorizontalComparisonDiagram(ProtocolDiagram):
         box_left = self.box_bottom_left.x
         total_width, total_height = total_size
         self.total_width, self.total_height = total_size
-        selected_text_height = ProtocolDiagramConfig.selected_text_height
+        selected_text_height = ProtocolDiagramConfig.dots_text_height
 
         # if mode == ParameterName.simulated or mode == ParameterName.sensitivity:
         #     title_string = 'Relative error'
@@ -730,11 +833,10 @@ class HorizontalComparisonDiagram(ProtocolDiagram):
                 ParameterName.end: known_flux_end_location
             }
             known_flux_text_config = {
-                **ProtocolDiagramConfig.selected_text_config,
+                **ProtocolDiagramConfig.known_flux_text_config,
                 ParameterName.string: CommonFigureString.known_flux,
-                ParameterName.font_size: ProtocolDiagramConfig.selected_text_font_size + 5,
+                ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size + 5,
                 ParameterName.center: known_flux_end_location + Vector(0, selected_text_height / 2 + 0.01),
-                ParameterName.font_color: ColorConfig.orange,
                 ParameterName.vertical_alignment: VerticalAlignment.baseline,
             }
             average_end_location = self.box_transform(Vector(average_flux_value, box_height / box_width))
@@ -744,9 +846,9 @@ class HorizontalComparisonDiagram(ProtocolDiagram):
                 ParameterName.end: average_end_location
             }
             average_text_config = {
-                **ProtocolDiagramConfig.selected_text_config,
+                **ProtocolDiagramConfig.averaged_text_config,
                 ParameterName.string: 'Average',
-                ParameterName.font_size: ProtocolDiagramConfig.selected_text_font_size - 5,
+                ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size - 5,
                 ParameterName.center: average_end_location + Vector(0, selected_text_height / 2 + 0.02),
                 ParameterName.vertical_alignment: VerticalAlignment.baseline,
             }
@@ -768,7 +870,7 @@ class HorizontalComparisonDiagram(ProtocolDiagram):
                 **ProtocolDiagramConfig.selected_text_config,
                 ParameterName.string: 'e.g. {}{:.0f}%'.format(
                     '+' if distance_ratio > 0 else '', distance_ratio),
-                ParameterName.font_size: ProtocolDiagramConfig.selected_text_font_size - 15,
+                ParameterName.font_size: ProtocolDiagramConfig.dots_text_font_size - 15,
                 ParameterName.center: distance_text_loc,
                 ParameterName.font_color: ColorConfig.orange,
                 ParameterName.vertical_alignment: VerticalAlignment.baseline,

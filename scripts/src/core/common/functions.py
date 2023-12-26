@@ -67,6 +67,13 @@ def tissue_specific_name_constructor(metabolite_or_reaction_name, tissue_name_li
         tissue_name_str, CoreConstants.specific_tissue_sep, metabolite_or_reaction_name)
 
 
+def group_emu_name_constructor(metabolite_name, case_name=None):
+    if case_name is None:
+        return metabolite_name
+    else:
+        return f'{case_name}_{metabolite_name}'
+
+
 def isdigit(number):
     return isinstance(number, int) or isinstance(number, float)
 

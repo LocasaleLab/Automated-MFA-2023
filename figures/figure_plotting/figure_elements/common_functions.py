@@ -1,4 +1,4 @@
-from ..common.third_party_packages import np, transforms
+from ..common.third_party_packages import np, transforms, stats
 from ..common.config import Constant
 from ..common.classes import Vector
 
@@ -272,3 +272,23 @@ text_parameter_set = {
     ParameterName.z_order,
 }
 
+
+def numbered_even_sequence(start, step, num):
+    return np.arange(num) * step + start
+
+
+def symmetrical_lim_tick_generator_with_zero(pos_lim, neg_lim=None, tick_interval=None):
+    half_tick = np.arange(0, pos_lim, tick_interval)
+    if neg_lim is None:
+        neg_lim = pos_lim
+        negative_half_tick = -half_tick[:0:-1]
+    else:
+        negative_half_tick = -np.arange(0, neg_lim, tick_interval)[:0:-1]
+    lim = [-neg_lim, pos_lim]
+    full_tick = np.concatenate([negative_half_tick, half_tick])
+    return lim, full_tick
+
+
+def t_test_of_two_groups(sample_1, sample_2):
+    res = stats.ttest_ind(sample_1, sample_2, equal_var=False)
+    return res.pvalue

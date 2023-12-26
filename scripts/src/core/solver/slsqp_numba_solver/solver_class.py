@@ -192,10 +192,10 @@ class SLSQPNumbaGroupSolver(SLSQPNumbaSolver):
             all_target_emu_name_metabolite_name_dict_list.append(all_target_emu_name_metabolite_name_dict)
             for emu_name, mid_value in target_experimental_mid_data_dict.items():
                 complete_target_experimental_mid_data_dict[
-                    group_emu_name_constructor(case_name, emu_name)] = mid_value
+                    group_emu_name_constructor(emu_name, case_name)] = mid_value
             for emu_name, experimental_name in emu_name_experimental_name_dict.items():
                 complete_emu_name_experimental_name_dict[
-                    group_emu_name_constructor(case_name, emu_name)] = experimental_name
+                    group_emu_name_constructor(emu_name, case_name)] = experimental_name
 
         self.objective_func = solver_objective_func_generator(
             self.optimizer_functions.solver_objective_func, ratio_list_to_objective_func)

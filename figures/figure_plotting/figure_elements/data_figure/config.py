@@ -1,15 +1,16 @@
 from ...common.config import ParameterName as GeneralParameterName, Keywords, DataName
-from ...common.classes import Vector, HorizontalAlignment, VerticalAlignment, FontWeight, DefaultDict, \
+from ...common.classes import Vector, HorizontalAlignment, VerticalAlignment, FontWeight, \
     TransformDict, LineStyle
 from ...common.color import TextConfig, ColorConfig, ZOrderConfig
 from ...common.common_figure_materials import CommonFigureMaterials, CommonFigureString, ProtocolSearchingMaterials, \
-    CommonElementConfig, ModelDataSensitivityDataFigureConfig
+    CommonElementConfig, ModelDataSensitivityDataFigureConfig, calculate_center_bottom_offset
 from ...common.third_party_packages import np, transforms
 from ...common.built_in_packages import it, List
-from ..basic_shape_elements.element_dict import CompositeFigure, move_and_scale_for_dict, \
+from ..basic_shape_elements.elements import CompositeFigure, move_and_scale_for_dict, \
     Rectangle, CompositeFigure, TextBox, Region, DataFigureAxes, Line, Ellipse, common_legend_generator
 from ..basic_shape_elements.modified_text import ax_text, draw_text
-from ..common_functions import initialize_vector_input, default_parameter_extract, clip_angle_to_normal_range
+from ..common_functions import initialize_vector_input, default_parameter_extract, clip_angle_to_normal_range, \
+    t_test_of_two_groups
 
 
 class ParameterName(GeneralParameterName):
@@ -34,6 +35,7 @@ class ParameterName(GeneralParameterName):
 
     violin = 'violin'
     box = 'box'
+    scatter = 'scatter'
 
     cutoff = 'cutoff'
     cutoff_param_dict = 'cutoff_param_dict'
@@ -46,10 +48,7 @@ class ParameterName(GeneralParameterName):
     ax_bottom_left_list = 'ax_bottom_left_list'
     ax_size_list = 'ax_size_list'
     array_len_list = 'array_len_list'
-    # figure_config_dict_list = 'figure_config_dict_list'
-    subplot_name_list = 'subplot_name_list'
-    text_axis_loc_pair = 'text_axis_loc_pair'
-    subplot_name_text_format_dict = 'subplot_name_text_format_dict'
+    max_bar_num_each_group = 'max_bar_num_each_group'
     data_figure_text_list = 'data_figure_text_list'
 
     normal_scatter_figure = 'normal'
@@ -80,6 +79,8 @@ class ParameterName(GeneralParameterName):
     cbar_size = 'cbar_size'
     cbar_scale = 'cbar_scale'
 
+    net_optimized_diff_vector_list = 'net_optimized_diff_vector_list'
+
 
 class DataFigureConfig(object):
     legend_z_order = ZOrderConfig.default_legend_z_order
@@ -94,6 +95,8 @@ class DataFigureConfig(object):
 
     main_text_font = TextConfig.main_text_font
     alpha_for_bar_plot = ColorConfig.alpha_for_bar_plot
+
+    common_text_config = CommonElementConfig.common_text_config
 
     # common_ax_total_bottom_left = Vector(0.08, 0.11)
     common_ax_total_bottom_left = Vector(0.11, 0.19)
@@ -116,11 +119,12 @@ class DataFigureConfig(object):
         label_height = 0.02
         tick_label_width = 0.05
         tick_label_height = 0.01
+        p_value_cap_width_ratio = 0.05
 
     # This labeling parameters are directly fed to .draw function. Therefore, they should be scaled first to
     # obtain correct location in final data figures.
     @staticmethod
-    def x_label_width_height_distance_dict_generator(scale=1):
+    def x_label_format_dict_generator(scale=1):
         return {
             ParameterName.axis_label_distance: 0.005 * scale,
             ParameterName.width: 0.05 * scale,
@@ -128,7 +132,7 @@ class DataFigureConfig(object):
         }
 
     @staticmethod
-    def x_tick_label_width_height_distance_dict_generator(scale=1):
+    def x_tick_label_format_dict_generator(scale=1):
         return {
             ParameterName.axis_tick_label_distance: 0.01 * scale,
             ParameterName.width: 0.05 * scale,
@@ -136,7 +140,7 @@ class DataFigureConfig(object):
         }
 
     @staticmethod
-    def y_label_width_height_distance_dict_generator(scale=1):
+    def y_label_format_dict_generator(scale=1):
         return {
             ParameterName.axis_label_distance: 0.025 * scale,
             ParameterName.width: 0.05 * scale,
@@ -144,7 +148,7 @@ class DataFigureConfig(object):
         }
 
     @staticmethod
-    def y_tick_label_width_height_distance_dict_generator(scale=1):
+    def y_tick_label_format_dict_generator(scale=1):
         return {
             ParameterName.axis_tick_label_distance: 0.006 * scale,
             ParameterName.width: 0.04 * scale,
@@ -161,7 +165,8 @@ class DataFigureConfig(object):
             ParameterName.axis_tick_length: DataFigureConfig.GroupDataFigure.axis_tick_len * scale
         }
         axis_label_format_dict = {
-            ParameterName.font: DataFigureConfig.main_text_font,
+            **DataFigureConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
             ParameterName.font_size: DataFigureConfig.GroupDataFigure.x_y_axis_tick_label_font_size * scale,
             ParameterName.z_order: DataFigureConfig.axis_label_z_order,
         }
@@ -170,13 +175,14 @@ class DataFigureConfig(object):
     @staticmethod
     def common_subplot_text_format_dict_generator(scale=1):
         return {
-            ParameterName.font: DataFigureConfig.main_text_font,
+            **DataFigureConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
             ParameterName.font_weight: FontWeight.bold,
             ParameterName.font_size: DataFigureConfig.GroupDataFigure.inner_text_font_size * scale,
             ParameterName.width: 0.05 * scale,
             ParameterName.height: 0.01 * scale,
-            ParameterName.horizontal_alignment: HorizontalAlignment.center,
-            ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+            # ParameterName.horizontal_alignment: HorizontalAlignment.center,
+            # ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
         }
 
     @staticmethod
@@ -207,12 +213,20 @@ class DataFigureConfig(object):
     }
 
     common_title_config_dict = {
-        ParameterName.font: TextConfig.main_text_font,
-        ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
-        ParameterName.horizontal_alignment: HorizontalAlignment.center,
-        ParameterName.z_order: ZOrderConfig.default_text_z_order,
+        **common_text_config,
+        # ParameterName.font: TextConfig.main_text_font,
+        # ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+        # ParameterName.horizontal_alignment: HorizontalAlignment.center,
+        # ParameterName.z_order: ZOrderConfig.default_text_z_order,
         ParameterName.font_weight: FontWeight.bold,
         # ParameterName.text_box: True,
+    }
+
+    common_supplementary_text_config_dict = {
+        **common_text_config,
+        ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+        ParameterName.horizontal_alignment: HorizontalAlignment.center,
+        ParameterName.z_order: figure_text_z_order,
     }
 
     # For flux tick labels
@@ -223,15 +237,17 @@ class DataFigureConfig(object):
         ParameterName.axis_line_end_distance: 0.115,
     }
     flux_x_tick_separator_label_format_dict = {
-        ParameterName.font: main_text_font,
+        # ParameterName.font: main_text_font,
+        **common_text_config,
         ParameterName.z_order: figure_text_z_order,
         ParameterName.width: 0.1,
         ParameterName.height: 0.02,
-        ParameterName.horizontal_alignment: HorizontalAlignment.center,
-        ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+        # ParameterName.horizontal_alignment: HorizontalAlignment.center,
+        # ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
         ParameterName.axis_label_distance: 0.12,
     }
     flux_x_tick_format_dict = {
+        **common_text_config,
         ParameterName.axis_tick_label_distance: 0.039,
         ParameterName.width: 0.08,
         ParameterName.height: 0.015,
@@ -239,6 +255,13 @@ class DataFigureConfig(object):
         ParameterName.horizontal_alignment: HorizontalAlignment.left,
         ParameterName.vertical_alignment: HorizontalAlignment.center,
         ParameterName.text_box: False,
+    }
+    common_p_value_cap_parameter_dict = {
+        ParameterName.edge_width: GroupDataFigure.p_value_cap_width_ratio,
+        ParameterName.height: 0.03,
+        ParameterName.width: 0.1,
+        ParameterName.text_y_offset: 0.03,
+        ParameterName.cap_y_offset: 0.02,
     }
 
 
@@ -257,6 +280,9 @@ mid_carbon_num_dict = {
     'FUM_m': 4,
     'CIT_c+CIT_m+ICIT_m': 4,
     'AKG_c+AKG_m': 5,
+    'FRU16BP_c': 6,
+    'GLU_c': 5,
+    'SUC_m': 4,
 }
 
 multiplied_parameter_set = {

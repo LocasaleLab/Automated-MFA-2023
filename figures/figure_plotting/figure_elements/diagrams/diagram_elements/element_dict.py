@@ -24,6 +24,23 @@ class ElementName(object):
     HeatmapDiagram = 'HeatmapDiagram'
 
 
+class Elements(object):
+    MIDDiagram = MIDDiagram
+    NetworkDiagram = NetworkDiagram
+    Mice = Mice
+    Human = Human
+    CulturedCell = CulturedCell
+    CarbonBackbone = CarbonBackbone
+    InitialDistributionDiagram = InitialDistributionDiagram
+    OptimumDistributionDiagram = OptimumDistributionDiagram
+    LossDistributionDiagram = LossDistributionDiagram
+    AverageDiagram = AverageDiagram
+    RandomOptimizedDistanceDiagram = RandomOptimizedDistanceDiagram
+    HorizontalComparisonDiagram = HorizontalComparisonDiagram
+    HorizontalLossDistributionDiagram = HorizontalLossDistributionDiagram
+    HeatmapDiagram = HeatmapDiagram
+
+
 element_dict = {
     ElementName.MIDDiagram: MIDDiagram,
     ElementName.NetworkDiagram: NetworkDiagram,

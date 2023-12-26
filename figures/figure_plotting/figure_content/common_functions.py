@@ -1,10 +1,6 @@
 from ..common.classes import Vector
 
 
-def calculate_center_bottom_offset(insider_center: Vector, outsider_size: Vector):
-    return outsider_size / 2 - insider_center
-
-
 def calculate_subfigure_layout(
         figure_layout_list, subfigure_class_list, height_to_width_ratio, top_margin_ratio, side_margin_ratio):
     subfigure_label_class_dict = {

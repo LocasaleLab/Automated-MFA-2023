@@ -1,4 +1,4 @@
-from .built_in_packages import enum, copy
+from .built_in_packages import enum
 from .third_party_packages import np
 from .config import float_type
 
@@ -64,9 +64,20 @@ class SubfigureLabelLoc(enum.Enum):
 
 
 class Color(np.ndarray):
+    @staticmethod
+    def verify_alpha(input_alpha):
+        if input_alpha is not None:
+            assert 0 <= input_alpha <= 1
+            alpha_set = True
+        else:
+            input_alpha = 1
+            alpha_set = False
+        return input_alpha, alpha_set
+
     def __new__(
-            cls, r=None, g=None, b=None, a: float = 1, *,
+            cls, r=None, g=None, b=None, a=None, *,
             array_255: np.ndarray = None, array_1: np.ndarray = None, text: str = None):
+        alpha_set = False
         if not (r is None and g is None and b is None):
             if r is not None and g is not None and b is not None:
                 if isinstance(r, int) or r > 1:
@@ -75,6 +86,7 @@ class Color(np.ndarray):
                     g /= 255
                 if isinstance(b, int) or b > 1:
                     b /= 255
+                a, alpha_set = cls.verify_alpha(a)
                 obj = np.asarray([r, g, b, a], dtype=float_type).view(cls)
             else:
                 raise ValueError('Please provide complete value of r, g and b')
@@ -92,7 +104,9 @@ class Color(np.ndarray):
                 rgb_raw_array = raw_array
             else:
                 rgb_raw_array = raw_array[:3]
-                target_array[3] = raw_array[3]
+                # target_array[3] = raw_array[3]
+                a, alpha_set = cls.verify_alpha(raw_array[3])
+                target_array[3] = a
             target_array[:3] = rgb_raw_array / ratio
             obj = target_array.view(cls)
         elif text is not None:
@@ -100,11 +114,13 @@ class Color(np.ndarray):
             r = int(text[1:3], 16)
             g = int(text[3:5], 16)
             b = int(text[5:7], 16)
+            a, alpha_set = cls.verify_alpha(a)
             obj = np.asarray([r / 255, g / 255, b / 255, a], dtype=float_type).view(cls)
         else:
             raise TypeError('Initialization type not recognized!')
         obj.rgb_array = np.array(obj[:3])
         obj.alpha = obj[3]
+        obj.alpha_set = alpha_set
         return obj
 
     def __array_finalize__(self, obj):
@@ -112,22 +128,34 @@ class Color(np.ndarray):
             return
         self.rgb_array = getattr(obj, 'rgb_array', None)
         self.alpha = getattr(obj, 'alpha', None)
+        self.alpha_set = getattr(obj, 'alpha_set', False)
 
     def __init__(
             self, r=None, g=None, b=None, a: float = 1, *,
             array_255: np.ndarray = None, array_1: np.ndarray = None, text: str = None):
         pass
 
+    def is_valid(self):
+        return np.all(self >= 0) and np.all(self <= 1)
+
     def transparency_mix(self, alpha, background=None):
         if background is None:
             background = white_color
         return Color(array_1=self * alpha + background * (1 - alpha))
+
+    def solve_raw_color_from_mix(self, alpha, background=None):
+        if background is None:
+            background = white_color
+        raw_color = Color(array_1=(self - background * (1 - alpha)) / alpha)
+        assert raw_color.is_valid()
+        return raw_color
 
     def add_transparency(self, alpha):
         new_color_array = np.zeros(4)
         new_color_array[:3] = self.rgb_array
         new_color_array[3] = alpha
         new_color = Color(array_1=new_color_array)
+        new_color.alpha_set = True
         return new_color
 
 
@@ -193,17 +221,6 @@ class Vector(np.ndarray):
 
     def to_tuple(self):
         return self[0], self[1]
-
-
-class DefaultDict(dict):
-    def __init__(self, default_value, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.default_value = default_value
-
-    def __getitem__(self, item):
-        if not super().__contains__(item):
-            super().__setitem__(item, copy.deepcopy(self.default_value))
-        return super().__getitem__(item)
 
 
 class TransformDict(dict):

@@ -1,7 +1,11 @@
 from scripts.src.core.common.classes import OptionDict
 from scripts.src.common.config import Direct as CommonDirect, Keywords
 from scripts.src.core.common.config import ParamName
+# from ...data.simulated_data import simulated_flux_vector_and_mid_data
+
 from .inventory import DataModelType, RunningMode
+
+# simulated_flux_value_dict = simulated_flux_vector_and_mid_data.simulated_flux_value_dict
 
 
 class Direct(object):
@@ -15,8 +19,12 @@ class Direct(object):
 
 # test_mode = True
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion
-# data_model_name = DataModelType.lung_tumor_invivo_infusion
-data_model_name = DataModelType.colon_cancer_cell_line
+# data_model_name = DataModelType.renal_carcinoma_invivo_infusion_squared_loss
+# data_model_name = DataModelType.renal_carcinoma_invivo_infusion_traditional_method
+data_model_name = DataModelType.lung_tumor_invivo_infusion
+# data_model_name = DataModelType.colon_cancer_cell_line
+# data_model_name = DataModelType.colon_cancer_cell_line_squared_loss
+# data_model_name = DataModelType.colon_cancer_cell_line_traditional_method
 # data_model_name = DataModelType.hct116_cultured_cell_line
 load_previous_results = True
 
@@ -27,20 +35,34 @@ running_mode = RunningMode.result_process
 
 # solver_type = ParamName.slsqp_numba_solver
 solver_type = ParamName.slsqp_numba_python_solver
+# solver_type = ParamName.slsqp_numba_nopython_solver
 # solver_type = ParamName.slsqp_solver
 
 experimental_results_comparison = False
 fluxes_comparison = True
 output_flux_results = False
 verify_result = False
+repeat_each_analyzed_set = True
+traditional_repeat_each_analyzed_set = True
 
 loss_percentile = 0.005
 # loss_percentile = 0.002
 report_interval = 50
-thread_num_constraint = 4
+repeat_time_each_analyzed_set = 5
+traditional_method_total_num = 400
+traditional_method_loss_percentile = 1 / 80
+traditional_method_select_num = 5
 
 
 def running_settings(test_mode=False):
+    parallel_parameter_dict = {
+        Keywords.max_optimization_each_generation: 10000,
+        Keywords.each_process_optimization_num: 50,
+        Keywords.processes_num: 6,
+        Keywords.thread_num_constraint: None,
+        # Keywords.thread_num_constraint: 4,
+        # Keywords.parallel_test: True,
+    }
     if test_mode:
         each_case_optimization_num = 10
         parallel_parameter_dict = None
@@ -51,20 +73,21 @@ def running_settings(test_mode=False):
         # }
     elif data_model_name == DataModelType.hct116_cultured_cell_line:
         each_case_optimization_num = 400
-        parallel_parameter_dict = {
-            'max_optimization_each_generation': 5000,
-            'each_process_optimization_num': 10,
-            # 'processes_num': 4
-            'processes_num': 6
-        }
+        # parallel_parameter_dict = {
+        #     'max_optimization_each_generation': 10000,
+        #     'each_process_optimization_num': 10,
+        #     # 'processes_num': 4
+        #     'processes_num': 6
+        # }
+        parallel_parameter_dict[Keywords.each_process_optimization_num] = 10
     else:
-        each_case_optimization_num = 20000
-        parallel_parameter_dict = {
-            'max_optimization_each_generation': 5000,
-            'each_process_optimization_num': 50,
-            # 'processes_num': 4
-            'processes_num': 6
-        }
+        each_case_optimization_num = 60000
+        # parallel_parameter_dict = {
+        #     'max_optimization_each_generation': 10000,
+        #     'each_process_optimization_num': 50,
+        #     # 'processes_num': 4
+        #     'processes_num': 6
+        # }
     return each_case_optimization_num, parallel_parameter_dict
 
 
@@ -129,4 +152,7 @@ class CommonParameters(object):
     mixed_compartment_list = ('m', 'c')
     model_compartment_set = {'m', 'c', 'e'}
     solver_config_dict = OptionDict()
+    squared_loss_config_dict = OptionDict({
+        ParamName.loss_type: ParamName.mean_squared_loss
+    })
 

@@ -1,24 +1,14 @@
 from ..common.config import ParameterName, Constant, DataName, Keywords
 from ..common.classes import Vector
-from ..common.color import ColorConfig
-from ..figure_elements.element_dict import ElementName, element_dict
-from .common_functions import calculate_center_bottom_offset, calculate_subfigure_layout, \
+from ..figure_elements.elements import Elements
+from .common_functions import calculate_subfigure_layout, \
     single_subfigure_layout
-from ..common.common_figure_materials import MetabolicNetworkConfig, FigureConfig, \
-    CommonFigureMaterials, ColonCancerRawMaterials, ColonCancerRatioMaterials, CommonFigureString
+from ..common.common_figure_materials import FigureConfig, ColonCancerRawMaterials, \
+    ColonCancerRatioMaterials, calculate_center_bottom_offset, colon_cancer_comparison_dict_generator
 from ..figure_elements.data_figure.basic_data_figure.figure_data_loader import raw_flux_value_dict_data
 
 
-Subfigure = element_dict[ElementName.Subfigure]
-OptimizationDiagram = element_dict[ElementName.OptimizationDiagram]
-MetabolicNetworkWithLegend = element_dict[ElementName.MetabolicNetworkWithLegend]
-FluxComparisonScatterWithTitle = element_dict[ElementName.FluxComparisonScatterWithTitle]
-FluxComparisonViolinBoxWithTitleLegend = element_dict[ElementName.FluxComparisonViolinBoxWithTitleLegend]
-QuadMetabolicNetworkComparison = element_dict[ElementName.QuadMetabolicNetworkComparison]
-ExperimentDiagram = element_dict[ElementName.ExperimentDiagram]
-MetabolicNetworkWithExchangeFlux = element_dict[ElementName.NormalAndExchangeTwinNetwork]
-MetabolicNetworkMFAResultComparison = element_dict[ElementName.NormalAndExchangeNetworkMFAResultComparison]
-NetworkMFAResultComparison = element_dict[ElementName.NetworkMFAResultComparison]
+Subfigure = Elements.Subfigure
 
 common_data_figure_scale = 0.7
 common_data_width = 0.5
@@ -41,6 +31,7 @@ class SubfigureA(Subfigure):
     subfigure_title = 'colon_cancer_experiment_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        ExperimentDiagram = Elements.ExperimentDiagram
         scale = 0.5
         data_name = DataName.colon_cancer_cell_line
         center = ExperimentDiagram.calculate_center(ExperimentDiagram, scale, data_name)
@@ -63,21 +54,17 @@ class SubfigureB(Subfigure):
     subfigure_title = 'metabolic_network_with_legend_for_colon_cancer'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        # scale = MetabolicNetworkConfig.common_scale
         scale = common_network_diagram_scale
         legend = True
-        # center = MetabolicNetworkWithLegend.calculate_center(MetabolicNetworkWithLegend, scale, legend=legend)
-        # bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
 
         subfigure_c_config_dict = {
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
             ParameterName.legend: legend,
             ParameterName.metabolic_network_config_dict: ColonCancerRawMaterials.diagram_network_config_dict,
-            # ParameterName.metabolic_network_legend_config_dict: {},
         }
 
-        metabolic_network_with_legend_obj = MetabolicNetworkWithExchangeFlux(**subfigure_c_config_dict)
+        metabolic_network_with_legend_obj = Elements.NormalAndExchangeTwinNetwork(**subfigure_c_config_dict)
         center = metabolic_network_with_legend_obj.calculate_center(
             metabolic_network_with_legend_obj, scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
@@ -114,7 +101,7 @@ class SubfigureC(Subfigure):
             }.items()
         }
 
-        quad_metabolic_network_comparison = NetworkMFAResultComparison(**{
+        quad_metabolic_network_comparison = Elements.NetworkMFAResultComparison(**{
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
             ParameterName.figure_data_parameter_dict: {
@@ -138,34 +125,7 @@ class SubfigureC(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-def colon_cancer_comparison_dict_generator(config_class):
-    common_kidney_carcinoma_comparison_dict = {
-        # ParameterName.figure_title: Title.comparison_between_normal_flank_tumor,
-        ParameterName.data_name: DataName.colon_cancer_cell_line,
-        ParameterName.comparison_name: 'high_low_glucose',
-        ParameterName.mean: False,
-        ParameterName.flux_name_list: config_class.flux_name_location_list,
-        ParameterName.display_flux_name_dict: config_class.display_flux_name_dict,
-        ParameterName.y_lim_list: config_class.y_lim_list,
-        ParameterName.y_ticks_list: config_class.y_ticks_list,
-        ParameterName.display_group_name_dict: config_class.cell_line_display_name_dict,
-        ParameterName.name_dict: config_class.name_dict,
-        ParameterName.color_dict: config_class.color_dict,
-        ParameterName.legend: True,
-        ParameterName.common_x_label: CommonFigureString.cell_line,
-        ParameterName.compare_one_by_one: True,
-        ParameterName.scatter_line: False,
-        ParameterName.error_bar: True,
-        ParameterName.figure_config_dict: {
-            ParameterName.x_tick_label_format_dict: {
-                ParameterName.font_size: 5
-            },
-            ParameterName.y_label_format_dict: {
-                ParameterName.axis_label_distance: 0.035
-            }
-        }
-    }
-    return common_kidney_carcinoma_comparison_dict
+FluxComparisonScatterWithTitle = Elements.FluxComparisonScatterWithTitle
 
 
 class SubfigureD(Subfigure):
@@ -205,19 +165,6 @@ class SubfigureE(Subfigure):
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
         figure_data_parameter_dict = {
-            # ParameterName.figure_title: Title.comparison_between_normal_flank_tumor,
-            # ParameterName.height_to_width_ratio: 0.7,
-            # ParameterName.data_name: DataName.colon_cancer_cell_line,
-            # ParameterName.comparison_name: 'high_low_glucose',
-            # ParameterName.mean: False,
-            # ParameterName.flux_name_list: ColonCancerRatioMaterials.flux_name_location_list,
-            # ParameterName.display_flux_name_dict: ColonCancerRatioMaterials.display_flux_name_dict,
-            # ParameterName.y_lim_list: ColonCancerRatioMaterials.y_lim_list,
-            # ParameterName.y_ticks_list: ColonCancerRatioMaterials.y_ticks_list,
-            # ParameterName.display_group_name_dict: ColonCancerRatioMaterials.cell_line_display_name_dict,
-            # ParameterName.name_dict: ColonCancerRatioMaterials.name_dict,
-            # ParameterName.color_dict: ColonCancerRatioMaterials.color_dict,
-            # ParameterName.legend: True,
             **colon_cancer_comparison_dict_generator(ColonCancerRatioMaterials)
         }
         scale = common_data_figure_scale
@@ -243,7 +190,7 @@ class SubfigureE(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class Figure5(element_dict[ElementName.Figure]):
+class Figure5(Elements.Figure):
     figure_label = 'figure_5'
     figure_title = 'Figure 5'
 

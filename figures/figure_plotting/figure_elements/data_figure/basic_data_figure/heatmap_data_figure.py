@@ -66,10 +66,10 @@ class ColorBarDataFigure(DataFigure):
         self.x_label = x_label
         figure_config_dict = {
             ParameterName.x_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.x_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.x_label_format_dict),
             ParameterName.x_tick_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.x_tick_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.x_tick_label_format_dict),
         }
 
@@ -157,16 +157,16 @@ class BasicHeatmapDataFigure(DataFigure):
                 ] if key in new_figure_config_dict
             },
             ParameterName.x_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.x_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.x_label_format_dict),
             ParameterName.x_tick_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.x_tick_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.x_tick_label_format_dict),
             ParameterName.y_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.y_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.y_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.y_label_format_dict),
             ParameterName.y_tick_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale),
+                axis_label_format_dict, DataFigureConfig.y_tick_label_format_dict_generator(scale),
                 new_figure_config_dict, ParameterName.y_tick_label_format_dict),
         }
 
@@ -244,23 +244,23 @@ class DistanceFluxAnalysisHeatmapDataFigure(BasicHeatmapDataFigure):
         # ax_total_bottom_left = Vector(0.1, 0.1)
         ax_total_bottom_left = Vector(0, 0)
         ax_total_size = Vector(1, 1) - ax_total_bottom_left
-        x_label_format_dict = DataFigureConfig.x_label_width_height_distance_dict_generator(scale)
+        x_label_format_dict = DataFigureConfig.x_label_format_dict_generator(scale)
         x_label_format_dict.update({
             ParameterName.font_size: HeatmapConfig.distance_x_y_label_font_size * scale,
             ParameterName.axis_label_distance: 0.02 * scale,
         })
-        x_tick_label_format_dict = DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale)
+        x_tick_label_format_dict = DataFigureConfig.x_tick_label_format_dict_generator(scale)
         x_tick_label_format_dict.update({
             ParameterName.font_size: HeatmapConfig.distance_x_y_tick_label_font_size * scale,
             ParameterName.axis_tick_label_distance: 0.006 * scale
             # ParameterName.axis_tick_label_distance: 0.02 * scale
         })
-        y_label_format_dict = DataFigureConfig.y_label_width_height_distance_dict_generator(scale)
+        y_label_format_dict = DataFigureConfig.y_label_format_dict_generator(scale)
         y_label_format_dict.update({
             ParameterName.font_size: HeatmapConfig.distance_x_y_label_font_size * scale,
             ParameterName.axis_label_distance: 0.025 * scale,
         })
-        y_tick_label_format_dict = DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale)
+        y_tick_label_format_dict = DataFigureConfig.y_tick_label_format_dict_generator(scale)
         y_tick_label_format_dict.update({
             ParameterName.font_size: HeatmapConfig.distance_x_y_tick_label_font_size * scale,
             ParameterName.axis_tick_label_distance: 0.007 * scale
@@ -360,7 +360,7 @@ class SensitivityAnalysisHeatmapDataFigure(BasicHeatmapDataFigure):
             **DataFigureConfig.flux_x_tick_format_dict,
             ParameterName.font_size: (HeatmapConfig.sensitivity_x_y_tick_label_font_size + 1),
         }
-        y_tick_label_format_dict = DataFigureConfig.y_tick_label_width_height_distance_dict_generator()
+        y_tick_label_format_dict = DataFigureConfig.y_tick_label_format_dict_generator()
         y_tick_label_format_dict.update({
             ParameterName.font_size: (HeatmapConfig.sensitivity_x_y_tick_label_font_size + 2),
             ParameterName.width: 0.08,

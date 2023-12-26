@@ -1,6 +1,6 @@
-from scripts.src.common.config import Color, Keywords, Direct, DataType
-from common_and_plotting_functions.functions import check_and_mkdir_of_direct
-from scripts.src.common.plotting_functions import multi_row_col_bar_plot
+from scripts.src.common.config import Color, Keywords, DataType
+from scripts.src.common.functions import data_param_list_generator_func_template, collect_results_func_template
+from scripts.src.common.result_processing_functions import experimental_data_plotting_func_template
 
 from scripts.data.common_functions import common_data_loader
 
@@ -8,6 +8,8 @@ from scripts.model.model_loader import model_loader, ModelList
 from scripts.src.core.model.model_constructor import common_model_constructor
 
 from ...common.result_processing_functions import common_flux_comparison_func
+from ..result_processing_functions import CurrentFinalResult
+
 
 data_wrap_obj, keyword = common_data_loader(DataType.renal_carcinoma, test_mode=False, natural_anti_correction=True)
 # user_defined_model = model_loader(ModelList.invivo_infusion_model)
@@ -54,22 +56,240 @@ test_data_param_raw_list = [
     }
 ]
 
-complete_data_param_raw_list = [
+separate_data_param_raw_list = [
     {
         keyword.tissue: keyword.kidney,
         '': [
             {
                 keyword.patient: 1,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 2,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 3,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 4,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 5,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+        ]
+    },
+    {
+        keyword.tissue: keyword.carcinoma,
+        '': [
+            {
+                keyword.patient: 1,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 2,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 3,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 4,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 5,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+        ]
+    },
+    {
+        keyword.tissue: keyword.brain,
+        '': [
+            {
+                keyword.patient: 1,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 2,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 3,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 4,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+            {
+                keyword.patient: 5,
+                '': [
+                    {
+                        keyword.index: 1,
+                    },
+                    {
+                        keyword.index: 2,
+                    },
+                    {
+                        keyword.index: 3,
+                    },
+                ]
+            },
+        ]},
+]
+
+average_data_param_raw_list = [
+    {
+        keyword.tissue: keyword.kidney,
+        '': [
+            {
+                keyword.patient: 1,
+                '': [
                     {
                         keyword.index: Keywords.average,
                     },
@@ -78,15 +298,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 2,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -95,15 +306,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 3,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -112,15 +314,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 4,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -129,15 +322,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 5,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -151,15 +335,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 1,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -168,15 +343,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 2,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -185,15 +351,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 3,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -202,15 +359,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 4,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -219,15 +367,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 5,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -241,15 +380,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 1,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -258,15 +388,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 2,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -275,15 +396,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 3,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -292,15 +404,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 4,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -309,15 +412,6 @@ complete_data_param_raw_list = [
             {
                 keyword.patient: 5,
                 '': [
-                    # {
-                    #     keyword.index: 1,
-                    # },
-                    # {
-                    #     keyword.index: 2,
-                    # },
-                    # {
-                    #     keyword.index: 3,
-                    # },
                     {
                         keyword.index: Keywords.average,
                     },
@@ -362,41 +456,14 @@ mid_name_list = [
 ]
 
 
-def data_param_list_generator(param_raw_list):
-    current_param_list = []
-    for labeling_param_dict in param_raw_list:
-        labeling_key = labeling_param_dict[keyword.tissue]
-        labeling_content_list = labeling_param_dict['']
-        for type_param_dict in labeling_content_list:
-            type_key = type_param_dict[keyword.patient]
-            type_content_list = type_param_dict['']
-            for index_param_dict in type_content_list:
-                index_key = index_param_dict[keyword.index]
-                current_param_list.append({
-                    keyword.tissue: labeling_key,
-                    keyword.patient: type_key,
-                    keyword.index: index_key,
-                    Keywords.obj_threshold_key: None
-                })
-    return current_param_list
+# data_param_raw_list = separate_data_param_raw_list
+data_param_raw_list = average_data_param_raw_list
+# total_param_list = data_param_list_generator(data_param_raw_list)
+keyword_list = [keyword.tissue, keyword.patient, keyword.index]
+total_param_list = data_param_list_generator_func_template(keyword_list)(data_param_raw_list)
 
-
-data_param_raw_list = complete_data_param_raw_list
-total_param_list = data_param_list_generator(data_param_raw_list)
-
-
-def collect_results(final_data_obj):
-    final_mapping_dict = {}
-    for param_dict in total_param_list:
-        tissue_key = param_dict[keyword.tissue]
-        patient_key = param_dict[keyword.patient]
-        index_key = param_dict[keyword.index]
-        project_name = data_wrap_obj.project_name_generator(tissue_key, patient_key, index_key)
-        final_mapping_dict[project_name] = (tissue_key, patient_key, index_key)
-        final_data_obj.load_current_result_label(project_name)
-        if Keywords.obj_threshold_key in final_data_obj.final_information_dict[project_name]:
-            del final_data_obj.final_information_dict[project_name][Keywords.obj_threshold_key]
-    return final_mapping_dict
+project_name_generator = data_wrap_obj.project_name_generator
+collect_results = collect_results_func_template(project_name_generator, total_param_list, keyword_list)
 
 
 def experimental_results_comparison_parameter_generator(target_metabolite_data_dict):
@@ -478,68 +545,36 @@ def flux_comparison_parameter_generator(final_solution_data_dict, final_flux_nam
     return final_dict_for_flux_comparison_plotting, final_key_name_parameter_dict, final_color_dict
 
 
-def experimental_data_plotting(
-        complete_experimental_mid_data_obj_dict, complete_result_information_dict, output_direct):
-    mid_data_dict_for_plotting = {}
-    raw_data_dict_for_plotting = {}
-    color_dict = {}
-    patient_color_dict = {}
+target_emu_name_nested_list = [
+    ['glucose', '3-phosphoglycerate', 'pyruvate', 'lactate'],
+    ['alanine', 'citrate', 'succinate', 'fumarate'],
+    ['malate', 'aspartate', 'glutamate', 'glutamine'],
+]
+
+
+patient_color_dict = {}
+
+
+def major_minor_key_analysis_func(result_information_dict):
+    tissue = result_information_dict[keyword.tissue]
+    patient = result_information_dict[keyword.patient]
+    index = result_information_dict[keyword.index]
+    condition_treatment_index_str = f'{patient}_{index}'
+    major_key = tissue
+    minor_key_list = [patient, index]
+    minor_key_str = condition_treatment_index_str
     complete_color_list = [Color.blue, Color.orange, Color.purple]
-    for result_label, experimental_mid_data_obj_dict in complete_experimental_mid_data_obj_dict.items():
-        result_information_dict = complete_result_information_dict[result_label]
-        tissue = result_information_dict[keyword.tissue]
-        patient = result_information_dict[keyword.patient]
-        index = result_information_dict[keyword.index]
-        if index == Keywords.average:
-            continue
-        if tissue not in mid_data_dict_for_plotting:
-            mid_data_dict_for_plotting[tissue] = {}
-            raw_data_dict_for_plotting[tissue] = {}
-        for metabolite_name, mid_data_obj in experimental_mid_data_obj_dict.items():
-            current_mid_label_tissue_dict = mid_data_dict_for_plotting[tissue]
-            current_raw_label_tissue_dict = raw_data_dict_for_plotting[tissue]
-            if metabolite_name not in current_mid_label_tissue_dict:
-                current_mid_label_tissue_dict[metabolite_name] = {}
-                current_raw_label_tissue_dict[metabolite_name] = {}
-            patient_index_str = f'{patient}_{index}'
-            current_mid_label_tissue_dict[metabolite_name][patient_index_str] = mid_data_obj.data_vector
-            current_raw_label_tissue_dict[metabolite_name][patient_index_str] = mid_data_obj.raw_data_vector
-            if patient_index_str not in color_dict:
-                if patient not in patient_color_dict:
-                    current_color = complete_color_list[len(patient_color_dict) % 3]
-                    patient_color_dict[patient] = current_color
-                color_dict[patient_index_str] = patient_color_dict[patient]
-    target_emu_name_nested_list = [
-        ['glucose', '3-phosphoglycerate', 'pyruvate', 'lactate'],
-        ['alanine', 'citrate', 'succinate', 'fumarate'],
-        ['malate', 'aspartate', 'glutamate', 'glutamine'],
-    ]
-    target_row_num = len(target_emu_name_nested_list)
-    target_col_num = len(target_emu_name_nested_list[0])
-    for tissue, each_tissue_mid_data_dict_for_plotting in mid_data_dict_for_plotting.items():
-        each_tissue_raw_data_dict_for_plotting = raw_data_dict_for_plotting[tissue]
-        for raw_data in (False, True):
-            if raw_data:
-                parent_direct = 'raw_data'
-                complete_data_dict = each_tissue_raw_data_dict_for_plotting
-                ylim = (0, None)
-            else:
-                parent_direct = 'mid_data'
-                complete_data_dict = each_tissue_mid_data_dict_for_plotting
-                ylim = (0, 1)
-            current_title = f'{tissue}'
-            current_output_direct = '{}/{}'.format(output_direct, parent_direct)
-            check_and_mkdir_of_direct(current_output_direct)
-            multi_row_col_bar_plot(
-                complete_data_dict, target_emu_name_nested_list, target_row_num, target_col_num,
-                error_bar_data_dict=None, color_dict=color_dict, title_dict=None,
-                output_direct=current_output_direct, current_title=current_title, ylim=ylim,
-                xlabel_list=None, figsize=None, legend=False)
+    if patient not in patient_color_dict:
+        current_color = complete_color_list[len(patient_color_dict) % 3]
+        patient_color_dict[patient] = current_color
+    else:
+        current_color = patient_color_dict[patient]
+    return major_key, minor_key_list, minor_key_str, current_color, 0
 
 
-def result_output_dataframe_dict_generator(complete_result_dict):
-    pass
-    # return {'Sheet1': pd.DataFrame()}
+experimental_data_plotting = experimental_data_plotting_func_template(
+    target_emu_name_nested_list, major_minor_key_analysis_func,
+    major_key_file_name_func=lambda major_key: f'target_metabolites_{major_key}_tissue')
 
 
 def metabolic_network_parameter_generator():

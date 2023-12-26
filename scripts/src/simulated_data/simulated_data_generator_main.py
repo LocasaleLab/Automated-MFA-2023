@@ -18,9 +18,13 @@ def arg_setting(computation_subparsers, simulation_enum):
         '-i', '--index', type=int, default=None,
         help='Index to distinguish different simulated data.'
     )
+    simulation_parser.add_argument(
+        '-b', '--batch_num', type=int, default=1,
+        help='Number to generate batched simulated solutions.'
+    )
     simulation_parser.set_defaults(func=simulation)
 
 
 def main(simulation_parser, args):
     from .common_functions import simulated_mid_data_generator
-    simulated_mid_data_generator(args.new_flux, args.index, args.with_noise)
+    simulated_mid_data_generator(args.new_flux, args.batch_num, args.index, args.with_noise)

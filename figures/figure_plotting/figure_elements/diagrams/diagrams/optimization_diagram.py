@@ -100,7 +100,7 @@ class OptimizationDiagramConfig(object):
 def height_to_width_ratio_calculation(mode):
     if mode == ParameterName.simulated:
         height_to_width_ratio = OptimizationDiagramConfig.simulated_height_to_width_ratio
-    elif mode == ParameterName.sensitivity:
+    elif mode in {ParameterName.sensitivity, ParameterName.data_sensitivity}:
         height_to_width_ratio = OptimizationDiagramConfig.sensitivity_height_to_width_ratio
     elif mode == ParameterName.experimental:
         height_to_width_ratio = OptimizationDiagramConfig.experimental_height_to_width_ratio
@@ -151,7 +151,6 @@ def network_model_and_text(
     target_network_model_center = Vector(network_model_x_loc, network_model_center_y_loc)
     network_model_bottom_left_offset = target_network_model_center - scaled_raw_network_model_center
     network_model_config = {
-        ParameterName.data_vector: np.array([0.3, 0.05, 0.05, 0.6]),
         ParameterName.scale: network_model_scale,
         ParameterName.bottom_left_offset: network_model_bottom_left_offset,
         ParameterName.base_z_order: child_diagram_base_z_order,
@@ -212,7 +211,7 @@ def optimization_diagram_generator(mode):
     if mode == ParameterName.simulated:
         main_horiz_axis = 0.57 * height_to_width_ratio
         # main_horiz_axis = 0.534 * height_to_width_ratio
-    elif mode == ParameterName.sensitivity:
+    elif mode in {ParameterName.sensitivity, ParameterName.data_sensitivity}:
         main_horiz_axis = 0.43 * height_to_width_ratio
     else:
         main_horiz_axis = 0.63 * height_to_width_ratio
@@ -249,7 +248,7 @@ def optimization_diagram_generator(mode):
     chevron_arrow_config_list = []
     other_element_config_list = []
 
-    if mode == ParameterName.simulated or mode == ParameterName.sensitivity:
+    if mode in {ParameterName.simulated, ParameterName.sensitivity, ParameterName.data_sensitivity}:
         background_top = height_to_width_ratio
         if mode == ParameterName.sensitivity:
             background_height = 0.3
@@ -384,7 +383,7 @@ def optimization_diagram_generator(mode):
     if mode == ParameterName.simulated:
         experimental_text_content = 'Simulated MIDs of\ntarget metabolites'
         experimental_text_y_offset = -0.01
-    elif mode == ParameterName.sensitivity:
+    elif mode in {ParameterName.sensitivity, ParameterName.data_sensitivity}:
         experimental_text_content = 'Selected simulated\nMIDs of target\nmetabolites'
         experimental_text_y_offset = 0.01
     else:
@@ -401,6 +400,11 @@ def optimization_diagram_generator(mode):
             Vector(experimental_mid_x_loc, middle_experimental_mid_y_loc + 0.06),
             0.18, 0.24, OptimizationDiagramConfig.no_2_string,
             text_config_list, other_element_config_list)
+    elif mode == ParameterName.data_sensitivity:
+        sensitivity_box_text(
+            Vector(experimental_mid_x_loc, middle_experimental_mid_y_loc + 0.196),
+            0.18, 0.505, '',
+            text_config_list, other_element_config_list)
 
     chevron_arrow3_config = {
         ParameterName.tail_end_center: Vector(main_vert_axis + predicted_mid_side_distance, main_horiz_axis),
@@ -415,7 +419,6 @@ def optimization_diagram_generator(mode):
         **OptimizationDiagramConfig.document_text_config,
     }
     loss_function_equation_config = {
-        # ParameterName.string: r'$\mathit{L}\mathbf{\left(v\right)}$',
         ParameterName.string: f'${CommonFigureString.loss_function}$',
         ParameterName.center: Vector(right_2_vert_axis, main_horiz_axis),
         **OptimizationDiagramConfig.equation_text_config,
@@ -469,8 +472,8 @@ def optimization_diagram_generator(mode):
     chevron_head_len = chevron_width * chevron_head_len_width_ratio
     # 0.5 is parallel with chevron arrow edge
     chevron_arrow_slope1 = 0.25 / chevron_head_len_width_ratio
-    if mode == ParameterName.simulated or mode == ParameterName.sensitivity:
-        if mode == ParameterName.sensitivity:
+    if mode in {ParameterName.simulated, ParameterName.sensitivity, ParameterName.data_sensitivity}:
+        if mode in {ParameterName.sensitivity, ParameterName.data_sensitivity}:
             simulated_arrow_horiz_axis = upper_horiz_axis
             simulated_chevron_arrow_break_x_loc = main_vert_axis + 0.055
         elif mode == ParameterName.simulated:
@@ -494,8 +497,11 @@ def optimization_diagram_generator(mode):
             **OptimizationDiagramConfig.chevron_config,
         }
         chevron_arrow_config_list.append(simulated_chevron_arrow1_config)
-        if mode == ParameterName.sensitivity:
-            current_network_model_text = 'Raw\nnetwork\nmodel'
+        if mode in {ParameterName.sensitivity, ParameterName.data_sensitivity}:
+            if mode == ParameterName.sensitivity:
+                current_network_model_text = 'Raw\nnetwork\nmodel'
+            else:
+                current_network_model_text = 'Network\nmodel'
             current_network_model_text_y_offset = 0
             network_model_and_text(
                 top_network_model_center_y_loc, current_network_model_text, current_network_model_text_y_offset,
@@ -534,7 +540,7 @@ def optimization_diagram_generator(mode):
             chevron_arrow_config_list.append(simulated_chevron_arrow2_config)
 
         known_flux_vector_text_config = {
-            ParameterName.string: 'Known flux\nvector',
+            ParameterName.string: 'Predefined\nflux vector',
             ParameterName.center: Vector(
                 known_flux_vector_x_loc,
                 simulated_arrow_horiz_axis - equation_text_height / 2 -
@@ -575,7 +581,7 @@ def optimization_diagram_generator(mode):
 
     text_center_x_loc = process_text_left_x_loc + document_text_width / 2
     if mode == ParameterName.simulated:
-        normal_text_content = 'Compared with known flux vector'
+        normal_text_content = 'Compared with the predefined flux'
         process_text1_config = {
             ParameterName.string: normal_text_content,
             ParameterName.center: Vector(text_center_x_loc, bottom_most_horiz_axis),
@@ -586,7 +592,7 @@ def optimization_diagram_generator(mode):
             # ParameterName.string: r'$\mathbf{v^\prime}$',
             ParameterName.string: CommonFigureString.known_flux,
             ParameterName.center: Vector(
-                text_center_x_loc + OptimizationDiagramConfig.bottom_document_size * len(normal_text_content) * 0.00091,
+                text_center_x_loc + OptimizationDiagramConfig.bottom_document_size * len(normal_text_content) * 0.00088,
                 bottom_most_horiz_axis + equation_text_size * 0.00013),
             **OptimizationDiagramConfig.bottom_document_text_config,
             ParameterName.font_size: equation_text_size

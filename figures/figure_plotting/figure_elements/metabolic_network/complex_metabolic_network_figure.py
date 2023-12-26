@@ -669,10 +669,10 @@ class SingleSensitivityDiagram(CompositeFigure):
     def calculate_center(self, scale, *args):
         return self.total_size / 2 * scale
 
-    def __init__(self, figure_data_parameter_dict, **kwargs):
+    def __init__(self, figure_data_parameter_dict, separate=False, **kwargs):
         # mode = figure_data_parameter_dict.pop(ParameterName.mode)
         mode = default_parameter_extract(figure_data_parameter_dict, ParameterName.mode, None, pop=True)
-        background = default_parameter_extract(figure_data_parameter_dict, ParameterName.background, False, pop=True)
+        background = default_parameter_extract(figure_data_parameter_dict, ParameterName.background, True, pop=True)
         # model_sensitivity_set = {
         #     DataName.merge_reversible_reaction, DataName.combine_consecutive_reactions, DataName.prune_branches}
         # data_and_boundary_sensitivity_set = {
@@ -692,6 +692,7 @@ class SingleSensitivityDiagram(CompositeFigure):
             effective_sensitivity_diagram_config_dict = {
                 ParameterName.name: f'data_sensitivity_diagram_{mode}',
                 ParameterName.mode: mode,
+                ParameterName.separate: separate,
                 **figure_data_parameter_dict,
             }
             diagram_class = DataAvailabilityDiagram
@@ -839,6 +840,7 @@ class ComplexSensitivityDiagram(CompositeFigure):
             common_figure_parameter_dict = {
                 ParameterName.bottom_left_offset: target_center_dict[each_subfigure_mode],
                 ParameterName.scale: common_scale,
+                ParameterName.separate: False,
                 ParameterName.figure_data_parameter_dict: {
                     ParameterName.mode: each_subfigure_mode,
                     ParameterName.background: True,
@@ -903,7 +905,7 @@ class SensitivityDiagram(CompositeFigure):
         if mode in complex_data_name_set:
             target_obj = ComplexSensitivityDiagram(figure_data_parameter_dict, **kwargs)
         else:
-            target_obj = SingleSensitivityDiagram(figure_data_parameter_dict, **kwargs)
+            target_obj = SingleSensitivityDiagram(figure_data_parameter_dict, separate=True, **kwargs)
         return target_obj
 
 
@@ -920,6 +922,21 @@ class ElementName(object):
     NetworkMFAResultComparison = 'ExchangeNetworkMFAResultComparison'
     NormalAndExchangeNetworkMFAResultComparison = 'NormalAndExchangeNetworkMFAResultComparison'
     SensitivityDiagram = 'SensitivityDiagram'
+
+
+class Elements(object):
+    MetaboliteNode = MetaboliteElement
+    Reaction = ReactionElement
+    Subnetwork = SubnetworkElement
+    MetabolicNetwork = MetabolicNetwork
+    MetabolicNetworkLegend = MetabolicNetworkLegend
+    MetabolicNetworkWithLegend = MetabolicNetworkWithLegend
+    ExchangeMetabolicNetworkWithTitle = ExchangeMetabolicNetworkWithTitle
+    QuadMetabolicNetworkComparison = QuadMetabolicNetworkComparison
+    NormalAndExchangeTwinNetwork = NormalAndExchangeTwinNetwork
+    NetworkMFAResultComparison = NetworkMFAResultComparison
+    NormalAndExchangeNetworkMFAResultComparison = NormalAndExchangeNetworkMFAResultComparison
+    SensitivityDiagram = SensitivityDiagram
 
 
 element_dict = {

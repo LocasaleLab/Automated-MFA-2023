@@ -1,7 +1,7 @@
 from ..config import np, Vector, warnings, Keyword, ParameterName, LineStyle, JoinStyle, \
     VerticalAlignment, HorizontalAlignment, FontWeight, ZOrderConfig, ColorConfig, TextConfig, \
-    CommonFigureString, CommonFigureMaterials, CommonElementConfig
-from ...basic_shape_elements.element_dict import ElementName, Arrow, ArcArrow, CompositeFigure, Circle, TextBox, \
+    CommonFigureString, CommonFigureMaterials, CommonElementConfig, default_parameter_extract, DataName
+from ...basic_shape_elements.elements import ElementName, Arrow, ArcArrow, CompositeFigure, Circle, TextBox, \
     Rectangle, RoundRectangle, PathStep, PathOperation, PathShape, Ellipse, ellipse_arc_obj, Line, Brace
 
 

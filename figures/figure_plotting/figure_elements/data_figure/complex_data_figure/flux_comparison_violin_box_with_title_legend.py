@@ -1,5 +1,5 @@
 from ..config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, TextBox, \
-    CommonFigureMaterials, default_parameter_extract
+    CommonFigureMaterials, default_parameter_extract, CommonElementConfig
 from ..basic_data_figure.violin_box_data_figure import FluxComparisonViolinBoxDataFigure
 
 
@@ -44,8 +44,9 @@ class FluxComparisonViolinBoxWithTitleLegend(CompositeFigure):
         axis_legend_top_y_value = bottom_line + axis_legend_height
         figure_title_y_value = axis_legend_top_y_value + figure_title_distance + figure_title_height / 2
         common_text_config_dict = {
-            ParameterName.font: DataFigureConfig.main_text_font,
-            ParameterName.z_order: DataFigureConfig.figure_text_z_order,
+            **CommonElementConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
+            # ParameterName.z_order: DataFigureConfig.figure_text_z_order,
             ParameterName.font_size: DataFigureConfig.GroupDataFigure.x_y_axis_label_font_size,
             ParameterName.font_weight: FontWeight.bold,
             ParameterName.text_box: False,

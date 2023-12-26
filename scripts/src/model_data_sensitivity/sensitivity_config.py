@@ -1,4 +1,8 @@
+from common_and_plotting_functions.figure_data_format import BasicFigureData
+from common_and_plotting_functions.config import FigureDataKeywords
+
 from ..common.built_in_packages import ValueEnum
+from ..common.config import Keywords as GeneralKeywords
 
 
 raw_config_first = True
@@ -30,6 +34,22 @@ class ExperimentName(ValueEnum):
     different_constant_flux_with_noise = 'different_constant_flux_with_noise'
     different_constant_flux_with_noise_all_data = 'different_constant_flux_with_noise_all_data'
 
+    optimization_from_raw_data_average_solutions = 'optimization_from_raw_data_average_solutions'
+    optimization_from_all_data_average_solutions = 'optimization_from_all_data_average_solutions'
+    optimization_from_raw_data_average_solutions_with_squared_loss = 'optimization_from_raw_data_average_solutions_with_squared_loss'
+    optimization_from_all_data_average_solutions_with_squared_loss = 'optimization_from_all_data_average_solutions_with_squared_loss'
+
+    optimization_from_batched_simulated_raw_data = 'optimization_from_batched_simulated_raw_data'
+    optimization_from_batched_simulated_all_data = 'optimization_from_batched_simulated_all_data'
+    optimization_from_batched_simulated_raw_data_average_solutions = 'optimization_from_batched_simulated_raw_data_average_solutions'
+    optimization_from_batched_simulated_all_data_average_solutions = 'optimization_from_batched_simulated_all_data_average_solutions'
+
+    raw_model_raw_data_with_squared_loss = 'raw_model_raw_data_with_squared_loss'
+    raw_model_all_data_with_squared_loss = 'raw_model_all_data_with_squared_loss'
+
+    optimization_from_batched_simulated_raw_data_with_squared_loss = 'optimization_from_batched_simulated_raw_data_with_squared_loss'
+    optimization_from_batched_simulated_all_data_with_squared_loss = 'optimization_from_batched_simulated_all_data_with_squared_loss'
+
 
 class ModelSetting(ValueEnum):
     raw_model = 'raw_model'
@@ -41,6 +61,8 @@ class ModelSetting(ValueEnum):
 class DataSetting(ValueEnum):
     raw_data = 'raw_data'
     all_data = 'all_data'
+    raw_data_squared_loss = 'raw_data_squared_loss'
+    all_data_squared_loss = 'all_data_squared_loss'
     medium_data_plus = 'medium_data_plus'
     medium_data = 'medium_data'
     few_data = 'few_data'
@@ -48,30 +70,49 @@ class DataSetting(ValueEnum):
     data_without_aa = 'data_without_aa'
     data_without_tca = 'data_without_tca'
     medium_data_without_combination = 'data_without_combination'
+    raw_data_batch = 'raw_data_batch'
+    all_data_batch = 'all_data_batch'
+    raw_data_batch_squared_loss = 'raw_data_batch_squared_loss'
+    all_data_batch_squared_loss = 'all_data_batch_squared_loss'
+
+
+squared_loss_data_dict = {
+    DataSetting.raw_data: DataSetting.raw_data_squared_loss,
+    DataSetting.all_data: DataSetting.all_data_squared_loss,
+    DataSetting.raw_data_batch: DataSetting.raw_data_batch_squared_loss,
+    DataSetting.all_data_batch: DataSetting.all_data_batch_squared_loss,
+    ExperimentName.optimization_from_batched_simulated_raw_data: ExperimentName.optimization_from_batched_simulated_raw_data_with_squared_loss,
+    ExperimentName.optimization_from_batched_simulated_all_data: ExperimentName.optimization_from_batched_simulated_all_data_with_squared_loss,
+}
 
 
 class ConfigSetting(ValueEnum):
     different_flux_range = 'different_flux_range'
     different_constant_flux = 'different_constant_flux'
     different_constant_flux_with_noise = 'different_constant_flux_with_noise'
+    optimization_from_average_solutions = 'optimization_from_average_solutions'
+    mean_squared_loss = 'mean_squared_loss'
+    optimization_from_average_solutions_with_mean_squared_loss = f'{optimization_from_average_solutions}_{mean_squared_loss}'
 
 
-class Keywords(object):
+class Keywords(GeneralKeywords):
     raw_type = 'raw'
-
-    model = 'model'
-    data = 'data'
-    config = 'config'
-    comment = 'comment'
 
     normal_result_process = 'normal_result_process'
     raw_model_result_process = 'raw_model_result_process'
+    raw_model_averaged_optimization_result_process = 'raw_model_averaged_optimization_result_process'
+    raw_model_batched_simulated_data_result_process = 'raw_model_different_simulated_data_result_process'
+    raw_model_batched_simulated_data_averaged_optimization_result_process = 'raw_model_different_simulated_data_averaged_optimization_result_process'
+    simulated_flux_value_dict = 'simulated_flux_value_dict'
 
     absolute_distance = 'absolute_distance'
     relative_distance = 'relative_distance'
     euclidean_distance = 'euclidean_distance'
     median = 'median'
     mean = 'mean'
+
+    selection_size = 'selection_size'
+    optimized_size = 'optimized_size'
 
 
 model_data_config_dict = {
@@ -190,7 +231,7 @@ model_data_config_dict = {
             Keywords.model: ModelSetting.raw_model,
             Keywords.data: DataSetting.all_data,
             Keywords.config: ConfigSetting.different_constant_flux,
-            Keywords.comment: 'Raw model, All available MID data, '
+            Keywords.comment: 'Raw model, all available MID data, '
                               'and constant flux is varied',
         },
     ExperimentName.different_constant_flux_with_noise:
@@ -206,8 +247,90 @@ model_data_config_dict = {
             Keywords.model: ModelSetting.raw_model,
             Keywords.data: (DataSetting.all_data, True),
             Keywords.config: ConfigSetting.different_constant_flux,
-            Keywords.comment: 'Raw model, All available MID data with noise, '
+            Keywords.comment: 'Raw model, all available MID data with noise, '
                               'and constant flux is varied',
+        },
+    ExperimentName.optimization_from_all_data_average_solutions:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions,
+            Keywords.comment: 'Raw model, all available MID data, optimization from averaged solutions',
+        },
+    ExperimentName.optimization_from_raw_data_average_solutions:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions,
+            Keywords.comment: 'Raw model, raw experimentally available MID data, optimization from averaged solutions',
+        },
+    ExperimentName.optimization_from_all_data_average_solutions_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions_with_mean_squared_loss,
+            Keywords.comment: 'Raw model, all available MID data, optimization from averaged solutions with Mean Square Loss',
+        },
+    ExperimentName.optimization_from_raw_data_average_solutions_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions_with_mean_squared_loss,
+            Keywords.comment: 'Raw model, raw experimentally available MID data, optimization from averaged solutions with Mean Square Loss',
+        },
+    ExperimentName.optimization_from_batched_simulated_all_data:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data_batch,
+            Keywords.comment: 'Raw model, all available MID data, multiple simulated data',
+        },
+    ExperimentName.optimization_from_batched_simulated_raw_data:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data_batch,
+            Keywords.comment: 'Raw model, raw experimentally available MID data, multiple simulated data',
+        },
+    ExperimentName.optimization_from_batched_simulated_all_data_average_solutions:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data_batch,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions,
+            Keywords.comment: 'Raw model, all available MID data, multiple simulated data, optimization from averaged solutions',
+        },
+    ExperimentName.optimization_from_batched_simulated_raw_data_average_solutions:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data_batch,
+            Keywords.config: ConfigSetting.optimization_from_average_solutions,
+            Keywords.comment: 'Raw model, raw experimentally available MID data, multiple simulated data, optimization from averaged solutions',
+        },
+    ExperimentName.raw_model_raw_data_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data,
+            Keywords.config: ConfigSetting.mean_squared_loss,
+            Keywords.comment: 'Raw model, raw experimentally available MID data and optimization with Mean Square Loss',
+        },
+    ExperimentName.raw_model_all_data_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data,
+            Keywords.config: ConfigSetting.mean_squared_loss,
+            Keywords.comment: 'Raw model, all available MID data and optimization with Mean Square Loss',
+        },
+    ExperimentName.optimization_from_batched_simulated_raw_data_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.raw_data_batch,
+            Keywords.config: ConfigSetting.mean_squared_loss,
+            Keywords.comment: 'Raw model, all available MID data, multiple simulated data with Mean Square Loss',
+        },
+    ExperimentName.optimization_from_batched_simulated_all_data_with_squared_loss:
+        {
+            Keywords.model: ModelSetting.raw_model,
+            Keywords.data: DataSetting.all_data_batch,
+            Keywords.config: ConfigSetting.mean_squared_loss,
+            Keywords.comment: 'Raw model, all available MID data, multiple simulated data with Mean Square Loss',
         },
 }
 
@@ -589,35 +712,97 @@ constant_flux_value_nested_dict_with_noise = {
     'with_lac_high_low': {'GLC_input': 1 + noise_rate, 'LAC_output': 1 - noise_rate},
 }
 
+complete_analyzed_set_size_list = (
+    100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000
+)
+complete_selected_min_loss_size_list = (1, 2, 5, 10, 20, 50, 100, 200, 500)
 
-net_flux_list = [
-    ('PGI_c', 'PGI_c__R'),
-    ('FBA_c', 'FBA_c__R'),
-    ('TPI_c', 'TPI_c__R'),
-    ('GAPD_c', 'GAPD_c__R'),
-    ('PGK_c', 'PGK_c__R'),
-    ('PGM_c', 'PGM_c__R'),
-    ('ENO_c', 'ENO_c__R'),
-    ('LDH_c', 'LDH_c__R'),
-    ('MDH_c', 'MDH_c__R'),
-    ('SHMT_c', 'SHMT_c__R'),
-    ('ACONT_m', 'ACONT_m__R'),
-    ('SUCD_m', 'SUCD_m__R'),
-    ('FUMH_m', 'FUMH_m__R'),
-    ('MDH_m', 'MDH_m__R'),
-    ('GLUD_m', 'GLUD_m__R'),
-    ('ASPTA_m', 'ASPTA_m__R'),
-    ('ASPTA_c', 'ASPTA_c__R'),
-    ('RPI_c', 'RPI_c__R'),
-    ('RPE_c', 'RPE_c__R'),
-    ('TKT1_c', 'TKT1_c__R'),
-    ('TKT2_c', 'TKT2_c__R'),
-    ('TALA_c', 'TALA_c__R'),
-    ('PYR_trans', 'PYR_trans__R'),
-    ('ASPGLU_m', 'ASPGLU_m__R'),
-    ('AKGMAL_m', 'AKGMAL_m__R'),
-    ('CIT_trans', 'CIT_trans__R'),
-    ('GLN_trans', 'GLN_trans__R'),
-    ('GLU_trans', 'GLU_trans__R'),
-    ('GPT_c', 'GPT_c__R'),
-]
+
+def return_analyzed_set_and_selected_min_loss_set(test_raw_model_analysis=False, current_experiment_name=None):
+    if test_raw_model_analysis:
+        if current_experiment_name in {ExperimentName.raw_model_all_data}:
+            analyzed_set_size_list = (5000,)
+            selected_min_loss_size_list = (100,)
+        else:
+            analyzed_set_size_list = (20000,)
+            selected_min_loss_size_list = (100,)
+    else:
+        analyzed_set_size_list = complete_analyzed_set_size_list
+        selected_min_loss_size_list = complete_selected_min_loss_size_list
+    return analyzed_set_size_list, selected_min_loss_size_list
+
+
+def complete_optimization_selection_parameters_dict_generator(analyzed_set_size_list, selected_min_loss_size_list):
+    parameters_dict = {}
+    for analyzed_set_size in analyzed_set_size_list:
+        for selected_min_loss_size in selected_min_loss_size_list:
+            if selected_min_loss_size > analyzed_set_size:
+                continue
+            analyzed_set_size_str = str(analyzed_set_size)
+            if analyzed_set_size > 1000:
+                analyzed_set_size_str = f'{int(analyzed_set_size / 1000 + .5)}k'
+            current_name = f'{analyzed_set_size_str}_{selected_min_loss_size}'
+            parameters_dict[current_name] = {
+                Keywords.optimized_size: analyzed_set_size, Keywords.selection_size: selected_min_loss_size}
+    return parameters_dict
+
+
+class AverageSolution(BasicFigureData):
+    data_prefix = FigureDataKeywords.raw_model_distance
+
+    def __init__(self):
+        super().__init__()
+        self.complete_data_name_dict = {
+            DataSetting.all_data: ExperimentName.raw_model_all_data,
+            DataSetting.raw_data: ExperimentName.raw_model_raw_data,
+            DataSetting.all_data_squared_loss: ExperimentName.raw_model_all_data_with_squared_loss,
+            DataSetting.raw_data_squared_loss: ExperimentName.raw_model_raw_data_with_squared_loss,
+            DataSetting.all_data_batch: ExperimentName.optimization_from_batched_simulated_all_data,
+            DataSetting.raw_data_batch: ExperimentName.optimization_from_batched_simulated_raw_data,
+            DataSetting.all_data_batch_squared_loss: ExperimentName.optimization_from_batched_simulated_all_data_with_squared_loss,
+            DataSetting.raw_data_batch_squared_loss: ExperimentName.optimization_from_batched_simulated_raw_data_with_squared_loss,
+        }
+
+    def return_averaged_flux_solutions(self, data_name, optimized_size, selection_size):
+        complete_data_name = self.complete_data_name_dict[data_name]
+        averaged_data_obj = self._return_figure_data(complete_data_name)
+        selected_averaged_flux_value_dict = averaged_data_obj.selected_averaged_flux_value_dict
+        return selected_averaged_flux_value_dict[optimized_size][selection_size]
+
+    def return_averaged_data(self, data_name):
+        complete_data_name = self.complete_data_name_dict[data_name]
+        averaged_data_obj = self._return_figure_data(complete_data_name)
+        raw_selected_flux_value_dict = averaged_data_obj.raw_selected_flux_value_dict
+        selected_averaged_flux_value_dict = averaged_data_obj.selected_averaged_flux_value_dict
+        initial_raw_selected_diff_vector_dict = averaged_data_obj.raw_selected_diff_vector_dict
+        initial_averaged_diff_vector_dict = averaged_data_obj.selected_averaged_diff_vector_dict
+        raw_selected_loss_dict = averaged_data_obj.raw_loss_value_dict
+        loss_of_mean_solution_dict = averaged_data_obj.loss_of_mean_solution_dict
+        raw_all_select_euclidian_distance_dict = averaged_data_obj.final_raw_all_select_euclidian_distance_dict
+        net_all_select_euclidian_distance_dict = averaged_data_obj.final_net_all_select_euclidian_distance_dict
+        try:
+            raw_mean_euclidian_distance_dict = averaged_data_obj.final_raw_euclidian_distance_dict
+        except AttributeError:
+            raw_mean_euclidian_distance_dict = None
+        net_mean_euclidian_distance_dict = averaged_data_obj.final_net_euclidian_distance_dict
+        net_all_selected_relative_error_dict = averaged_data_obj.net_all_selected_relative_error_dict
+        net_selected_averaged_relative_error_dict = averaged_data_obj.net_selected_averaged_relative_error_dict
+        final_flux_relative_distance_dict = averaged_data_obj.final_flux_relative_distance_dict
+        try:
+            net_distance_between_different_simulated_flux_dict = averaged_data_obj.net_distance_between_different_simulated_flux_dict
+        except AttributeError:
+            net_distance_between_different_simulated_flux_dict = None
+        return (
+            raw_selected_flux_value_dict, selected_averaged_flux_value_dict,
+            initial_raw_selected_diff_vector_dict, initial_averaged_diff_vector_dict,
+            raw_selected_loss_dict, loss_of_mean_solution_dict,
+            raw_all_select_euclidian_distance_dict, net_all_select_euclidian_distance_dict,
+            raw_mean_euclidian_distance_dict, net_mean_euclidian_distance_dict,
+            net_all_selected_relative_error_dict,
+            net_selected_averaged_relative_error_dict,
+            final_flux_relative_distance_dict, net_distance_between_different_simulated_flux_dict)
+
+
+averaged_solution_data_obj = AverageSolution()
+
+

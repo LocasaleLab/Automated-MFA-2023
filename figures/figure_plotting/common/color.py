@@ -36,7 +36,10 @@ class ColorConfig(object):
     light_medium_bright_orange = Color(255, 205, 175)
     light_bright_orange = Color(255, 224, 205)
     light_orange = Color(253, 208, 180)
+    dark_orange = Color(229, 90, 5)
+    solid_dark_orange = Color(243, 160, 110, a=1)
     purple = Color(112, 48, 160)
+    medium_purple = purple.transparency_mix(0.7)
     green = Color(44, 160, 44)
     light_green = Color(161, 209, 109)
     super_light_green = Color(184, 224, 140)
@@ -62,6 +65,7 @@ class ColorConfig(object):
     metabolite_green = Color(166, 214, 166)
     metabolite_gold = Color(253, 228, 147)
     metabolite_yellow = Color(253, 228, 147)
+    darker_yellow = Color(252, 218, 105)
     mid_red = Color(255, 87, 87)
     mixed_mid_red = Color(242, 118, 118)
     biomass_purple = Color(174, 127, 213)
@@ -125,11 +129,36 @@ class ColorConfig(object):
     # experimental_flux_color = bar_orange
     experimental_flux_color = orange
     experimental_flux_color_with_alpha = experimental_flux_color.transparency_mix(higher_alpha)
+    # raw_distance_color = orange
+    # net_distance_color = dark_orange
+    # net_distance_legend_color = solid_dark_orange
+    # raw_distance_color = normal_blue
+    # raw_distance_color_with_alpha = raw_distance_color.transparency_mix(higher_alpha)
+    # net_distance_color = distance_text_color = net_distance_text_color = dark_blue
+    raw_distance_color = darker_yellow
+    raw_distance_color_with_alpha = raw_distance_color.transparency_mix(higher_alpha)
+    net_distance_color = distance_text_color = brown
+    net_distance_legend_color = Color(243, 214, 117).add_transparency(1)
     global_optimum_color = mid_red
     global_optimum_color_with_alpha = mixed_mid_red
+    predefined_flux_color = mixed_mid_red
+    predefined_flux_text_color = mid_red
 
     cmap_list = [(0, normal_blue), (0.5, light_gray), (1, slightly_light_orange)]
     my_color_map = mcolors.LinearSegmentedColormap.from_list('BlueOrange', cmap_list)
+
+    # different_simulated_distance = purple
+    different_simulated_distance = mid_red
+    initial_solution_color = random_flux_color_with_alpha
+    selected_solution_color = medium_orange
+    selected_solution_text_color = orange
+    averaged_solution_color = normal_blue
+    averaged_solution_text_color = dark_blue
+    # reoptimized_solution_color = green
+    # reoptimized_solution_color = mid_red
+    # reoptimized_solution_text_color = mid_red
+    reoptimized_solution_color = medium_purple
+    reoptimized_solution_text_color = purple
 
 
 class TextConfig(object):

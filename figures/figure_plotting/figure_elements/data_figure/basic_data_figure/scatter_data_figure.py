@@ -1,6 +1,6 @@
 from ..config import DataFigureConfig, ParameterName, Vector, ColorConfig, Keywords, np, move_and_scale_for_dict, \
     merge_axis_format_dict, it, common_legend_generator, default_parameter_extract, CommonFigureString, \
-    VerticalAlignment, LineStyle, DataName, ProtocolSearchingMaterials
+    VerticalAlignment, LineStyle, DataName, ProtocolSearchingMaterials, t_test_of_two_groups
 from .figure_data_loader import raw_model_data, flux_comparison_data, embedded_flux_data
 from .data_figure import DataFigure
 from .data_figure_plotting_and_data_output_generator import draw_text_by_axis_loc, single_scatter_plotting
@@ -25,10 +25,6 @@ class BasicScatterDataFigure(DataFigure):
             ParameterName.color_dict,
             ParameterName.data_nested_list,
         ]]
-        # try:
-        #     self.complete_scatter_line_list = figure_data_parameter_dict[ParameterName.scatter_line]
-        # except KeyError:
-        #     self.complete_scatter_line_list = it.repeat(None)
         self.complete_scatter_line_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.scatter_line, it.repeat(None))
 
@@ -41,26 +37,20 @@ class BasicScatterDataFigure(DataFigure):
                 for key in [
                     ParameterName.cutoff_param_dict, ParameterName.subplot_name_text_format_dict,
                     ParameterName.error_bar_param_dict, ParameterName.scatter_param_dict,
-                    ParameterName.line_param_dict
+                    ParameterName.line_param_dict, ParameterName.supplementary_text_format_dict,
                 ]
             },
             ParameterName.x_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_label_width_height_distance_dict_generator(),
+                axis_label_format_dict, DataFigureConfig.x_label_format_dict_generator(),
                 new_figure_config_dict, ParameterName.x_label_format_dict),
             ParameterName.x_tick_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.x_tick_label_width_height_distance_dict_generator(),
+                axis_label_format_dict, DataFigureConfig.x_tick_label_format_dict_generator(),
                 new_figure_config_dict, ParameterName.x_tick_label_format_dict),
-            # ParameterName.y_label_format_dict: merge_axis_format_dict(
-            #     axis_label_format_dict, DataFigureConfig.y_label_width_height_distance_dict_generator(scale),
-            #     new_figure_config_dict, ParameterName.y_label_format_dict),
-            # ParameterName.y_tick_label_format_dict: merge_axis_format_dict(
-            #     axis_label_format_dict, DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale),
-            #     new_figure_config_dict, ParameterName.y_tick_label_format_dict),
             ParameterName.y_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.y_label_width_height_distance_dict_generator(),
+                axis_label_format_dict, DataFigureConfig.y_label_format_dict_generator(),
                 new_figure_config_dict, ParameterName.y_label_format_dict),
             ParameterName.y_tick_label_format_dict: merge_axis_format_dict(
-                axis_label_format_dict, DataFigureConfig.y_tick_label_width_height_distance_dict_generator(),
+                axis_label_format_dict, DataFigureConfig.y_tick_label_format_dict_generator(),
                 new_figure_config_dict, ParameterName.y_tick_label_format_dict),
         }
 
@@ -75,6 +65,11 @@ class BasicScatterDataFigure(DataFigure):
                 ParameterName.subplot_name_list,
                 ParameterName.text_axis_loc_pair,
             )]
+        self.supplementary_text_list, self.supplementary_text_loc_list = default_parameter_extract(
+            figure_data_parameter_dict, [
+                ParameterName.supplementary_text_list,
+                ParameterName.supplementary_text_loc_list,
+            ], None, repeat_default_value=True)
 
         (
             self.cutoff_value_list,
@@ -103,16 +98,6 @@ class BasicScatterDataFigure(DataFigure):
                 ParameterName.y_tick_labels_list,
                 ParameterName.figure_type
             )]
-        # self.error_bar, self.scatter_line = [
-        #     figure_data_parameter_dict[key] if key in figure_data_parameter_dict else False
-        #     for key in [
-        #         ParameterName.error_bar,
-        #         ParameterName.scatter_line,
-        #     ]]
-        # try:
-        #     self.error_bar = figure_data_parameter_dict[ParameterName.error_bar]
-        # except KeyError:
-        #     self.error_bar = False
         self.error_bar = default_parameter_extract(figure_data_parameter_dict, ParameterName.error_bar, False)
 
         if ParameterName.legend in figure_data_parameter_dict:
@@ -140,13 +125,6 @@ class BasicScatterDataFigure(DataFigure):
                 self.complete_data_dict_list, ax_and_transform_list, self.x_lim_list, self.x_label_list,
                 self.x_ticks_list, self.x_tick_labels_list, self.y_lim_list, self.y_label_list, self.y_ticks_list,
                 self.y_tick_labels_list, self.cutoff_value_list, self.complete_scatter_line_list):
-            # if self.scatter_line_diagram:
-            #     single_point_variation_plotting(
-            #         current_ax, current_transform, complete_data_dict, x_lim, x_ticks,
-            #         y_lim, y_ticks, x_label=x_label, x_tick_labels=x_tick_labels,
-            #         y_label=y_label, y_tick_labels=y_tick_labels, cutoff_value=cutoff_value,
-            #         **self.figure_config_dict)
-            # else:
             single_scatter_plotting(
                 current_ax, current_transform, complete_data_dict, x_lim=x_lim, x_ticks=x_ticks, x_label=x_label,
                 x_tick_labels=x_tick_labels, y_lim=y_lim, y_ticks=y_ticks,
@@ -157,20 +135,19 @@ class BasicScatterDataFigure(DataFigure):
                 draw_text_by_axis_loc(
                     current_ax, subplot_name, self.text_axis_loc_pair, current_transform,
                     **self.figure_config_dict[ParameterName.subplot_name_text_format_dict])
+        if self.supplementary_text_list is not None:
+            for supplementary_text, supplementary_loc, (current_ax, current_transform) in zip(
+                    self.supplementary_text_list, self.supplementary_text_loc_list, ax_and_transform_list):
+                draw_text_by_axis_loc(
+                    current_ax, supplementary_text, supplementary_loc, current_transform,
+                    **self.figure_config_dict[ParameterName.supplementary_text_format_dict]
+                )
 
     def move_and_scale(self, scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1):
         super().move_and_scale(
             scale=scale, bottom_left_offset=bottom_left_offset, base_z_order=base_z_order,
             z_order_increment=z_order_increment)
-        # if self.cutoff_param_dict is not None:
-        #     move_and_scale_for_dict(self.cutoff_param_dict, scale=scale)
-        # if self.error_bar_param_dict is not None:
-        #     move_and_scale_for_dict(self.error_bar_param_dict, scale=scale)
-        # if self.subplot_name_text_format_dict is not None:
-        #     move_and_scale_for_dict(self.subplot_name_text_format_dict, scale=scale)
         for data_dict in self.complete_data_dict_list:
-            # for label_dict in data_dict.values():
-            #     move_and_scale_for_dict(label_dict, scale=scale)
             move_and_scale_for_dict(data_dict, scale=scale)
 
 
@@ -178,20 +155,20 @@ def common_figure_config_dict_generator(axis_label_format_dict, scale=1):
     return {
         ParameterName.x_label_format_dict: {
             **axis_label_format_dict,
-            **DataFigureConfig.x_label_width_height_distance_dict_generator(scale),
+            **DataFigureConfig.x_label_format_dict_generator(scale),
         },
         ParameterName.x_tick_label_format_dict: {
             **axis_label_format_dict,
-            **DataFigureConfig.x_tick_label_width_height_distance_dict_generator(scale),
+            **DataFigureConfig.x_tick_label_format_dict_generator(scale),
         },
         ParameterName.y_label_format_dict: {
             **axis_label_format_dict,
-            **DataFigureConfig.y_label_width_height_distance_dict_generator(scale),
+            **DataFigureConfig.y_label_format_dict_generator(scale),
             ParameterName.axis_label_distance: 0.03 * scale,
         },
         ParameterName.y_tick_label_format_dict: {
             **axis_label_format_dict,
-            **DataFigureConfig.y_tick_label_width_height_distance_dict_generator(scale),
+            **DataFigureConfig.y_tick_label_format_dict_generator(scale),
         },
         ParameterName.scatter_param_dict: {
             ParameterName.z_order: DataFigureConfig.normal_figure_element_z_order
@@ -240,8 +217,9 @@ class GridScatterDataFigure(BasicScatterDataFigure):
             ParameterName.cutoff_param_dict: cutoff_param_dict,
         }
         (
-            data_dict, scatter_y_lim_pair, x_label_index_dict, y_label_index_dict
+            (_, data_dict), max_y_lim, x_label_index_dict, y_label_index_dict
         ) = raw_model_data.return_scatter_data(**figure_data_parameter_dict)
+        scatter_y_lim_pair = (0, max_y_lim)
         common_y_lim = scatter_y_lim_pair if y_lim is None else y_lim
 
         row_num = len(y_label_index_dict)
@@ -317,7 +295,8 @@ def general_flux_layout_generator(
         ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict, flux_name_location_list,
         common_x_label, common_y_label, preset_y_lim_list, preset_y_ticks_list, preset_x_lim_list, display_name_dict,
         column_width, class_width, marker_size, color_dict, scatter_param_dict, compare_one_by_one=False,
-        with_scatter_line=False):
+        with_scatter_line=False, scatter_line_param_dict=None, complete_p_value_y_value_list=None,
+        p_value_cap_param_dict=None):
     row_num = len(flux_name_location_list)
     ax_row_size = (ax_total_size.y - (row_num - 1) * ax_interval.y) / row_num
     flux_name_list = []
@@ -333,6 +312,12 @@ def general_flux_layout_generator(
     y_tick_labels_list = []
     complete_scatter_line_list = []
     complete_plotting_data_dict_list = []
+    if complete_p_value_y_value_list is not None:
+        complete_p_value_text_list = []
+        complete_p_value_text_loc_list = []
+    else:
+        complete_p_value_text_list = None
+        complete_p_value_text_loc_list = None
     for row_index, row_list in enumerate(flux_name_location_list):
         total_array_len_this_row = 0
         this_row_array_len_list = []
@@ -340,6 +325,10 @@ def general_flux_layout_generator(
         for col_index, flux_name in enumerate(row_list):
             flux_name_list.append(flux_name)
             current_flux_data_dict = final_flux_comparison_data_dict[flux_name]
+            if complete_p_value_y_value_list is not None:
+                current_p_value_y_value = complete_p_value_y_value_list[row_index][col_index]
+            else:
+                current_p_value_y_value = None
             maximal_value = 0
             minimal_value = 0
             total_group_num = len(current_flux_data_dict)
@@ -352,11 +341,16 @@ def general_flux_layout_generator(
             this_col_len = None
             raw_scatter_line_xy_list = []
             current_flux_data_dict_by_class = {}
+            p_value_list = []
+            group_center_x_value_list = []
             if compare_one_by_one:
                 for group_index, (group_name, current_group_value_obj) in enumerate(current_flux_data_dict.items()):
                     total_class_num = len(current_group_value_obj)
+                    if current_p_value_y_value is not None:
+                        assert total_class_num == 2
                     current_group_center_value = group_index
                     this_group_scatter_line_xy_list = []
+                    sample_pair_list = []
                     for class_index, (class_name, current_class_value_list) in enumerate(
                             current_group_value_obj.items()):
                         maximal_value = np.maximum(maximal_value, np.max(current_class_value_list))
@@ -366,6 +360,7 @@ def general_flux_layout_generator(
                         else:
                             current_std = None
                         current_mean = np.mean(current_class_value_list)
+                        sample_pair_list.append(current_class_value_list)
                         each_class_column_width = column_width / total_class_num
                         current_class_center_x_value = (class_index + 0.5) * each_class_column_width \
                             - 0.5 * column_width
@@ -383,6 +378,9 @@ def general_flux_layout_generator(
                         current_market_color_list.append(color_dict[class_name])
                     if with_scatter_line:
                         raw_scatter_line_xy_list.append(this_group_scatter_line_xy_list)
+                    if current_p_value_y_value is not None:
+                        group_center_x_value_list.append(current_group_center_value)
+                        p_value_list.append(t_test_of_two_groups(*sample_pair_list))
             else:
                 for group_index, (group_name, current_group_value_obj) in enumerate(current_flux_data_dict.items()):
                     for class_name, current_class_value_list in current_group_value_obj.items():
@@ -390,6 +388,8 @@ def general_flux_layout_generator(
                             current_flux_data_dict_by_class[class_name] = {}
                         current_flux_data_dict_by_class[class_name][group_index] = current_class_value_list
                 complete_class_num = len(current_flux_data_dict_by_class)
+                if current_p_value_y_value is not None:
+                    raise ValueError()
                 each_class_column_width = column_width / complete_class_num
                 for class_index, (class_name, current_class_data_dict) in enumerate(
                         current_flux_data_dict_by_class.items()):
@@ -422,14 +422,6 @@ def general_flux_layout_generator(
                 ParameterName.scatter_param_dict: scatter_param_dict,
             }
             complete_plotting_data_dict_list.append(current_tissue_data_dict)
-            if with_scatter_line:
-                reshaped_scatter_line_list = []
-                for scatter_line_pair in raw_scatter_line_xy_list:
-                    scatter_line_xy_array = np.array(scatter_line_pair)
-                    reshaped_scatter_line_list.append(list(scatter_line_xy_array.T))
-                complete_scatter_line_list.append(reshaped_scatter_line_list)
-            else:
-                complete_scatter_line_list.append(None)
             x_ticks_list.append(current_x_ticks_list)
             if preset_x_lim_list is not None:
                 x_lim = preset_x_lim_list[row_index][col_index]
@@ -474,6 +466,24 @@ def general_flux_layout_generator(
             x_tick_labels_list.append(x_tick_labels)
             display_x_label_list.append(display_x_label)
             display_y_label_list.append(display_y_label)
+            current_scatter_line_list = []
+            if with_scatter_line:
+                reshaped_scatter_line_list = []
+                for scatter_line_pair in raw_scatter_line_xy_list:
+                    reshaped_scatter_line_list.append([*np.array(scatter_line_pair).T, scatter_line_param_dict])
+                current_scatter_line_list.extend(reshaped_scatter_line_list)
+            if current_p_value_y_value is not None:
+                (
+                    p_value_text_list, p_value_text_loc_list, p_value_cap_list
+                ) = p_value_parameter_list_generator(
+                    group_center_x_value_list, current_p_value_y_value, p_value_list, x_lim, y_lim,
+                    dict(p_value_cap_param_dict))
+                current_scatter_line_list.extend(p_value_cap_list)
+                complete_p_value_text_list.append(p_value_text_list)
+                complete_p_value_text_loc_list.append(p_value_text_loc_list)
+            if len(current_scatter_line_list) == 0:
+                current_scatter_line_list = None
+            complete_scatter_line_list.append(current_scatter_line_list)
         unit_array_len_size = (ax_total_size.x - (this_row_axis_num - 1) * ax_interval.x) / total_array_len_this_row
         this_row_bottom_left = ax_total_bottom_left + \
                                Vector(0, (ax_row_size + ax_interval.y) * (row_num - row_index - 1))
@@ -484,7 +494,7 @@ def general_flux_layout_generator(
             this_row_bottom_left = this_row_bottom_left + Vector(this_ax_col_len + ax_interval.x, 0)
     return ax_bottom_left_list, ax_size_list, complete_plotting_data_dict_list, flux_name_list, x_lim_list, \
         display_x_label_list, x_ticks_list, x_tick_labels_list, y_lim_list, display_y_label_list, y_ticks_list, \
-        y_tick_labels_list, complete_scatter_line_list
+        y_tick_labels_list, complete_scatter_line_list, complete_p_value_text_list, complete_p_value_text_loc_list
 
 
 def pure_flux_layout_generator(
@@ -672,6 +682,56 @@ def colon_scatter_line_figure(
         x_ticks_list, x_tick_labels_list, y_lim_list, display_y_label_list, y_ticks_list, y_tick_labels_list
 
 
+def p_value_parameter_list_generator(
+        p_value_x_value_list, p_value_y_value_list, p_value_list, x_lim, y_lim, p_value_cap_param_dict):
+    cap_y_height = p_value_cap_param_dict.pop(ParameterName.height)
+    cap_x_width = p_value_cap_param_dict.pop(ParameterName.width)
+    text_y_offset = p_value_cap_param_dict.pop(ParameterName.text_y_offset)
+    cap_y_offset = p_value_cap_param_dict.pop(ParameterName.cap_y_offset)
+
+    if x_lim is None:
+        x_lim = (0, 1)
+    if y_lim is None:
+        y_lim = (0, 1)
+
+    if isinstance(p_value_y_value_list, (int, float)):
+        p_value_y_value_list = it.repeat(p_value_y_value_list)
+    elif isinstance(p_value_y_value_list, (list, tuple)):
+        assert len(p_value_x_value_list) == len(p_value_y_value_list)
+    else:
+        raise ValueError()
+    p_value_text_loc_list = []
+    p_value_cap_start_end_list = []
+    for x_value, y_value in zip(p_value_x_value_list, p_value_y_value_list):
+        if y_value > 0.5:
+            text_y_value = y_value + text_y_offset
+            cap_horiz_y_value = y_value - cap_y_offset
+            cap_vertical_y_value = cap_horiz_y_value - cap_y_height
+        else:
+            text_y_value = y_value - text_y_offset
+            cap_horiz_y_value = y_value + cap_y_offset
+            cap_vertical_y_value = cap_horiz_y_value + cap_y_height
+        cap_horiz_y_value = y_lim[0] + cap_horiz_y_value * (y_lim[1] - y_lim[0])
+        cap_vertical_y_value = y_lim[0] + cap_vertical_y_value * (y_lim[1] - y_lim[0])
+        cap_horiz_left_x_value = x_value - cap_x_width / 2 * (x_lim[1] - x_lim[0])
+        cap_horiz_right_x_value = x_value + cap_x_width / 2 * (x_lim[1] - x_lim[0])
+        text_x_value = (x_value - x_lim[0]) / (x_lim[1] - x_lim[0])
+        cap_start_end_x_y_pair = [
+            [cap_horiz_left_x_value, cap_horiz_left_x_value, cap_horiz_right_x_value, cap_horiz_right_x_value],
+            [cap_vertical_y_value, cap_horiz_y_value, cap_horiz_y_value, cap_vertical_y_value]
+        ]
+        p_value_cap_start_end_list.append([*cap_start_end_x_y_pair, p_value_cap_param_dict])
+        p_value_text_loc_list.append(Vector(text_x_value, text_y_value))
+    p_value_text_list = []
+    for p_value in p_value_list:
+        if p_value < 0.001:
+            p_value_text = '<0.001'
+        else:
+            p_value_text = '{:.3f}'.format(p_value)
+        p_value_text_list.append(p_value_text)
+    return p_value_text_list, p_value_text_loc_list, p_value_cap_start_end_list
+
+
 class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
@@ -679,60 +739,49 @@ class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
         ax_total_bottom_left = Vector(0, 0)
         ax_total_size = Vector(1, 1) - ax_total_bottom_left
 
-        try:
-            ax_interval = figure_data_parameter_dict[ParameterName.ax_interval]
-        except KeyError:
-            ax_interval = Vector(0.06, 0.06)  # (horizontal, vertical)
-        try:
-            common_y_label = figure_data_parameter_dict[ParameterName.common_y_label]
-        except KeyError:
-            common_y_label = None
-        try:
-            common_x_label = figure_data_parameter_dict.pop(ParameterName.common_x_label)
-        except KeyError:
-            common_x_label = None
-        try:
-            preset_y_lim_list = figure_data_parameter_dict.pop(ParameterName.y_lim_list)
-        except KeyError:
-            preset_y_lim_list = None
-        try:
-            preset_y_ticks_list = figure_data_parameter_dict.pop(ParameterName.y_ticks_list)
-        except KeyError:
-            preset_y_ticks_list = None
-        try:
-            preset_x_lim_list = figure_data_parameter_dict.pop(ParameterName.x_lim_list)
-        except KeyError:
-            preset_x_lim_list = None
-        try:
-            display_flux_name_dict = figure_data_parameter_dict.pop(ParameterName.display_flux_name_dict)
-        except KeyError:
-            display_flux_name_dict = {}
-        try:
-            display_group_name_dict = figure_data_parameter_dict.pop(ParameterName.display_group_name_dict)
-        except KeyError:
-            display_group_name_dict = {}
-        try:
-            compare_one_by_one = figure_data_parameter_dict.pop(ParameterName.compare_one_by_one)
-        except KeyError:
-            compare_one_by_one = False
-        try:
-            column_width = figure_data_parameter_dict.pop(ParameterName.column_width)
-        except KeyError:
-            # column_width = 0.3
-            column_width = 0.5
-        try:
-            class_width = figure_data_parameter_dict.pop(ParameterName.class_width)
-        except KeyError:
-            class_width = 1
-        try:
-            marker_size = figure_data_parameter_dict.pop(ParameterName.marker_size)
-        except KeyError:
-            # marker_size = 1.5
-            marker_size = 8
-        try:
-            new_figure_config_dict = figure_data_parameter_dict.pop(ParameterName.figure_config_dict)
-        except KeyError:
-            new_figure_config_dict = {}
+        ax_interval = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.ax_interval, Vector(0.06, 0.06))
+        common_y_label = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.common_y_label, None)
+        common_x_label = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.common_x_label, None, pop=True)
+        preset_y_lim_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.y_lim_list, None, pop=True)
+        preset_y_ticks_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.y_ticks_list, None, pop=True)
+        preset_x_lim_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.x_lim_list, None, pop=True)
+        display_flux_name_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.display_flux_name_dict, {}, pop=True)
+        display_group_name_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.display_group_name_dict, {}, pop=True)
+        compare_one_by_one = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.compare_one_by_one, False, pop=True)
+        column_width = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.column_width, 0.5, pop=True)
+        class_width = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.class_width, 1, pop=True)
+        marker_size = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.marker_size, 8, pop=True)
+        new_figure_config_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.figure_config_dict, {}, pop=True)
+        complete_p_value_y_value_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.p_value_y_value_list, None, pop=True)
+        p_value_cap_param_dict = {
+            **DataFigureConfig.common_p_value_cap_parameter_dict,
+            **default_parameter_extract(
+                figure_data_parameter_dict, ParameterName.p_value_cap_parameter_dict,
+                {}, pop=True)
+        }
+        supplementary_text_format_dict = {
+            **DataFigureConfig.common_supplementary_text_config_dict,
+            ParameterName.font_size: 5,
+            ParameterName.width: 0.1,
+            ParameterName.height: 0.05,
+            **default_parameter_extract(
+                figure_data_parameter_dict, ParameterName.supplementary_text_format_dict,
+                {}, pop=True)
+        }
 
         color_dict = figure_data_parameter_dict.pop(ParameterName.color_dict)
         text_axis_loc_pair = Vector(0.5, 1.08)
@@ -746,6 +795,10 @@ class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
             **figure_data_parameter_dict)
         scatter_param_dict = {
             ParameterName.z_order: DataFigureConfig.normal_figure_element_z_order
+        }
+        scatter_line_param_dict = {
+            **DataFigureConfig.common_line_param_dict_generator(),
+            ParameterName.z_order: DataFigureConfig.line_z_order
         }
         figure_config_dict = {
             ParameterName.y_label_format_dict: merge_axis_format_dict(
@@ -770,55 +823,13 @@ class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
             ParameterName.line_param_dict: {
                 **DataFigureConfig.common_line_param_dict_generator(),
                 ParameterName.z_order: DataFigureConfig.line_z_order
-            }
+            },
+            ParameterName.supplementary_text_format_dict: supplementary_text_format_dict
         }
         try:
             with_scatter_line = figure_data_parameter_dict.pop(ParameterName.scatter_line)
         except KeyError:
             with_scatter_line = False
-        # if scatter_line_figure == ParameterName.colon_cancer_scatter_line_figure:
-        #     ax_interval = Vector(0.01, 0.005)  # (horizontal, vertical)
-        #     figure_config_dict.update({
-        #         ParameterName.x_label_format_dict: {
-        #             ParameterName.axis_label_distance: 0.03,
-        #             ParameterName.font_size: DataFigureConfig.GroupDataFigure.inner_text_font_size,
-        #         }
-        #     })
-        # if scatter_line_figure == ParameterName.scatter_line_figure:
-        #     marker_size = 2
-        #     figure_config_dict.update({})
-        # with_scatter_line = scatter_line_figure == ParameterName.scatter_line_figure
-
-        # if (
-        #         scatter_line_figure == ParameterName.normal_scatter_figure or
-        #         scatter_line_figure == ParameterName.scatter_line_figure):
-        #     flux_name_location_list = figure_data_parameter_dict[ParameterName.flux_name_list]
-        #     if common_y_label is None:
-        #         common_y_label = 'Flux value'
-        #     (
-        #         ax_bottom_left_list, ax_size_list, complete_plotting_data_dict_list, flux_name_list, x_lim_list,
-        #         display_x_label_list, x_ticks_list, x_tick_labels_list, y_lim_list, display_y_label_list, y_ticks_list,
-        #         y_tick_labels_list) = pure_flux_layout_generator(
-        #         ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict,
-        #         flux_name_location_list, scatter_line_diagram, common_y_label, preset_y_lim_list,
-        #         preset_y_ticks_list, preset_x_lim_list, display_group_name_dict,
-        #         column_width, marker_size, color_dict, scatter_param_dict)
-        #     subplot_name_list = [
-        #         display_flux_name_dict[flux_name] if flux_name in display_flux_name_dict else flux_name
-        #         for flux_name in flux_name_list]
-        # elif scatter_line_figure == ParameterName.colon_cancer_scatter_line_figure:
-        #     flux_name_list = figure_data_parameter_dict[ParameterName.flux_name_list]
-        #     cell_line_name_list = figure_data_parameter_dict[ParameterName.cell_line_name_list]
-        #     (
-        #         ax_bottom_left_list, ax_size_list, complete_plotting_data_dict_list, x_lim_list, display_x_label_list,
-        #         x_ticks_list, x_tick_labels_list, y_lim_list, display_y_label_list, y_ticks_list,
-        #         y_tick_labels_list) = colon_scatter_line_figure(
-        #         ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict, flux_name_list,
-        #         cell_line_name_list, default_y_ticks, default_y_tick_labels, marker_size, color_dict,
-        #         scatter_param_dict)
-        #     subplot_name_list = None
-        # else:
-        #     raise ValueError()
 
         flux_name_location_list = figure_data_parameter_dict[ParameterName.flux_name_list]
         if common_y_label is None:
@@ -826,11 +837,15 @@ class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
         (
             ax_bottom_left_list, ax_size_list, complete_plotting_data_dict_list, flux_name_list, x_lim_list,
             display_x_label_list, x_ticks_list, x_tick_labels_list, y_lim_list, display_y_label_list, y_ticks_list,
-            y_tick_labels_list, complete_scatter_line_list) = general_flux_layout_generator(
+            y_tick_labels_list, complete_scatter_line_list, complete_p_value_text_list, complete_p_value_text_loc_list
+        ) = general_flux_layout_generator(
             ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict, flux_name_location_list,
             common_x_label, common_y_label, preset_y_lim_list, preset_y_ticks_list, preset_x_lim_list,
             display_group_name_dict, column_width, class_width, marker_size, color_dict, scatter_param_dict,
-            compare_one_by_one=compare_one_by_one, with_scatter_line=with_scatter_line)
+            compare_one_by_one=compare_one_by_one, with_scatter_line=with_scatter_line,
+            scatter_line_param_dict=scatter_line_param_dict,
+            complete_p_value_y_value_list=complete_p_value_y_value_list,
+            p_value_cap_param_dict=p_value_cap_param_dict)
         subplot_name_list = [
             display_flux_name_dict[flux_name] if flux_name in display_flux_name_dict else flux_name
             for flux_name in flux_name_list]
@@ -855,6 +870,8 @@ class FluxComparisonScatterDataFigure(BasicScatterDataFigure):
             ParameterName.scatter_line: complete_scatter_line_list,
             ParameterName.subplot_name_list: subplot_name_list,
             ParameterName.text_axis_loc_pair: text_axis_loc_pair,
+            ParameterName.supplementary_text_list: complete_p_value_text_list,
+            ParameterName.supplementary_text_loc_list: complete_p_value_text_loc_list,
             **figure_data_parameter_dict
         }
         super().__init__(figure_data_parameter_dict, bottom_left, size, **kwargs)
@@ -1029,7 +1046,7 @@ class AccuracyVariationScatterDataFigure(BasicScatterDataFigure):
             default_x_label = CommonFigureString.optimization_size_n
             raw_x_ticks = 100 * basic_num_array[:-1]
             x_tick_labels = [str(x_tick) for x_tick in raw_x_ticks]
-            all_data_y_lim = [0, 130]
+            all_data_y_lim = [0, 140]
             # all_data_y_ticks = [0, 20, 40, 60, 80, 100]
             all_data_y_ticks = np.arange(*all_data_y_lim, 30)
             all_data_raw_threshold = ProtocolSearchingMaterials.all_data_target_optimization_size

@@ -1,15 +1,14 @@
 # Automated Flux Analysis
 
-
 ## Synopsis
 
-This software is developed for efficient 13C metabolic flux analysis (MFA). Given a metabolic network model, it can load data of mass isotopomer distribution (MID) measured by mass spectrometry (MS), and robustly find a solution that accurately fit MID data.
-
-Besides MFA function, this software also includes codes for sensitivity analysis and analyses of several experimental data, as well as visualization of results and plotting of figures for the paper that it is published.
+Developed for 13C metabolic flux analysis (MFA), this tool processes mass isotopomer distribution (MID) data from mass
+spectrometry to accurately fit MID data and deduce metabolic activities. It includes functionality for MFA, sensitivity
+analysis, experimental data analysis, and visualization of results for publication.
 
 ## Requirements
 
-This software is developed and tested on Python 3.8. It also relies on following Python packages:
+The tool is built for Python 3.8 and requires the following packages:
 
 | Packages           | Version has been tested |
 |--------------------|-------------------------|
@@ -25,29 +24,41 @@ This software is developed and tested on Python 3.8. It also relies on following
 [//]: # (For convenience, an out-of-the-box Docker image is provided to run this code. This docker image is tested on `docker-ce` in Ubuntu with Docker version `19.03.1`. &#40;See Usages part for details.&#41;)
 
 ## Model
+
 Models utilized in this software are in `scripts/model` folder.
 
-The folder `base_model` contains the base model and its derivatives utilized in algorithm development, sensitivity analysis and experimental data analysis for cultured cells.
+The basic model (`base_model`) contains the base model utilized in algorithm development, analysis to data availability
+and experimental data analysis for cultured cells.
 
-Another folder `invivo_infusion_model` contains the model for analysis of infusion data from patients, which is slightly different from base model in several reactions.
+The basic model with GLC and CIT buffers (`base_model_with_glc_tca_buffer`) contains the model for analysis of in vivo
+infusion data from patients, which is slightly different from base model in several reactions.
 
 ## Data
-All <sup>13</sup>C-isotope labeling data are in `scripts/data` folder. 
 
-Infusion data from patients with renal, brain  and lung cancer are from [Faubert *et al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) and [Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) (`renal_carcinoma/data.xlsx` and `lung_tumor/data.xlsx`) .
+All <sup>13</sup>C-isotope labeling data are in `scripts/data` folder.
 
-Labeling data from cultured cell line HCT-116 are from [Reid *et al*, 2018](https://doi.org/10.1038/s41467-018-07868-6) (`colon_cancer_cell_line/data.xlsx`).
+Infusion data from patients with renal, brain and lung cancer are from [Faubert *et
+al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) and [Courtney *et
+al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) (`renal_carcinoma/data.xlsx` and `lung_tumor/data.xlsx`) .
+
+Labeling data from cultured cell line HCT-116 are from [Reid *et
+al*, 2018](https://doi.org/10.1038/s41467-018-07868-6) (`colon_cancer_cell_line/data.xlsx`).
 
 Data from other colon cancer cell lines are produced in this study (`colon_cancer_cell_line/data.xlsx`).
 
 These raw data are loaded and converted to standard form for MFA.
 
 ## Algorithm and Solver
+
 Algorithm and solver utilized in this study are located in the `scripts/src/core` folder.
 
-The `model` and `data` folder include some class definition and corresponding processing functions. Specifically, EMU algorithm is encoded in `model/emu_analyzer_functions.py`.
+The `model` and `data` folder include some class definition and corresponding processing functions. Specifically, EMU
+algorithm is encoded in `model/emu_analyzer_functions.py`.
 
-Most optimizations are based on `slsqp_solver` and `slsqp_numba_solver`. As their names indicate, the `slsqp_numba_solver` is implemented based on `numba` package for faster execution (roughly 50% time reduction). However, the numba version has the memory leak problem in parallelized executions in Linux system. If running for long time (longer than 50 hours), the normal version is recommended.
+Most optimizations are based on `slsqp_solver` and `slsqp_numba_solver`. As their names indicate,
+the `slsqp_numba_solver` is implemented based on `numba` package for faster execution (roughly 50% time reduction).
+However, the numba version has the memory leak problem in parallelized executions in Linux system. If running for long
+time (longer than 50 hours), the normal version is recommended.
 
 
 <!---
@@ -71,7 +82,8 @@ In this script, you could modify the value of `MODEL` to the name of your target
 
 ## Getting started
 
-This script could also be executed as a raw Python project. Make sure Python 3.8 and all required packages are correctly installed. First switch to a target directory and download the source code:
+This script could also be executed as a raw Python project. Make sure Python 3.8 and all required packages are correctly
+installed. First switch to a target directory and download the source code:
 
 ```shell script
 git clone https://github.com/LocasaleLab/Automated-MFA-2023
@@ -91,86 +103,143 @@ You could try multiple different arguments according to help information. For ex
 python main.py computation experiments flux_analysis hct116_cultured_cell_line -t
 ```
 
-This instruction means running a `computation`, which is a `flux_analysis` process of data in `experiments` named `hct116_cultured_cell_line` in test mode (`-t`). 
+This instruction means running a `computation`, which is a `flux_analysis` process of data in `experiments`
+named `hct116_cultured_cell_line` in test mode (`-t`).
 Detailed argument list will be explained below.
 
 ## Arguments
 
-There two different options under the main manu:
-- `figure`: Option to generate figures in paper. This option must be executed after that analysis results are generated by the `computation` option.
+There are two different options under the main manu:
+
+- `figure`: Option to generate figures in paper. This option must be executed after that analysis results are generated
+  by the `computation` option.
 - `computation`: Option to run most computations.
 
 ### Computations
 
-There four different options under the `computation` manu:
+There are four different options under the `computation` manu:
+
+- `standard_name`: Option to output standard name of metabolites and reactions
 - `simulation`: Option to generate simulated MID data
 - `sensitivity`: Option to analyze protocol, model, data and config sensitivity of MFA
 - `experiments`: Option to run MFA for several experimental data analyses
-- `standard_name`: Option to output standard name of metabolites and reactions
-
-#### Simulation
-
-This is a paragraph to explain the simulation argument
-
-
-#### Sensitivity
-
-This is a paragraph to explain the sensitivity argument
-
-
-#### Experiments
-
-This is a paragraph to explain the experiments argument
-
 
 #### Standard name
 
-This is a paragraph to explain the standard_name argument
+This option will output the standard name of all metabolites and reactions to `common_data/raw_data/standard_name.xlsx`.
 
+#### Simulation
 
-<!---
-The list will be available in the future
+This option will generate simulated MID data utilized in algorithm development and robustness analysis. Simulated data
+Excel and pickle file will be output to the folder `common_data/raw_data/simulated_data`
+and `scripts/data/simulated_data` respectively. This option has following optional parameters:
 
-### List of models
+`-b, --batch_num n`:
 
-| Model name in this script | Model name in methods | Source tissue | Sink tissue            | Circulating metabolites    | Data source                          | Description                                                                                                                       |
-|---------------------------|-----------------------|---------------|------------------------|----------------------------|--------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------|
-| `model1`                  | Model A               | Liver         | Heart                  | Glucose; Lactate           | Low-infusion glucose data: mouse M1  | Basic two-tissue model.                                                                                                           |
-| `model1_unfitted`         | Model A               | Liver         | Heart                  | Glucose; Lactate           | Low-infusion glucose data: mouse M1  | Unfitted result of basic two-tissue model, as the negative result of fitting.                                                     |
-| `model1_all`              | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion glucose data: mouse M1  | Basic two-tissue model with different sink tissues.                                                                               |
-| `model1_all_m5`           | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion glucose data: mouse M5  | Basic two-tissue model with different sink tissues and different mouse data.                                                      |
-| `model1_all_m9`           | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion glucose data: mouse M9  | Basic two-tissue model with different sink tissues and different mouse data.                                                      |
-| `model1_all_lactate`      | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion lactate data: mouse M3  | Basic two-tissue model with different sink tissues and different infusion data.                                                   |
-| `model1_all_lactate_m4`   | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion lactate data: mouse M4  | Basic two-tissue model with different sink tissues and different infusion data.                                                   |
-| `model1_all_lactate_m10`  | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion lactate data: mouse M10 | Basic two-tissue model with different sink tissues and different infusion data.                                                   |
-| `model1_all_lactate_m11`  | Model A               | Liver         | All 8 tissues          | Glucose; Lactate           | Low-infusion lactate data: mouse M11 | Basic two-tissue model with different sink tissues and different infusion data.                                                   |
-| `parameter`               | Model A               | Liver         | Heart                  | Glucose; Lactate           | Low-infusion data: mouse M1          | Sensitivity analysis of data and other constraint fluxes.                                                                         |
-| `model6`                  | Model B               | Liver         | Skeletal muscle        | Glucose; Lactate           | High-infusion data: mouse M1         | Two-tissue model with high-infusion data in different mouse strain.                                                               |
-| `model6_unfitted`         | Model B               | Liver         | Skeletal muscle        | Glucose; Lactate           | High-infusion data: mouse M1         | Unfitted result of two-tissue model with high-infusion flux, as the negative result of fitting.                                   |
-| `model6_m2`               | Model B               | Liver         | Skeletal muscle        | Glucose; Lactate           | High-infusion data: mouse M2         | Two-tissue model with high-infusion data in different mouse strain.                                                               |
-| `model6_m3`               | Model B               | Liver         | Skeletal muscle        | Glucose; Lactate           | High-infusion data: mouse M3         | Two-tissue model with high-infusion data in different mouse strain.                                                               |
-| `model6_m4`               | Model B               | Liver         | Skeletal muscle        | Glucose; Lactate           | High-infusion data: mouse M4         | Two-tissue model with high-infusion data in different mouse strain.                                                               |
-| `model3`                  | Model D               | Liver         | Heart                  | Glucose; Pyruvate; Lactate | Low-infusion glucose data: mouse M1  | Two-tissue model with three circulatory metabolites.                                                                              |
-| `model3_unfitted`         | Model D               | Liver         | Heart                  | Glucose; Pyruvate; Lactate | Low-infusion glucose data: mouse M1  | Unfitted result of two-tissue model with three circulatory metabolites, as the negative result of fitting.                        |
-| `model3_all`              | Model D               | Liver         | All 8 tissues          | Glucose; Pyruvate; Lactate | Low-infusion glucose data: mouse M1  | Two-tissue model with three circulatory metabolites and different sink tissues.                                                   |
-| `model5`                  | Model C               | Liver         | Heart; Skeletal muscle | Glucose; Lactate           | Low-infusion data: mouse M1          | Three-tissue model.                                                                                                               |
-| `model5_comb2`            | Model C               | Liver         | Brain; Skeletal muscle | Glucose; Lactate           | Low-infusion data: mouse M1          | Three-tissue model.                                                                                                               |
-| `model5_comb3`            | Model C               | Liver         | Heart; Brain           | Glucose; Lactate           | Low-infusion data: mouse M1          | Three-tissue model.                                                                                                               |
-| `model5_unfitted`         | Model C               | Liver         | Heart; Skeletal muscle | Glucose; Lactate           | Low-infusion data: mouse M1          | Unfitted result of three-tissue model, as the negative result of fitting.                                                         |
-| `model7`                  | Model E               | Liver         | Skeletal muscle        | Glucose; Pyruvate; Lactate | High-infusion data: mouse M1         | Two-tissue model with three circulatory metabolites and high-infusion data.                                                       |
-| `model7_unfitted`         | Model E               | Liver         | Skeletal muscle        | Glucose; Pyruvate; Lactate | High-infusion data: mouse M1         | Unfitted result of two-tissue model with three circulatory metabolites and high-infusion flux, as the negative result of fitting. |
+This parameter is used to generated batched (determined by `n`) predefined fluxes and corresponding simulated MID data.
+It is used in verifying the performance of algorithm in multiple simulated data.
 
--->
+`-f, --new_flux`:
 
-### Other Parameters
+If this optional parameter appear, new predefined flux optimized from PHDGH mass spectrometry data will be generated.
+Otherwise, the stored flux vector will be loaded.
+
+`-n, --with_noise`:
+
+If this optional parameter appear, all-available and experimentally-available MID data will be generated with randomized
+noise. Otherwise, the precise MID data will be generated.
+
+`-i, --index p`:
+
+This parameter will add an extra number suffix `p` to generated simulated data file. It is usually used to distinguish
+the newly generated simulated data.
+
+#### Common Arguments of Sensitivity and Experiments
+
+Usage: `python main.py computation {sensitivity, experiments} running_mode job_name`
+
+**Positional arguments**
+
+`running_mode`: Running mode of the script.
+
+- `flux_analysis`: Option to start a new flux analysis process to the target job.
+- `result_process`: Option to process analysis results of the target job.
+- `solver_output`: Option to output detailed model, data and configurations of the target job.
+- `raw_experimental_data_plotting`: Only available in `experiments` mode. Option to display the raw experimental data of
+  target job.
+
+`job_name`: Name of target job. List of available jobs are listed below.
+
+**Optional arguments**
 
 `-p, --parallel_num`:
-    
+
 Number of parallel processes. If not provided, it will be selected according to CPU cores.
 
 `-t, --test_mode`:
 
-Whether the code is executed in test mode, which means less sample number and shorter time (several minites).
+Whether the code is executed in test mode, which means less sample number and shorter time (several minutes).
+
+#### Sensitivity
+
+This option will execute series of operations related to algorithm development, performance assessment and robustness
+analysis based on simulated MID data. Their raw data will be output to `common_data/raw_data/model_data_sensitivity`. If
+not specified, all jobs in this analysis rely on the basic model (`base_model`).
+
+**List of jobs**
+
+| Job name in this script                                          | Simulated data size | MID coverage                 | Initial solutions                                                    | Description                                                                                                                                           |
+|------------------------------------------------------------------|---------------------|------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `raw_model_all_data`                                             | Single              | All-available MID            | Randomly sampled                                                     | Basic optimization based on simulated all-available MID data generated from one predefined flux vector.                                               |
+| `raw_model_raw_data`                                             | Single              | Experimentally-available MID | Randomly sampled                                                     | Basic optimization based on simulated experimentally-available MID data generated from one predefined flux vector.                                    |
+| `optimization_from_all_data_average_solutions`                   | Single              | All-available MID            | Averaged solutions of `raw_model_all_data`                           | Optimization starting from averaged solutions of `raw_model_all_data` based on simulated all-available MID data.                                      |
+| `optimization_from_raw_data_average_solutions`                   | Single              | Experimentally-available MID | Averaged solutions of `raw_model_raw_data`                           | Optimization starting from averaged solutions of `raw_model_raw_data` based on simulated experimentally-available MID data.                           |
+| `optimization_from_batched_simulated_all_data`                   | 30                  | All-available MID            | Randomly sampled                                                     | Optimization based on multiple simulated all-available MID data generated from 30 distantly distributed predefined flux vectors.                      |
+| `optimization_from_batched_simulated_raw_data`                   | 30                  | Experimentally-available MID | Randomly sampled                                                     | Optimization based on multiple simulated experimentally-available MID data generated from 30 distantly distributed predefined flux vectors.           |
+| `optimization_from_batched_simulated_all_data_average_solutions` | 30                  | All-available MID            | Averaged solutions of `optimization_from_batched_simulated_all_data` | Optimization starting from averaged solutions of `optimization_from_batched_simulated_all_data` based on simulated all-available MID data.            |
+| `optimization_from_batched_simulated_raw_data_average_solutions` | 30                  | Experimentally-available MID | Averaged solutions of `optimization_from_batched_simulated_raw_data` | Optimization starting from averaged solutions of `optimization_from_batched_simulated_raw_data` based on simulated experimentally-available MID data. |
+| `data_sensitivity`                                               | Single              | Varied in each set           | Randomly sampled                                                     | Optimization from datasets with different data availability.                                                                                          |
+
+#### Experiments
+
+This option will execute series of operations related to analysis to experimental data, including HCT116, renal
+carcinoma, lung tumor and colon cancer cell lines. Their raw data will be output
+to `common_data/raw_data/experimental_data_analysis`. All tracing experiments rely on U-13C-glucose.
+
+**List of jobs**
+
+| Job name in this script                              | Model                                                                   | Data source                                                                                                                                  | Tissue type                                 | Total sample size <br/>(combine biological replicates) | Analysis                         | Optimization number of each sample | Description                                                                                                 |
+|------------------------------------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|--------------------------------------------------------|----------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `hct116_cultured_cell_line`                          | Basic model (`base_model`)                                              | Published data of HCT-116 labeling experiments [Reid *et al*, 2018](https://doi.org/10.1038/s41467-018-07868-6)                              | Cultured colon cancer cell line             | 1                                                      | Traditional MFA method           | 400                                | Reanalyze the HCT-116 cell line data for verification of our pipeline.                                      |
+| `renal_carcinoma_invivo_infusion`                    | Basic model with GLC and CIT buffers (`base_model_with_glc_tca_buffer`) | Published data of infusion experiments for patients with renal carcinoma[Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) | Renal carcinoma and brain tumor in patients | 15                                                     | Optimization-averaging algorithm | 100,000                            | Analyze the in vivo infusion data through the optimization-averaging algorithm.                             |
+| `renal_carcinoma_invivo_infusion_traditional_method` | Basic model with GLC and CIT buffers (`base_model_with_glc_tca_buffer`) | Published data of infusion experiments for patients with renal carcinoma[Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) | Renal carcinoma and brain tumor in patients | 15                                                     | Traditional MFA method           | 400                                | Analyze the same data with the traditional strategy for comparison.                                         |
+| `lung_tumor_invivo_infusion`                         | Basic model with GLC and CIT buffers (`base_model_with_glc_tca_buffer`) | Published data of infusion experiments for patients with lung cancer [Faubert *et al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019)     | Lung tumor in patients                      | 35                                                     | Optimization-averaging algorithm | 60,000                             | Analyze the in vivo infusion data of multiple kinds of cancer through the optimization-averaging algorithm. |
+| `colon_cancer_cell_line`                             | Basic model (`base_model`)                                              | New data of eight colon cancer cell lines                                                                                                    | Cultured colon cancer cell line             | 16                                                     | Optimization-averaging algorithm | 100,000                            | Analyze the cultured cell data through the optimization-averaging algorithm to verify our finding.          |
+| `colon_cancer_cell_line_traditional_method`          | Basic model (`base_model`)                                              | New data of eight colon cancer cell lines                                                                                                    | Cultured colon cancer cell line             | 16                                                     | Traditional MFA method           | 400                                | Analyze the same data with the traditional strategy for comparison.                                         |
+
+
+### Figures
+
+There are 12 different options under the `figure` manu, of which 5 are main figures, and 6 are supplementary figures. The `all` option can regenerate all figures. For example:
+
+```shell
+python main.py figure 1
+```
+
+| Arguments | Figures     | Main figure or supplementary figure |
+|-----------|-------------|-------------------------------------|
+| `1`       | Figure 1    | Main figure                         |
+| `2`       | Figure 2    | Main figure                         |
+| `3`       | Figure 3    | Main figure                         |
+| `4`       | Figure 4    | Main figure                         |
+| `5`       | Figure 5    | Main figure                         |
+| `s1`      | Figure S1   | Supplementary figure                |
+| `s2`      | Figure S2   | Supplementary figure                |
+| `s3`      | Figure S3   | Supplementary figure                |
+| `s4`      | Figure S4   | Supplementary figure                |
+| `s5`      | Figure S5   | Supplementary figure                |
+| `s6`      | Figure S6   | Supplementary figure                |
+| `all`     | All figures | All figures                         |
 
 
 ## Contributors

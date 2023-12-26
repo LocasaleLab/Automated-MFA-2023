@@ -1,13 +1,14 @@
 from ...common.third_party_packages import np
 from ...common.classes import Vector, VerticalAlignment, HorizontalAlignment, FontWeight, SegmentedLinearMappers
 from ...common.color import ColorConfig, TextConfig, ZOrderConfig
-from ...common.config import ParameterName as GeneralParameterName, DataName, numbered_even_sequence, Keywords
+from ...common.config import ParameterName as GeneralParameterName, DataName, Keywords
 from ...common.common_figure_materials import CommonElementConfig, CommonFigureString, \
     DataSensitivityMetabolicNetworkConfig, ModelDataSensitivityDataFigureConfig
-from ..basic_shape_elements.element_dict import Region, TextBox, Capsule, Circle, Arrow, ArcArrow, ArcPathArrow, \
+from ..basic_shape_elements.elements import Region, TextBox, Capsule, Circle, Arrow, ArcArrow, ArcPathArrow, \
     BentArrow, BrokenArrow, Rectangle, RoundRectangle, ElementName, CompositeFigure, ChevronArrow, Line
 from ..common_functions import convert_theta_to_coordinate, basic_shape_parameter_set, construct_full_name, \
-    load_required_parameter, text_parameter_set, calculate_bottom_left_point, calculate_top_right_point
+    load_required_parameter, text_parameter_set, calculate_bottom_left_point, calculate_top_right_point, \
+    numbered_even_sequence
 
 
 class ParameterName(GeneralParameterName):
@@ -17,7 +18,6 @@ class ParameterName(GeneralParameterName):
     # arrow = 'arrow' # Defined in parent parameter name
     common = 'common'
 
-    normal = 'normal'
     branch = 'branch'
     cycle = 'cycle'
     path_cycle = 'path_cycle'

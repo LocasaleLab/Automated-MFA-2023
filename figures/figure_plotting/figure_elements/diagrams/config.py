@@ -1,11 +1,12 @@
-from ...common.config import ParameterName as GeneralParameterName, DataName
+from ...common.config import ParameterName as GeneralParameterName, DataName, default_parameter_extract
 from ...common.third_party_packages import np
 from ...common.built_in_packages import warnings
 from ...common.color import ColorConfig, TextConfig, ZOrderConfig
 from ...common.classes import HorizontalAlignment, VerticalAlignment, Vector, LineStyle, JoinStyle, FontWeight, \
     FontStyle
-from ...common.common_figure_materials import CommonElementConfig, CommonFigureString, CommonFigureMaterials
-from ..basic_shape_elements.element_dict import common_legend_generator
+from ...common.common_figure_materials import CommonElementConfig, CommonFigureString, CommonFigureMaterials, \
+    calculate_center_bottom_offset
+from ..basic_shape_elements.elements import common_legend_generator
 
 
 class Keyword(object):
@@ -27,6 +28,7 @@ class ParameterName(GeneralParameterName):
     color_name = 'color_name'
 
     bound_box = 'bound_box'
+    cross_axis = 'cross_axis'
     bar = 'bar'
     text = 'text'
     chevron_arrow = 'chevron_arrow'

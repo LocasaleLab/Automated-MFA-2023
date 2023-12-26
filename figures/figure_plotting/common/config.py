@@ -1,6 +1,4 @@
-import numpy as np
-
-from common_and_plotting_functions.functions import default_parameter_extract
+from common_and_plotting_functions.functions import default_parameter_extract, np
 
 float_type = 'float64'
 axis_for_test = False
@@ -45,6 +43,18 @@ class Keywords(object):
 class DataName(object):
     raw_model_raw_data = 'raw_model_raw_data'
     raw_model_all_data = 'raw_model_all_data'
+    raw_model_raw_data_with_squared_loss = 'raw_model_raw_data_with_squared_loss'
+    raw_model_all_data_with_squared_loss = 'raw_model_all_data_with_squared_loss'
+    optimization_from_solutions_raw_data = 'optimization_from_raw_data_average_solutions'
+    optimization_from_solutions_all_data = 'optimization_from_all_data_average_solutions'
+    optimization_from_solutions_raw_data_with_squared_loss = 'optimization_from_raw_data_average_solutions_with_squared_loss'
+    optimization_from_solutions_all_data_with_squared_loss = 'optimization_from_all_data_average_solutions_with_squared_loss'
+    optimization_from_batched_raw_data = 'optimization_from_batched_simulated_raw_data'
+    optimization_from_batched_all_data = 'optimization_from_batched_simulated_all_data'
+    optimization_from_solutions_batched_raw_data = 'optimization_from_batched_simulated_raw_data_average_solutions'
+    optimization_from_solutions_batched_all_data = 'optimization_from_batched_simulated_all_data_average_solutions'
+    optimization_from_batched_raw_data_with_squared_loss = 'optimization_from_batched_simulated_raw_data_with_squared_loss'
+    optimization_from_batched_all_data_with_squared_loss = 'optimization_from_batched_simulated_all_data_with_squared_loss'
 
     raw_data_result_label = 'raw_model__raw_data'
     all_data_result_label = 'raw_model__all_data'
@@ -84,9 +94,14 @@ class DataName(object):
     different_constant_flux_with_noise_all_data = 'different_constant_flux_with_noise_all_data'
 
     colon_cancer_cell_line = 'colon_cancer_cell_line'
+    colon_cancer_cell_line_squared_loss = 'colon_cancer_cell_line_squared_loss'
+    colon_cancer_cell_line_traditional_method = 'colon_cancer_cell_line_traditional_method'
     renal_carcinoma_invivo_infusion = 'renal_carcinoma_invivo_infusion'
+    renal_carcinoma_invivo_infusion_squared_loss = 'renal_carcinoma_invivo_infusion_squared_loss'
+    renal_carcinoma_invivo_infusion_traditional_method = 'renal_carcinoma_invivo_infusion_traditional_method'
     lung_tumor_invivo_infusion = 'lung_tumor_invivo_infusion'
     hct116_cultured_cell_line = 'hct116_cultured_cell_line'
+    hct116_cultured_cell_line_squared_loss = 'hct116_cultured_cell_line_squared_loss'
     multiple_tumor = 'multiple_tumor'
 
 
@@ -117,6 +132,7 @@ class ParameterName(object):
     ccw = 'ccw'
     square_bottom_left_point = 'square_bottom_left_point'
     figure_title = 'figure_title'
+    figure_subtitle = 'figure_subtitle'
     figure_title_config_dict = 'figure_title_config_dict'
     subfigure = 'subfigure'
     subfigure_label = 'subfigure_label'
@@ -182,12 +198,15 @@ class ParameterName(object):
 
     # Axis
     axis = 'axis'
+    visible = 'visible'
     x = 'x'
     y = 'y'
     ax_top = 'top'
     ax_bottom = 'bottom'
     ax_left = 'left'
     ax_right = 'right'
+    ax_height = 'ax_height'
+    ax_width = 'ax_width'
     axis_tick_label_distance = 'axis_tick_label_distance'
     axis_label_distance = 'axis_label_distance'
     axis_label_location = 'axis_label_location'
@@ -212,6 +231,7 @@ class ParameterName(object):
     z_order_increment = 'z_order_increment'
     cap_size = 'cap_size'       # For error bar
     data_location_cap = 'data_location_cap'
+    text_axis_loc_pair = 'text_axis_loc_pair'
 
     # Metabolic network
     network_type = 'network_type'
@@ -258,9 +278,14 @@ class ParameterName(object):
 
     # Diagram specific parameter
     mode = 'mode'
+    separate = 'separate'
+    normal = 'normal'
     simulated = 'simulated'
+    simulated_reoptimization = 'simulated_reoptimization'
+    optimization_from_average_solutions = 'optimization_from_average_solutions'
     experimental = 'experimental'
     sensitivity = 'sensitivity'
+    data_sensitivity = 'data_sensitivity'
     random_optimized_comparison = 'random_optimized_comparison'
     distribution_type = 'distribution_type'
     global_optimum = 'global_optimum'
@@ -270,19 +295,30 @@ class ParameterName(object):
     repeats = 'repeats'
     loss = 'loss'
     distance = 'distance'
+    raw_distance = 'raw_distance'
+    net_distance = 'net_distance'
     optimized = 'optimized'
     unoptimized = 'unoptimized'
+    raw_optimized = 'raw_optimized'
+    selected = 'selected'
+    averaged = 'averaged'
+    small_data = 'small_data'
+    medium_data = 'medium_data'
+    different_simulated_distance = 'different_simulated_distance'
 
     # Data figure specific parameter
+    figure_data = 'figure_data'
     data_name = 'data_name'
     figure_class = 'figure_class'
     figure_type = 'figure_type'
     all_flux = 'all_flux'
+    raw_flux_diff_vector = 'raw_flux_diff_vector'
     net_euclidean_distance = 'net_euclidean_distance'
     flux_absolute_distance = 'flux_absolute_distance'
     flux_relative_distance = 'flux_relative_distance'
     time_data = 'time_data'
     loss_data = 'loss_data'
+    low_height = 'low_height'
     solution_distance_data = 'solution_distance_data'
     comparison_name = 'comparison_name'
     mean = 'mean'
@@ -297,6 +333,8 @@ class ParameterName(object):
     optimized_size = 'optimized_size'
 
     figure_config_dict = 'figure_config_dict'
+    subplot_name_list = 'subplot_name_list'
+    subplot_name_text_format_dict = 'subplot_name_text_format_dict'
     result_label = 'result_label'
     result_label_layout_list = 'result_label_layout_list'
     mid_name_list = 'mid_name_list'
@@ -308,7 +346,10 @@ class ParameterName(object):
     figure_data_parameter_dict = 'figure_data_parameter_dict'
     raw_data_figure_parameter_dict = 'raw_data_figure_parameter_dict'
     all_data_figure_parameter_dict = 'all_data_figure_parameter_dict'
+    loss_data_figure_parameter_dict = 'loss_data_figure_parameter_dict'
+    net_distance_data_figure_parameter_dict = 'net_distance_data_figure_parameter_dict'
     compare_one_by_one = 'compare_one_by_one'
+    p_value = 'p_value'
 
     x_lim_list = 'x_lim_list'
     common_x_label = 'common_x_label'
@@ -334,12 +375,24 @@ class ParameterName(object):
     median_props = 'median_props'
 
     data_figure_axes = 'data_figure_axes'
+    hidden_data_axes = 'hidden_data_axes'
     legend = 'legend'
     name_dict = 'name_dict'
     horiz_or_vertical = 'horiz_or_vertical'
+    supplementary_text_list = 'supplementary_text_list'
+    supplementary_text_loc_list = 'supplementary_text_loc_list'
+    supplementary_text_format_dict = 'supplementary_text_format_dict'
+    p_value_y_value_list = 'p_value_y_value_list'
+    p_value_cap_parameter_dict = 'p_value_cap_parameter_list'
+    text_y_offset = 'text_y_offset'
+    cap_y_offset = 'cap_y_offset'
 
     default_y_tick_label_list = 'default_y_tick_label_list'
     common_y_lim = 'common_y_lim'
+    common_y_lim_2 = 'common_y_lim_2'
+    y_abs_lim = 'y_abs_lim'
+    y_tick_interval = 'y_tick_interval'
+    y_tick_interval_2 = 'y_tick_interval_2'
 
     legend_type = 'legend_type'
     patch_legend = 'patch_legend'
@@ -362,6 +415,13 @@ class ParameterName(object):
     # Published data parameters
     multiple_tumor = DataName.multiple_tumor
     condition = 'condition'
+
+    with_single_optimized_solutions = 'with_single_optimized_solutions'
+    with_collected_optimized_set = 'with_collected_optimized_set'
+    with_unoptimized_set = 'with_unoptimized_set'
+
+    # Optimization from averaged solutions parameters
+    with_sloppiness_diagram = 'with_sloppiness_diagram'
 
 
 # class MPLParameterName(ParameterName):
@@ -419,8 +479,3 @@ def figure_path_generator(figure_name):
 
 def figure_data_path_generator(figure_name):
     return '{}/{}.xlsx'.format(Direct.figure_data_output_direct, figure_name)
-
-
-def numbered_even_sequence(start, step, num):
-    return np.arange(num) * step + start
-

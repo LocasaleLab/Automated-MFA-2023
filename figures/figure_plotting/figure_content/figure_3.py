@@ -1,24 +1,32 @@
-from ..common.config import ParameterName, Constant, DataName
+from ..common.config import ParameterName, Constant, DataName, np
 from ..common.classes import Vector
-from ..figure_elements.element_dict import ElementName, element_dict
-from .common_functions import calculate_center_bottom_offset, calculate_subfigure_layout
-from ..common.common_figure_materials import FigureConfig, MetabolicNetworkConfig, \
-    ModelDataSensitivityDataFigureConfig
+from ..figure_elements.elements import Elements
 
-Subfigure = element_dict[ElementName.Subfigure]
-CompositeFigure = element_dict[ElementName.CompositeFigure]
-OptimizationDiagram = element_dict[ElementName.OptimizationDiagram]
-ProtocolDiagram = element_dict[ElementName.ProtocolDiagram]
-SensitivityAllFluxHeatmap = element_dict[ElementName.SensitivityAllFluxHeatmap]
-SensitivityDiagram = element_dict[ElementName.SensitivityDiagram]
+from ..figure_elements.data_figure.basic_data_figure.figure_data_loader import raw_model_data
 
+from .common_functions import calculate_subfigure_layout, single_subfigure_layout
+from ..common.common_figure_materials import FigureConfig, CommonFigureString, calculate_center_bottom_offset, \
+    CommonFigureMaterials
+
+Subfigure = Elements.Subfigure
+common_data_figure_scale = 0.4
+common_data_width = 1
+all_net_flux_comparison_scale = 0.35
+
+SensitivityDiagram = Elements.SensitivityDiagram
+SingleLossOrDistanceFigure = Elements.SingleLossOrDistanceFigure
 common_sensitivity_diagram_scale = 0.35
-common_data_sensitivity_diagram_scale = 0.2
-common_heatmap_scale = 0.45
-heatmap_common_offset = Vector(0.05, -0.03)
-common_left_right_column_ratio = (0.32, 0.68)
-subfigure_c_d_offset = Vector(0, -0.01)
-subfigure_e_f_offset = Vector(0, -0.01)
+common_optimized_size = 20000
+optimized_size_50000 = 50000
+common_selection_size = 100
+selection_size_50 = 50
+selection_size_20 = 20
+selection_size_10 = 10
+selection_size_5 = 5
+evenly_distributed_ax_width = 0.7
+remove_pathway_ax_width = 0.56
+compartmentalization_ax_width = 0.6
+ax_common_height = 0.2
 
 
 class SubfigureA(Subfigure):
@@ -27,18 +35,23 @@ class SubfigureA(Subfigure):
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
         scale = 0.28
-        center = OptimizationDiagram.calculate_center(OptimizationDiagram, scale, ParameterName.sensitivity)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        OptimizationDiagram = Elements.OptimizationDiagram
+        mode = ParameterName.data_sensitivity
 
-        data_acquisition_diagram = OptimizationDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + Vector(0.03, -0.015),
+        optimization_diagram = OptimizationDiagram(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.mode: ParameterName.sensitivity,
+            ParameterName.mode: mode,
             ParameterName.background: False,
         })
 
+        center = optimization_diagram.calculate_center(optimization_diagram, scale, mode)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        optimization_diagram.move_and_scale(
+            bottom_left_offset=center_bottom_offset + Vector(0.03, -0.015))
+
         subfigure_element_dict = {
-            data_acquisition_diagram.name: data_acquisition_diagram}
+            optimization_diagram.name: optimization_diagram}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
@@ -49,18 +62,22 @@ class SubfigureB(Subfigure):
     subfigure_title = 'protocol_diagram_sensitivity'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        scale = 0.5
-        center = ProtocolDiagram.calculate_center(ProtocolDiagram, scale, ParameterName.sensitivity)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        scale = 0.45
+        mode = ParameterName.sensitivity
 
-        data_acquisition_diagram = ProtocolDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + Vector(0.01, -0.005),
+        data_sensitivity_generator_diagram = Elements.DataSensitivityGeneratorDiagram(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.mode: ParameterName.sensitivity,
+            ParameterName.mode: mode,
         })
 
+        center = data_sensitivity_generator_diagram.calculate_center(data_sensitivity_generator_diagram, scale, mode)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        data_sensitivity_generator_diagram.move_and_scale(
+            bottom_left_offset=center_bottom_offset + Vector(0.01, -0.005))
+
         subfigure_element_dict = {
-            data_acquisition_diagram.name: data_acquisition_diagram}
+            data_sensitivity_generator_diagram.name: data_sensitivity_generator_diagram}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
@@ -68,10 +85,10 @@ class SubfigureB(Subfigure):
 
 class SubfigureC(Subfigure):
     subfigure_label = 'c'
-    subfigure_title = 'model_sensitivity_diagram'
+    subfigure_title = 'data_sensitivity_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.model_sensitivity
+        mode = DataName.smaller_data_size
         scale = common_sensitivity_diagram_scale
 
         sensitivity_diagram = SensitivityDiagram(**{
@@ -85,7 +102,7 @@ class SubfigureC(Subfigure):
         center = sensitivity_diagram.calculate_center(scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
         sensitivity_diagram.move_and_scale(
-            bottom_left_offset=center_bottom_offset + Vector(0.01, 0) + subfigure_c_d_offset)
+            bottom_left_offset=center_bottom_offset + Vector(0.01, -0.02))
 
         subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
         super().__init__(
@@ -93,31 +110,137 @@ class SubfigureC(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
+def obtain_and_process_data_sensitivity_data(
+        figure_data_parameter_dict, all_case_list, loss_adjusted_factor_list=None, raw_flux_vector=False,
+        selected_solutions=False, flux_relative_distance=False):
+    if flux_relative_distance:
+        (
+            value_dict_list, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
+        ) = raw_model_data.return_all_flux_data(**figure_data_parameter_dict)
+        second_parameter = flux_name_list
+        value_dict_list = value_dict_list[1:]
+    elif raw_flux_vector:
+        (
+            value_dict_list, flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
+        ) = raw_model_data.return_diff_vector_data(**figure_data_parameter_dict)
+        second_parameter = flux_name_list
+        if selected_solutions:
+            value_dict_list = value_dict_list[:1]
+        else:
+            value_dict_list = value_dict_list[1:]
+    else:
+        (
+            value_dict_list, max_value, analyzed_set_size_list,
+            selected_min_loss_size_list) = raw_model_data.return_scatter_data(**figure_data_parameter_dict)
+        second_parameter = max_value
+    new_value_dict_list = []
+    value_dict_num = len(value_dict_list)
+    modified_value_dict_list = []
+    for value_dict in value_dict_list:
+        modified_value_dict = {}
+        for case_name_obj, case_content in value_dict.items():
+            modified_value_dict[str(case_name_obj)] = case_content
+        modified_value_dict_list.append(modified_value_dict)
+    for case_index, (case_name, *parameter_pair) in enumerate(all_case_list):
+        if len(parameter_pair) == 0:
+            current_optimized_size = common_optimized_size
+            current_selection_size = common_selection_size
+        else:
+            current_optimized_size, current_selection_size = parameter_pair
+        for value_dict_index, modified_value_dict in enumerate(modified_value_dict_list):
+            current_total_index = value_dict_num * case_index + value_dict_index
+            while len(new_value_dict_list) <= current_total_index:
+                new_value_dict_list.append({})
+            new_value_dict = new_value_dict_list[current_total_index]
+            current_nested_list = modified_value_dict[case_name][current_selection_size][current_optimized_size]
+            if np.ndim(current_nested_list) == 2 and len(current_nested_list) == 1:
+                current_nested_list = current_nested_list[0]
+            if loss_adjusted_factor_list is not None:
+                current_nested_list = [
+                    current_value * loss_adjusted_factor_list[case_index] for current_value in current_nested_list]
+            if common_selection_size not in new_value_dict:
+                new_value_dict[common_selection_size] = {}
+            new_value_dict[common_selection_size][common_optimized_size] = current_nested_list
+    figure_data_parameter_dict[ParameterName.figure_data] = (
+        new_value_dict_list, second_parameter, analyzed_set_size_list,
+        selected_min_loss_size_list
+    )
+
+
+(
+    common_select_average_name_dict, common_select_average_color_dict
+) = CommonFigureMaterials.select_average_solution_name_color_dict(CommonFigureMaterials, wrap_name=False)
+
+evenly_distributed_all_case_list = [
+    ('raw_data',),
+    ('medium_data',),
+    ('medium_data', common_optimized_size, selection_size_10),
+    # ('medium_data', optimized_size_50000, selection_size_20),
+    ('few_data',),
+    ('few_data', common_optimized_size, selection_size_10),
+]
+evenly_distributed_adjusted_factor_list = [21 / 21, 21 / 13, 21 / 7]
+evenly_distributed_wrap_labels_list = [
+    f'{CommonFigureString.experimental_available_mid_data_wrap}\nSelect 100\nfrom 20000',
+    f'{CommonFigureString.medium_data}\nSelect 100\nfrom 20000',
+    f'{CommonFigureString.medium_data}\nSelect 10\nfrom 20000',
+    # f'{CommonFigureString.medium_data}_50k_20',
+    f'{CommonFigureString.few_data}\nSelect 100\nfrom 20000',
+    f'{CommonFigureString.few_data}\nSelect 100\nfrom 20000',
+]
+evenly_distributed_labels_list = [
+    f'{CommonFigureString.experimental_available_mid_data}, select 100 from 20000',
+    f'{CommonFigureString.medium_data}, select 100 from 20000',
+    f'{CommonFigureString.medium_data}, select 10 from 20000',
+    # f'{CommonFigureString.medium_data}_50k_20',
+    CommonFigureString.few_data,
+    f'{CommonFigureString.few_data}, select 10 from 20000',
+]
+evenly_distributed_medium_data_list = evenly_distributed_all_case_list[:3]
+evenly_distributed_medium_data_labels_list = evenly_distributed_labels_list[:3]
+evenly_distributed_few_data_list = evenly_distributed_all_case_list[3:]
+evenly_distributed_few_data_labels_list = evenly_distributed_labels_list[3:]
+
+
 class SubfigureD(Subfigure):
     subfigure_label = 'd'
-    subfigure_title = 'heatmap_for_merge_reversible_reactions'
+    subfigure_title = 'loss_comparison_evenly_distributed_mid_data'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = True
-        scale = common_heatmap_scale
-        data_name = DataName.model_sensitivity
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        color_list = [
+            common_select_average_color_dict[key]
+            for key in [ParameterName.selected, ParameterName.averaged] * len(evenly_distributed_all_case_list)
+        ]
 
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset:
-                subfigure_bottom_left + center_bottom_offset + heatmap_common_offset + subfigure_c_d_offset,
+        figure_data_parameter_dict = {
+            ParameterName.ax_total_size: Vector(evenly_distributed_ax_width, ax_common_height),
+            ParameterName.figure_title: CommonFigureString.net_euclidean_distance,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.x_tick_labels_list: evenly_distributed_wrap_labels_list,
+            ParameterName.color_dict: common_select_average_color_dict,
+            ParameterName.color: color_list,
+            ParameterName.legend: True,
+            ParameterName.name_dict: common_select_average_name_dict,
+            ParameterName.figure_class: ParameterName.net_euclidean_distance,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.common_y_lim: [0, 2000],
+            ParameterName.default_y_tick_label_list: [0, 500, 1000, 1500, 2000]
+        }
+        obtain_and_process_data_sensitivity_data(figure_data_parameter_dict, evenly_distributed_all_case_list)
+        scale = common_data_figure_scale
+        data_sensitivity_comparison_figure = SingleLossOrDistanceFigure(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-                ParameterName.figure_title: ModelDataSensitivityDataFigureConfig.title_with_order_prefix[data_name],
-            },
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
 
+        center = data_sensitivity_comparison_figure.calculate_center(data_sensitivity_comparison_figure, scale)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        data_sensitivity_comparison_figure.move_and_scale(bottom_left_offset=center_bottom_offset)
+
         subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
+            data_sensitivity_comparison_figure.name: data_sensitivity_comparison_figure}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
@@ -125,10 +248,46 @@ class SubfigureD(Subfigure):
 
 class SubfigureE(Subfigure):
     subfigure_label = 'e'
+    subfigure_title = 'flux_relative_error_evenly_distributed_mid_data'
+
+    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        figure_data_parameter_dict = {
+            ParameterName.figure_title: CommonFigureString.relative_error_to_known_flux,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.flux_relative_distance: True,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.subplot_name_list: evenly_distributed_medium_data_labels_list,
+            ParameterName.text_axis_loc_pair: Vector(0.4, 0.92)
+        }
+        obtain_and_process_data_sensitivity_data(
+            figure_data_parameter_dict, evenly_distributed_medium_data_list, flux_relative_distance=True)
+        scale = all_net_flux_comparison_scale
+        raw_model_all_data_flux_error_bar_comparison_figure = Elements.OptimizedAllFluxComparisonBarDataFigure(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
+        })
+        center = raw_model_all_data_flux_error_bar_comparison_figure.calculate_center(
+            scale, **figure_data_parameter_dict)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0.01)
+        raw_model_all_data_flux_error_bar_comparison_figure.move_and_scale(
+            bottom_left_offset=center_bottom_offset)
+
+        subfigure_element_dict = {
+            raw_model_all_data_flux_error_bar_comparison_figure.name:
+                raw_model_all_data_flux_error_bar_comparison_figure}
+        super().__init__(
+            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
+            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+class SubfigureF(Subfigure):
+    subfigure_label = 'f'
     subfigure_title = 'data_sensitivity_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.data_sensitivity
+        mode = DataName.data_without_pathway
         scale = common_sensitivity_diagram_scale
 
         sensitivity_diagram = SensitivityDiagram(**{
@@ -142,7 +301,7 @@ class SubfigureE(Subfigure):
         center = sensitivity_diagram.calculate_center(scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
         sensitivity_diagram.move_and_scale(
-            bottom_left_offset=center_bottom_offset + Vector(0.01, 0) + subfigure_e_f_offset)
+            bottom_left_offset=center_bottom_offset + Vector(0.01, -0.01))
 
         subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
         super().__init__(
@@ -150,57 +309,58 @@ class SubfigureE(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class SubfigureF(Subfigure):
-    subfigure_label = 'f'
-    subfigure_title = 'heatmap_for_data_sensitivity'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = True
-        scale = common_heatmap_scale
-        data_name = DataName.data_sensitivity
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset:
-                subfigure_bottom_left + center_bottom_offset + heatmap_common_offset + subfigure_e_f_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-                ParameterName.figure_title: ModelDataSensitivityDataFigureConfig.title_with_order_prefix[data_name],
-            },
-        })
-
-        subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+remove_pathway_all_case_list = [
+    ('raw_data', ), ('data_without_ppp', ), ('data_without_aa', ), ('data_without_tca', )]
+remove_pathway_adjusted_factor_list = [21 / 21, 21 / 13, 21 / 7]
+remove_pathway_labels_list = [
+    CommonFigureString.complete_data,
+    CommonFigureString.data_without_ppp,
+    CommonFigureString.data_without_aa,
+    CommonFigureString.data_without_tca,
+]
 
 
 class SubfigureG(Subfigure):
     subfigure_label = 'g'
-    subfigure_title = 'config_sensitivity_diagram'
+    subfigure_title = 'loss_comparison_remove_pathway'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.config_sensitivity
-        scale = common_sensitivity_diagram_scale
+        adjusted_factor_list = None
+        color_list = [
+            common_select_average_color_dict[key]
+            for key in [ParameterName.selected, ParameterName.averaged] * len(remove_pathway_all_case_list)
+        ]
 
-        sensitivity_diagram = SensitivityDiagram(**{
+        figure_data_parameter_dict = {
+            ParameterName.ax_total_size: Vector(remove_pathway_ax_width, ax_common_height),
+            ParameterName.figure_title: CommonFigureString.net_euclidean_distance,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.x_tick_labels_list: remove_pathway_labels_list,
+            ParameterName.color_dict: common_select_average_color_dict,
+            ParameterName.color: color_list,
+            ParameterName.name_dict: common_select_average_name_dict,
+            ParameterName.legend: True,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.figure_class: ParameterName.net_euclidean_distance,
+            ParameterName.common_y_lim: [0, 1500],
+            ParameterName.default_y_tick_label_list: [0, 500, 1000, 1500]
+        }
+        obtain_and_process_data_sensitivity_data(figure_data_parameter_dict, remove_pathway_all_case_list)
+        scale = common_data_figure_scale
+        data_sensitivity_comparison_figure = SingleLossOrDistanceFigure(**{
+            ParameterName.total_width: common_data_width,
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.mode: mode,
-            }
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
 
-        center = sensitivity_diagram.calculate_center(scale)
+        center = data_sensitivity_comparison_figure.calculate_center(data_sensitivity_comparison_figure, scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.01, 0))
+        data_sensitivity_comparison_figure.move_and_scale(bottom_left_offset=center_bottom_offset)
 
-        subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
+        subfigure_element_dict = {
+            data_sensitivity_comparison_figure.name: data_sensitivity_comparison_figure}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
@@ -208,205 +368,46 @@ class SubfigureG(Subfigure):
 
 class SubfigureH(Subfigure):
     subfigure_label = 'h'
-    subfigure_title = 'heatmap_for_config_sensitivity'
+    subfigure_title = 'flux_relative_error_remove_pathway_mid_data'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = True
-        scale = common_heatmap_scale
-        data_name = DataName.config_sensitivity
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + heatmap_common_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-                ParameterName.figure_title: ModelDataSensitivityDataFigureConfig.title_with_order_prefix[data_name],
-            },
-        })
-
-        subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureC(Subfigure):
-    subfigure_label = 'c'
-    subfigure_title = 'sensitivity_merge_reversible_reactions_diagram'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.merge_reversible_reaction
-        scale = common_sensitivity_diagram_scale
-
-        sensitivity_diagram = SensitivityDiagram(**{
+        figure_data_parameter_dict = {
+            ParameterName.figure_title: CommonFigureString.relative_error_to_known_flux,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.flux_relative_distance: True,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.subplot_name_list: remove_pathway_labels_list
+        }
+        obtain_and_process_data_sensitivity_data(
+            figure_data_parameter_dict, remove_pathway_all_case_list, flux_relative_distance=True)
+        scale = all_net_flux_comparison_scale
+        raw_model_all_data_flux_error_bar_comparison_figure = Elements.OptimizedAllFluxComparisonBarDataFigure(**{
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.mode: mode,
-            }
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
-
-        center = sensitivity_diagram.calculate_center(scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.01, 0))
-
-        subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureD(Subfigure):
-    subfigure_label = 'd'
-    subfigure_title = 'heatmap_for_merge_reversible_reactions'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = False
-        scale = common_heatmap_scale
-        data_name = DataName.merge_reversible_reaction
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + heatmap_common_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-            },
-        })
+        center = raw_model_all_data_flux_error_bar_comparison_figure.calculate_center(
+            scale, **figure_data_parameter_dict)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, -0.01)
+        raw_model_all_data_flux_error_bar_comparison_figure.move_and_scale(
+            bottom_left_offset=center_bottom_offset)
 
         subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
+            raw_model_all_data_flux_error_bar_comparison_figure.name:
+                raw_model_all_data_flux_error_bar_comparison_figure}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class OldSubfigureE(Subfigure):
-    subfigure_label = 'e'
-    subfigure_title = 'sensitivity_combine_consecutive_reactions_diagram'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.combine_consecutive_reactions
-        scale = common_sensitivity_diagram_scale
-
-        sensitivity_diagram = SensitivityDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.mode: mode,
-            }
-        })
-
-        center = sensitivity_diagram.calculate_center(scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.01, -0.))
-
-        subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
-        # subfigure_element_dict = {}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureF(Subfigure):
-    subfigure_label = 'f'
-    subfigure_title = 'heatmap_for_combine_consecutive_reactions'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = False
-        scale = common_heatmap_scale
-        data_name = DataName.combine_consecutive_reactions
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + heatmap_common_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-            },
-        })
-
-        subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureG(Subfigure):
-    subfigure_label = 'g'
-    subfigure_title = 'sensitivity_prune_branches_diagram'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.prune_branches
-        scale = common_sensitivity_diagram_scale
-
-        sensitivity_diagram = SensitivityDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.mode: mode,
-            }
-        })
-
-        center = sensitivity_diagram.calculate_center(scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.02, 0.005))
-
-        subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
-        # subfigure_element_dict = {}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureH(Subfigure):
-    subfigure_label = 'h'
-    subfigure_title = 'heatmap_for_prune_branches'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = True
-        scale = common_heatmap_scale
-        data_name = DataName.prune_branches
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset:
-                subfigure_bottom_left + center_bottom_offset + heatmap_common_offset + Vector(0, 0.005),
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-            },
-        })
-
-        subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureI(Subfigure):
+class SubfigureI(Subfigure):
     subfigure_label = 'i'
-    subfigure_title = 'sensitivity_data_sensitivity_smaller_data_size_diagram'
+    subfigure_title = 'data_sensitivity_diagram'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.smaller_data_size
-        scale = common_data_sensitivity_diagram_scale
+        mode = DataName.compartmental_data
+        scale = common_sensitivity_diagram_scale
 
         sensitivity_diagram = SensitivityDiagram(**{
             ParameterName.bottom_left_offset: subfigure_bottom_left,
@@ -418,7 +419,8 @@ class OldSubfigureI(Subfigure):
 
         center = sensitivity_diagram.calculate_center(scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.02, -0.0))
+        sensitivity_diagram.move_and_scale(
+            bottom_left_offset=center_bottom_offset + Vector(0.01, -0.01))
 
         subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
         super().__init__(
@@ -426,89 +428,100 @@ class OldSubfigureI(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class OldSubfigureJ(Subfigure):
+compartmentalization_all_case_list = [('all_data', ), ('data_without_combination', ), ('raw_data', )]
+compartmentalization_labels_list = [
+    CommonFigureString.all_compartmentalized_data,
+    CommonFigureString.experimental_compartmentalized_data,
+    CommonFigureString.experimental_mixed_data,]
+compartmentalization_wrap_labels_list = [
+    CommonFigureString.all_compartmentalized_data_wrap,
+    CommonFigureString.experimental_compartmentalized_data_wrap,
+    CommonFigureString.experimental_mixed_data_wrap,]
+
+
+class SubfigureJ(Subfigure):
     subfigure_label = 'j'
-    subfigure_title = 'heatmap_for_data_sensitivity'
+    subfigure_title = 'loss_comparison_compartmentalization'
 
     def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = False
-        scale = common_heatmap_scale
-        data_name = DataName.data_sensitivity
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + heatmap_common_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-            },
-        })
-
-        subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureK(Subfigure):
-    subfigure_label = 'k'
-    subfigure_title = 'sensitivity_data_sensitivity_without_specific_pathway_diagram'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        mode = DataName.data_without_pathway
-        scale = common_data_sensitivity_diagram_scale
-
-        sensitivity_diagram = SensitivityDiagram(**{
+        # adjusted_factor_list = [21 / 21, 21 / 13, 21 / 7]
+        adjusted_factor_list = None
+        color_list = [
+            common_select_average_color_dict[key]
+            for key in [ParameterName.selected, ParameterName.averaged] * len(compartmentalization_all_case_list)
+        ]
+        figure_data_parameter_dict = {
+            ParameterName.ax_total_size: Vector(compartmentalization_ax_width, ax_common_height),
+            ParameterName.figure_title: CommonFigureString.net_euclidean_distance,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.x_tick_labels_list: compartmentalization_wrap_labels_list,
+            ParameterName.color_dict: common_select_average_color_dict,
+            ParameterName.name_dict: common_select_average_name_dict,
+            ParameterName.color: color_list,
+            ParameterName.legend: True,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.figure_class: ParameterName.net_euclidean_distance,
+            ParameterName.common_y_lim: [0, 1000],
+            ParameterName.default_y_tick_label_list: [0, 500, 1000]
+        }
+        obtain_and_process_data_sensitivity_data(figure_data_parameter_dict, compartmentalization_all_case_list)
+        scale = common_data_figure_scale
+        data_sensitivity_comparison_figure = SingleLossOrDistanceFigure(**{
+            ParameterName.total_width: common_data_width,
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.mode: mode,
-            }
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
 
-        center = sensitivity_diagram.calculate_center(scale)
+        center = data_sensitivity_comparison_figure.calculate_center(data_sensitivity_comparison_figure, scale)
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        sensitivity_diagram.move_and_scale(bottom_left_offset=center_bottom_offset + Vector(0.02, -0.02))
-
-        subfigure_element_dict = {sensitivity_diagram.name: sensitivity_diagram}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureL(Subfigure):
-    subfigure_label = 'l'
-    subfigure_title = 'heatmap_for_data_sensitivity_with_noise'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        cbar = True
-        scale = common_heatmap_scale
-        data_name = DataName.data_sensitivity_with_noise
-        center = SensitivityAllFluxHeatmap.calculate_center(
-            SensitivityAllFluxHeatmap, scale, data_name, cbar)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        sensitivity_all_flux_heatmap = SensitivityAllFluxHeatmap(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + heatmap_common_offset,
-            ParameterName.scale: scale,
-            ParameterName.cbar: cbar,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: data_name,
-            },
-        })
+        data_sensitivity_comparison_figure.move_and_scale(bottom_left_offset=center_bottom_offset)
 
         subfigure_element_dict = {
-            sensitivity_all_flux_heatmap.name: sensitivity_all_flux_heatmap}
+            data_sensitivity_comparison_figure.name: data_sensitivity_comparison_figure}
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class Figure3(element_dict[ElementName.Figure]):
+class SubfigureK(Subfigure):
+    subfigure_label = 'k'
+    subfigure_title = 'flux_relative_error_compartmentalization_mid_data'
+
+    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
+        figure_data_parameter_dict = {
+            ParameterName.figure_title: CommonFigureString.relative_error_to_known_flux,
+            ParameterName.data_name: DataName.data_sensitivity,
+            ParameterName.flux_relative_distance: True,
+            ParameterName.optimized_size: common_optimized_size,
+            ParameterName.selection_size: common_selection_size,
+            ParameterName.subplot_name_list: compartmentalization_labels_list,
+            ParameterName.text_axis_loc_pair: Vector(0.5, 0.92)
+        }
+        obtain_and_process_data_sensitivity_data(
+            figure_data_parameter_dict, compartmentalization_all_case_list, flux_relative_distance=True)
+        scale = all_net_flux_comparison_scale
+        raw_model_all_data_flux_error_bar_comparison_figure = Elements.OptimizedAllFluxComparisonBarDataFigure(**{
+            ParameterName.bottom_left_offset: subfigure_bottom_left,
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
+        })
+        center = raw_model_all_data_flux_error_bar_comparison_figure.calculate_center(
+            scale, **figure_data_parameter_dict)
+        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
+        raw_model_all_data_flux_error_bar_comparison_figure.move_and_scale(
+            bottom_left_offset=center_bottom_offset)
+
+        subfigure_element_dict = {
+            raw_model_all_data_flux_error_bar_comparison_figure.name:
+                raw_model_all_data_flux_error_bar_comparison_figure}
+        super().__init__(
+            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
+            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+class Figure3(Elements.Figure):
     figure_label = 'figure_3'
     figure_title = 'Figure 3'
 
@@ -522,10 +535,9 @@ class Figure3(element_dict[ElementName.Figure]):
             SubfigureF,
             SubfigureG,
             SubfigureH,
-            # SubfigureI,
-            # SubfigureJ,
-            # SubfigureK,
-            # SubfigureL,
+            SubfigureI,
+            SubfigureJ,
+            SubfigureK,
         ]
 
         figure_size = Constant.default_figure_size
@@ -533,39 +545,68 @@ class Figure3(element_dict[ElementName.Figure]):
         top_margin_ratio = FigureConfig.top_margin_ratio
         side_margin_ratio = FigureConfig.side_margin_ratio
 
+        left_column_width = 0.45
+        right_column_width = 0.55
+        right_column_center_x = left_column_width + right_column_width / 2
+
+        a_b_row_height = 0.2
+        evenly_distributed_diagram_height = 0.11
+        remove_pathway_diagram_height = 0.13
+        diagram_height_2 = 0.13
+        net_distance_figure_height = 0.13
+        evenly_distributed_height = evenly_distributed_diagram_height + net_distance_figure_height
+        remove_pathway_height = remove_pathway_diagram_height + net_distance_figure_height
+        compartmental_mid_height = diagram_height_2 + net_distance_figure_height
+        evenly_distributed_size = Vector(right_column_width, evenly_distributed_height)
+        evenly_distributed_center_y = a_b_row_height + evenly_distributed_height / 2
+        evenly_distributed_center = Vector(right_column_center_x, evenly_distributed_center_y)
+        remove_pathway_size = Vector(right_column_width, remove_pathway_height)
+        remove_pathway_center_y = evenly_distributed_center_y + evenly_distributed_height / 2 + remove_pathway_height / 2
+        remove_pathway_center = Vector(right_column_center_x, remove_pathway_center_y)
+        compartmental_mid_size = Vector(right_column_width, compartmental_mid_height)
+        compartmental_mid_center_y = remove_pathway_center_y + remove_pathway_height / 2 + compartmental_mid_height / 2
+        compartmental_mid_center = Vector(right_column_center_x, compartmental_mid_center_y)
+
         figure_layout_list = [
-            (0.19, [
-                (common_left_right_column_ratio[0], 'a'),
-                (common_left_right_column_ratio[1], 'b')
+            (a_b_row_height, [
+                (left_column_width, 'a'),
+                (right_column_width, 'b')
             ]),
-            (0.29, [
-                (common_left_right_column_ratio[0], 'c'),
-                (common_left_right_column_ratio[1], 'd')
+            (evenly_distributed_diagram_height, [
+                (left_column_width, 'c'),
             ]),
-            (0.22, [
-                (common_left_right_column_ratio[0], 'e'),
-                (common_left_right_column_ratio[1], 'f')
+            (net_distance_figure_height, [
+                (left_column_width, 'd')
             ]),
-            (0.26, [
-                (common_left_right_column_ratio[0], 'g'),
-                (common_left_right_column_ratio[1], 'h')
+            (remove_pathway_diagram_height, [
+                (left_column_width, 'f'),
             ]),
-            # (0.155, [
-            #     (common_left_right_column_ratio[0], 'g'),
-            #     (common_left_right_column_ratio[1], 'h')
-            # ]),
-            # (0.125, [
-            #     (common_left_right_column_ratio[0], 'i'),
-            #     (common_left_right_column_ratio[1], 'j')
-            # ]),
-            # (0.16, [
-            #     (common_left_right_column_ratio[0], 'k'),
-            #     (common_left_right_column_ratio[1], 'l')
-            # ]),
+            (net_distance_figure_height, [
+                (left_column_width, 'g'),
+            ]),
+            (diagram_height_2, [
+                (left_column_width, 'i'),
+            ]),
+            (net_distance_figure_height, [
+                (left_column_width, 'j')
+            ]),
         ]
 
         subfigure_obj_list = calculate_subfigure_layout(
             figure_layout_list, subfigure_class_list, height_to_width_ratio, top_margin_ratio, side_margin_ratio)
+
+        subfigure_obj_list.extend([
+            single_subfigure_layout(
+                evenly_distributed_center, evenly_distributed_size, SubfigureE, height_to_width_ratio, top_margin_ratio,
+                side_margin_ratio),
+            single_subfigure_layout(
+                remove_pathway_center, remove_pathway_size, SubfigureH, height_to_width_ratio, top_margin_ratio,
+                side_margin_ratio),
+            single_subfigure_layout(
+                compartmental_mid_center, compartmental_mid_size, SubfigureK, height_to_width_ratio, top_margin_ratio,
+                side_margin_ratio),
+        ])
+
         subfigure_dict = {subfigure_obj.subfigure_label: subfigure_obj for subfigure_obj in subfigure_obj_list}
         super().__init__(self.figure_label, subfigure_dict, figure_size=figure_size, figure_title=self.figure_title)
 

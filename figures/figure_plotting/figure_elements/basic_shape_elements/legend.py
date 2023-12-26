@@ -183,7 +183,7 @@ class PatchLegend(CompositeFigure):
             patch_left_x = this_item_left_x + each_col_margin
             patch_center_x = patch_left_x + patch_width / 2
             text_center_x = patch_left_x + patch_width + patch_text_distance + text_width / 2
-            if alpha is not None:
+            if alpha is not None and not type_color.alpha_set:
                 current_type_color = type_color.add_transparency(alpha)
             else:
                 current_type_color = type_color

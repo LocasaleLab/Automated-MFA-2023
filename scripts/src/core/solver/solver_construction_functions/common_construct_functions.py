@@ -368,11 +368,15 @@ def apply_mix_equation(
     return current_item_name, emu_name_index_size_dict[current_item_name][0], current_carbon_num + 1
 
 
-def calculate_optimal_entropy(exp_data_np_vector_list):
+def calculate_optimal_entropy(exp_data_np_vector_list, eps_for_log=CoreConstants.eps_for_log):
     optimal_cross_entropy = 0
     for current_exp_data_vector in exp_data_np_vector_list:
+        if current_exp_data_vector is None:
+            raise ValueError('Experimental data vector is None!')
         optimal_cross_entropy += np_log_eps(
-            current_exp_data_vector, current_exp_data_vector, CoreConstants.eps_for_log)
+            current_exp_data_vector, current_exp_data_vector, eps_for_log)
+    if np.isnan(optimal_cross_entropy):
+        raise ValueError('Optimal cross entropy is not a number!')
     return optimal_cross_entropy
 
 

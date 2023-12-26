@@ -721,61 +721,57 @@ def bar_plot_warp_func(
 def core_single_ax_bar_plot(
         ax, array_data_dict, color_dict, error_bar_data_dict, array_len,
         bar_total_width, edge, y_lim=None, y_ticks=None, cmap=None, bar_param_dict=None, error_bar_param_dict=None,
-        cutoff=None, cutoff_param_dict=None, twin_x_axis=False):
+        cutoff=None, cutoff_param_dict=None, twin_x_axis=False, max_bar_num_each_group=None):
+    def right_y_ticks_verification(_right_y_ticks):
+        if isinstance(_right_y_ticks, str) and _right_y_ticks == 'default':
+            return True
+        elif isinstance(_right_y_ticks[0], (int, float, np.int32, np.float64)):
+            return True
+        return False
+
+    if max_bar_num_each_group is None:
+        max_bar_num_each_group = len(array_data_dict)
     if array_data_dict is None:
         bar_unit_width = bar_total_width
     else:
-        bar_unit_width = bar_total_width / len(array_data_dict)
+        bar_unit_width = bar_total_width / max_bar_num_each_group
     x_tick_loc = np.arange(array_len) + 0.5
     x_left_loc = x_tick_loc - bar_total_width / 2
     if bar_param_dict is None:
         bar_param_dict = {}
-    error_bar_line_width_str = 'elinewidth'
-    error_bar_line_width_str2 = 'capthick'
-    cap_size_str = 'capsize'
-    input_edge_width_str = 'edge_width'
-    input_cap_size_str = 'cap_size'
+    # input_edge_width_str = 'edge_width'
+    # input_cap_size_str = 'cap_size'
     # default_error_bar_dict = {
-    #     cap_size_str: 3,
-    #     error_bar_line_width_str: 1.5,
-    #     error_bar_line_width_str2: 1.5
+    #     input_cap_size_str: 3,
+    #     input_edge_width_str: 1.5
     # }
-    default_error_bar_dict = {
-        input_cap_size_str: 3,
-        input_edge_width_str: 1.5
-    }
-    if error_bar_param_dict is not None:
-        # for key, value in error_bar_param_dict.items():
-        #     if key == input_edge_width_str:
-        #         default_error_bar_dict.update({
-        #             error_bar_line_width_str: value,
-        #             error_bar_line_width_str2: value
-        #         })
-        #     elif key == input_cap_size_str:
-        #         default_error_bar_dict[cap_size_str] = value
-        #     else:
-        #         default_error_bar_dict[key] = value
-        default_error_bar_dict.update(error_bar_param_dict)
+    # if error_bar_param_dict is not None:
+    #     default_error_bar_dict.update(error_bar_param_dict)
+    if error_bar_param_dict is None:
+        error_bar_param_dict = {}
     if array_data_dict is not None:
         for index, (data_label, data_value) in enumerate(array_data_dict.items()):
+            loc_index = index
+            color_index = index
             if twin_x_axis:
-                ax_index, data_array = data_value
+                ax_index, data_array, *loc_index_list = data_value
+                if len(loc_index_list) > 0:
+                    loc_index = loc_index_list[0]
             else:
                 ax_index = None
-                data_array = data_value
+                if isinstance(data_value, tuple) and len(data_value) == 2:
+                    data_array, loc_index = data_value
+                else:
+                    data_array = data_value
             assert len(data_array) == array_len
             if data_label in color_dict:
                 current_color = color_dict[data_label]
             else:
-                current_color = cmap.colors[index]
-            effective_error_bar_param = {
-                'ecolor': current_color,
-                **default_error_bar_dict,
-            }
+                current_color = cmap.colors[color_index]
             error_bar_vector = None
             if error_bar_data_dict is not None and data_label in error_bar_data_dict:
                 error_bar_vector = error_bar_data_dict[data_label]
-            x_loc = x_left_loc + index * bar_unit_width + bar_unit_width / 2
+            x_loc = x_left_loc + loc_index * bar_unit_width + bar_unit_width / 2
             if twin_x_axis:
                 current_ax = ax[ax_index]
             else:
@@ -786,13 +782,13 @@ def core_single_ax_bar_plot(
             if error_bar_vector is not None:
                 core_error_bar_plotting(
                     current_ax, x_loc, data_array, error_bar_vector, edge_color=it.repeat(current_color),
-                    **default_error_bar_dict)
+                    **error_bar_param_dict)
     x_lim = [-edge, array_len + edge]
     if twin_x_axis:
         ax, right_ax = ax
         y_lim, right_y_lim = get_twin_axis_numeric_parameters(y_lim, lambda _right_y_lim: len(_right_y_lim) == 2)
         y_ticks, right_y_ticks = get_twin_axis_numeric_parameters(
-            y_ticks, lambda _right_y_ticks: _right_y_ticks == 'default' or isinstance(_right_y_ticks[0], (int, float)))
+            y_ticks, right_y_ticks_verification)
         axis_numeric_setting(right_ax, x_lim=x_lim, x_ticks=x_tick_loc, y_lim=right_y_lim, y_ticks=right_y_ticks)
     axis_numeric_setting(ax, x_lim=x_lim, x_ticks=x_tick_loc, y_lim=y_lim, y_ticks=y_ticks)
     if cutoff is not None:
@@ -828,6 +824,10 @@ def core_error_bar_plotting(
         x_error_bar_array = it.repeat(None)
     if edge_color is None:
         edge_color = it.repeat(None)
+    if edge_width is None:
+        edge_width = 1.5
+    if cap_size is None:
+        cap_size = 3
     # for error_bar_index in range(total_error_bar_num):
     for x_value, y_value, y_error_bar, x_error_bar, error_bar_color in zip(
             x_value_array, y_value_array, y_error_bar_array, x_error_bar_array, edge_color):

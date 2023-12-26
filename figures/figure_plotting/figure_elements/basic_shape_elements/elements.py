@@ -37,6 +37,34 @@ class ElementName(object):
     Figure = 'Figure'
 
 
+class Elements(object):
+    Region = Region
+    DataFigureAxes = DataFigureAxes
+    TextBox = TextBox
+    Circle = Circle
+    Rectangle = Rectangle
+    PathRectangle = PathRectangle
+    RoundRectangle = RoundRectangle
+    Ellipse = Ellipse
+    Polygon = Polygon
+    Line = Line
+    Brace = Brace
+    Arrow = Arrow
+    ChevronArrow = ChevronArrow
+    Capsule = Capsule
+    ArcChevronArrow = ArcChevronArrow
+    ArcArrow = ArcArrow
+    ArcPathArrow = ArcPathArrow
+    BentArrow = BentArrow
+    BentChevronArrow = BentChevronArrow
+    BrokenArrow = BrokenArrow
+    BrokenChevronArrow = BrokenChevronArrow
+    BasicShape = BasicShape
+    CompositeFigure = CompositeFigure
+    Subfigure = Subfigure
+    Figure = Figure
+
+
 element_dict = {
     ElementName.Region: Region,
     ElementName.DataFigureAxes: DataFigureAxes,

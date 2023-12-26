@@ -1,7 +1,8 @@
+from ...common_functions import numbered_even_sequence
+
 from ..config import np, DataName, Vector, ColorConfig, ZOrderConfig, CommonFigureString, CommonElementConfig, \
     DataSensitivityMetabolicNetworkConfig, MetaboliteConfig, ReactionConfig, SensitivityConfig, \
-    ParameterName, FontWeight, HorizontalAlignment, VerticalAlignment, numbered_even_sequence, \
-    ChevronArrow, RoundRectangle
+    ParameterName, FontWeight, HorizontalAlignment, VerticalAlignment, ChevronArrow, RoundRectangle
 
 from .common_functions import arrange_text_by_row
 
@@ -339,16 +340,28 @@ def metabolic_sensitivity_network_layout_generator(
     return total_size, chevron_obj_list
 
 
-def data_availability_sensitivity_layout_generator(mode, current_title, result_label_name_dict):
+def data_availability_sensitivity_layout_generator(mode, current_title, result_label_name_dict, separate=False):
     if mode == DataName.smaller_data_size:
-        total_width = 0.75
-        total_height = 0.29
+        if separate:
+            total_width = 0.9
+            total_height = 0.3
+        else:
+            total_width = 0.75
+            total_height = 0.29
     elif mode == DataName.data_without_pathway:
-        total_width = 0.3
-        total_height = 0.44
+        if separate:
+            total_width = 0.8
+            total_height = 0.29
+        else:
+            total_width = 0.3
+            total_height = 0.44
     elif mode == DataName.compartmental_data:
-        total_width = 0.51
-        total_height = 0.44
+        if separate:
+            total_width = 0.8
+            total_height = 0.43
+        else:
+            total_width = 0.51
+            total_height = 0.44
     else:
         raise ValueError()
 
@@ -396,17 +409,107 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
         title_x_location = 0.11
         text_item_left = 0.22
         text_item_right = total_width
-        distance_inside_each_group = 0.025
         distance_between_group = 0.07
-        raw_data_center_bottom_y = data_rectangle_overlap_area_margin + data_rectangle_text_margin
-        text_left_offset = 0
-        raw_data_center_y_value = [
-            raw_data_center_bottom_y + distance_inside_each_group, raw_data_center_bottom_y]
-        medium_data_center_bottom_y = raw_data_center_bottom_y + distance_between_group
-        medium_data_center_y_value = [
-            medium_data_center_bottom_y + distance_inside_each_group, medium_data_center_bottom_y]
-        few_data_center_bottom_y = medium_data_center_bottom_y + distance_between_group
-        few_data_center_y_value = [few_data_center_bottom_y + distance_inside_each_group, few_data_center_bottom_y]
+
+        if separate:
+            left_right_margin = 0.03
+            few_data_string_list = DataSensitivityMetabolicNetworkConfig.few_data_vertical_list
+            medium_data_string_list = DataSensitivityMetabolicNetworkConfig.medium_data_vertical_list
+            raw_data_string_list = DataSensitivityMetabolicNetworkConfig.experimentally_available_data_vertical_list
+            raw_data_title_str = CommonFigureString.experimental_available_mid_data
+            current_title_height = 0.038
+
+            raw_data_rectangle_top_y = total_height - title_height
+            raw_data_title_y_value = (raw_data_rectangle_top_y - current_title_height / 2)
+            medium_data_title_y_value = raw_data_title_y_value - current_title_height
+            medium_data_rectangle_top_y = medium_data_title_y_value + current_title_height / 2
+            few_data_title_y_value = medium_data_title_y_value - current_title_height
+            few_data_rectangle_top_y = few_data_title_y_value + current_title_height / 2
+            raw_data_rectangle_bottom_y = data_rectangle_overlap_area_margin
+            medium_data_rectangle_bottom_y = raw_data_rectangle_bottom_y + data_rectangle_overlap_area_margin
+            few_data_rectangle_bottom_y = medium_data_rectangle_bottom_y + data_rectangle_overlap_area_margin
+            few_data_bottom_text_center_y = few_data_rectangle_bottom_y + data_rectangle_text_margin - 0.007
+            all_metabolite_center_y_value = numbered_even_sequence(
+                few_data_bottom_text_center_y, distance_inside_each_group, 4)[::-1]
+            few_data_center_y_value = medium_data_center_y_value = raw_data_center_y_value = \
+                all_metabolite_center_y_value
+            few_data_rectangle_y_range_pair = Vector(few_data_rectangle_bottom_y, few_data_rectangle_top_y)
+            medium_data_rectangle_y_range_pair = Vector(medium_data_rectangle_bottom_y, medium_data_rectangle_top_y)
+            raw_data_rectangle_y_range_pair = Vector(raw_data_rectangle_bottom_y, raw_data_rectangle_top_y)
+
+            raw_data_left_x_value = left_right_margin
+            two_column_text_width = 0.27
+            text_left_offset = 0.01
+            medium_data_left_x_value = raw_data_left_x_value + data_rectangle_overlap_area_margin
+            few_data_left_x_value = medium_data_left_x_value + data_rectangle_overlap_area_margin
+            few_data_right_x_value = few_data_left_x_value + two_column_text_width
+            medium_data_right_x_value = few_data_right_x_value + two_column_text_width
+            raw_data_right_x_value = medium_data_right_x_value + two_column_text_width
+            few_data_rectangle_x_range_pair = Vector(few_data_left_x_value, few_data_right_x_value)
+            medium_data_rectangle_x_range_pair = Vector(medium_data_left_x_value, medium_data_right_x_value)
+            raw_data_rectangle_x_range_pair = Vector(raw_data_left_x_value, raw_data_right_x_value)
+            few_data_text_x_range_pair = Vector(
+                few_data_left_x_value + data_rectangle_text_margin,
+                few_data_right_x_value - data_rectangle_text_margin)
+            medium_data_text_x_range_pair = Vector(
+                few_data_right_x_value + data_rectangle_text_margin,
+                medium_data_right_x_value - data_rectangle_text_margin)
+            raw_data_text_x_range_pair = Vector(
+                medium_data_right_x_value + data_rectangle_text_margin,
+                raw_data_right_x_value - data_rectangle_text_margin)
+            few_data_title_x_value = np.mean(few_data_rectangle_x_range_pair)
+            medium_data_title_x_value = np.mean(medium_data_rectangle_x_range_pair)
+            raw_data_title_x_value = np.mean(raw_data_rectangle_x_range_pair)
+            few_data_rectangle_pair = [few_data_rectangle_x_range_pair, few_data_rectangle_y_range_pair]
+            medium_data_rectangle_pair = [medium_data_rectangle_x_range_pair, medium_data_rectangle_y_range_pair]
+            raw_data_rectangle_pair = [raw_data_rectangle_x_range_pair, raw_data_rectangle_y_range_pair]
+            few_data_title_center = Vector(few_data_title_x_value, few_data_title_y_value)
+            medium_data_title_center = Vector(medium_data_title_x_value, medium_data_title_y_value)
+            raw_data_title_center = Vector(raw_data_title_x_value, raw_data_title_y_value)
+        else:
+            text_left_offset = 0
+            raw_data_title_str = CommonFigureString.experimental_available_mid_data_wrap
+            few_data_string_list = DataSensitivityMetabolicNetworkConfig.few_data_list
+            medium_data_string_list = DataSensitivityMetabolicNetworkConfig.medium_data_list
+            raw_data_string_list = DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list
+            raw_data_center_bottom_y = data_rectangle_overlap_area_margin + data_rectangle_text_margin
+            raw_data_center_y_value = [
+                raw_data_center_bottom_y + distance_inside_each_group, raw_data_center_bottom_y]
+            medium_data_center_bottom_y = raw_data_center_bottom_y + distance_between_group
+            medium_data_center_y_value = [
+                medium_data_center_bottom_y + distance_inside_each_group, medium_data_center_bottom_y]
+            few_data_center_bottom_y = medium_data_center_bottom_y + distance_between_group
+            few_data_center_y_value = [few_data_center_bottom_y + distance_inside_each_group, few_data_center_bottom_y]
+
+            text_top_location = few_data_center_y_value[0] + data_rectangle_text_margin
+            expand_width_vector = Vector(-data_rectangle_overlap_area_margin, data_rectangle_overlap_area_margin)
+            raw_data_rectangle_left_right_pair = Vector(
+                data_rectangle_overlap_area_margin, total_width - data_rectangle_overlap_area_margin)
+            medium_data_rectangle_left_right_pair = raw_data_rectangle_left_right_pair - expand_width_vector
+            few_data_rectangle_left_right_pair = medium_data_rectangle_left_right_pair - expand_width_vector
+            few_data_rectangle_pair = [
+                few_data_rectangle_left_right_pair,
+                Vector(few_data_center_y_value[1] - data_rectangle_text_margin, text_top_location),
+            ]  # [(left, right), (bottom, top)]
+            few_data_title_center = Vector(title_x_location, float(np.mean(few_data_center_y_value)))
+            medium_data_rectangle_pair = [
+                medium_data_rectangle_left_right_pair,
+                Vector(
+                    medium_data_center_y_value[1] - data_rectangle_text_margin,
+                    text_top_location + data_rectangle_overlap_area_margin),
+            ]
+            medium_data_title_center = Vector(title_x_location, float(np.mean(medium_data_center_y_value)))
+            raw_data_rectangle_pair = [
+                raw_data_rectangle_left_right_pair,
+                Vector(
+                    raw_data_center_y_value[1] - data_rectangle_text_margin,
+                    text_top_location + 2 * data_rectangle_overlap_area_margin),
+            ]
+            raw_data_title_center = Vector(title_x_location, float(np.mean(raw_data_center_y_value)))
+            left_right_x_range = Vector(text_item_left, text_item_right)
+            raw_data_text_x_range_pair = medium_data_text_x_range_pair = few_data_text_x_range_pair = \
+                left_right_x_range
+
         few_data_rectangle_config = {
             ParameterName.face_color: ColorConfig.medium_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order + 0.3,
@@ -419,47 +522,10 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
             ParameterName.face_color: ColorConfig.dark_light_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order + 0.1,
         }
-        text_top_location = few_data_center_y_value[0] + data_rectangle_text_margin
-        # few_data_rectangle_pair = [
-        #     Vector(title_x_location - 0.08, text_item_right - 0.025),
-        #     Vector(few_data_center_y_value[1] - data_rectangle_text_margin, text_top_location),
-        # ]  # [(left, right), (bottom, top)]
-        expand_width_vector = Vector(-data_rectangle_overlap_area_margin, data_rectangle_overlap_area_margin)
-        raw_data_rectangle_left_right_pair = Vector(
-            data_rectangle_overlap_area_margin, total_width - data_rectangle_overlap_area_margin)
-        medium_data_rectangle_left_right_pair = raw_data_rectangle_left_right_pair - expand_width_vector
-        few_data_rectangle_left_right_pair = medium_data_rectangle_left_right_pair - expand_width_vector
-        few_data_rectangle_pair = [
-            # Vector(title_x_location - 0.08, text_item_right - 0.025),
-            few_data_rectangle_left_right_pair,
-            Vector(few_data_center_y_value[1] - data_rectangle_text_margin, text_top_location),
-        ]  # [(left, right), (bottom, top)]
-        few_data_string_list = DataSensitivityMetabolicNetworkConfig.few_data_list
-        few_data_title_center = Vector(title_x_location, float(np.mean(few_data_center_y_value)))
-        medium_data_rectangle_pair = [
-            # few_data_rectangle_pair[0] + expand_width_vector,
-            medium_data_rectangle_left_right_pair,
-            Vector(
-                medium_data_center_y_value[1] - data_rectangle_text_margin,
-                text_top_location + data_rectangle_overlap_area_margin),
-        ]
-        medium_data_string_list = DataSensitivityMetabolicNetworkConfig.medium_data_list
-        medium_data_title_center = Vector(title_x_location, float(np.mean(medium_data_center_y_value)))
-        raw_data_rectangle_pair = [
-            # medium_data_rectangle_pair[0] + expand_width_vector,
-            raw_data_rectangle_left_right_pair,
-            Vector(
-                raw_data_center_y_value[1] - data_rectangle_text_margin,
-                text_top_location + 2 * data_rectangle_overlap_area_margin),
-        ]
-        raw_data_string_list = DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list
-        raw_data_title_center = Vector(title_x_location, float(np.mean(raw_data_center_y_value)))
-        left_right_x_range = Vector(text_item_left, text_item_right)
-
         flux_range_string_dict = {
             DataName.few_data: (
                 result_label_name_dict[DataName.few_data],
-                left_right_x_range,
+                few_data_text_x_range_pair,
                 few_data_title_center,
                 few_data_center_y_value,
                 few_data_string_list,
@@ -468,7 +534,7 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
             ),
             DataName.medium_data: (
                 result_label_name_dict[DataName.medium_data],
-                left_right_x_range,
+                medium_data_text_x_range_pair,
                 medium_data_title_center,
                 medium_data_center_y_value,
                 medium_data_string_list,
@@ -476,8 +542,8 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
                 medium_data_rectangle_config,
             ),
             DataName.raw_data_result_label: (
-                CommonFigureString.experimental_available_mid_data_wrap,
-                left_right_x_range,
+                raw_data_title_str,
+                raw_data_text_x_range_pair,
                 raw_data_title_center,
                 raw_data_center_y_value,
                 raw_data_string_list,
@@ -497,25 +563,120 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
         aa_removed_str_list = DataSensitivityMetabolicNetworkConfig.aa_removed_list
         tca_removed_str_list = DataSensitivityMetabolicNetworkConfig.tca_removed_list
         other_metabolite_str_list = DataSensitivityMetabolicNetworkConfig.other_metabolite_list
-        data_without_aa_center_y_value = numbered_even_sequence(
-            bottom_panel_bottom_y, distance_inside_each_group, len(aa_removed_str_list) + 1)[::-1]
-        data_without_tca_center_y_value = numbered_even_sequence(
-            bottom_panel_bottom_y, distance_inside_each_group, len(tca_removed_str_list) + 1)[::-1]
-        # data_without_ppp_center_y_value = [0.4, 0.35, 0.3]
-        data_without_ppp_center_y_value = numbered_even_sequence(
-            data_without_aa_center_y_value[0] + distance_between_group, distance_inside_each_group,
-            len(ppp_removed_str_list) + 1)[::-1]
-        other_metabolite_data_center_y_value = numbered_even_sequence(
-            data_without_tca_center_y_value[0] + distance_between_group, distance_inside_each_group,
-            len(other_metabolite_str_list) + 1)[::-1]
-        left_panel_width = 0.14
-        right_panel_width = 0.13
-        left_panel_left_right_x_value = Vector(
-            data_rectangle_overlap_area_margin, data_rectangle_overlap_area_margin + left_panel_width)
-        right_panel_left_right_x_value = Vector(
-            total_width - data_rectangle_overlap_area_margin - right_panel_width,
-            total_width - data_rectangle_overlap_area_margin)
-        text_left_offset = 0.02
+        current_title_height = 0.038
+
+        if separate:
+            text_left_offset = 0.03
+            common_rectangle_top = total_height - 0.06
+            common_title_height = common_rectangle_top - current_title_height / 2
+            common_center_y_value = numbered_even_sequence(
+                common_title_height, -distance_inside_each_group, len(aa_removed_str_list) + 1)
+            other_metabolite_data_center_y_value = common_center_y_value[:len(other_metabolite_str_list) + 1]
+            data_without_ppp_center_y_value = common_center_y_value[:len(ppp_removed_str_list) + 1]
+            data_without_ppp_bottom_y_value = data_without_ppp_center_y_value[-1] - data_rectangle_text_margin
+            data_without_aa_center_y_value = common_center_y_value
+            data_without_aa_bottom_y_value = data_without_aa_center_y_value[-1] - data_rectangle_text_margin
+            data_without_tca_center_y_value = common_center_y_value[:len(tca_removed_str_list) + 1]
+            data_without_tca_bottom_y_value = data_without_tca_center_y_value[-1] - data_rectangle_text_margin
+
+            # each_column_width = 0.14
+            margin = 0.02
+            total_column_num = 4
+            each_column_width = (total_width - margin * (total_column_num - 0.5)) / total_column_num
+            other_metabolite_left_value = margin / 2
+            other_metabolite_right_value = other_metabolite_left_value + each_column_width
+            data_without_ppp_left_value = other_metabolite_right_value
+            data_without_ppp_right_value = data_without_ppp_left_value + each_column_width
+            data_without_aa_left_value = data_without_ppp_right_value + margin
+            data_without_aa_right_value = data_without_aa_left_value + each_column_width
+            data_without_tca_left_value = data_without_aa_right_value + margin
+            data_without_tca_right_value = data_without_tca_left_value + each_column_width
+            other_metabolite_left_right_x_value = Vector(other_metabolite_left_value, other_metabolite_right_value)
+            data_without_ppp_left_right_x_value = Vector(data_without_ppp_left_value, data_without_ppp_right_value)
+            data_without_aa_left_right_x_value = Vector(data_without_aa_left_value, data_without_aa_right_value)
+            data_without_tca_left_right_x_value = Vector(data_without_tca_left_value, data_without_tca_right_value)
+            other_metabolite_title_center_x_value = np.mean(other_metabolite_left_right_x_value)
+            data_without_ppp_title_center_x_value = np.mean(data_without_ppp_left_right_x_value)
+            data_without_aa_title_center_x_value = np.mean(data_without_aa_left_right_x_value)
+            data_without_tca_title_center_x_value = np.mean(data_without_tca_left_right_x_value)
+            data_without_ppp_rectangle_pair = [
+                data_without_ppp_left_right_x_value,
+                Vector(
+                    data_without_ppp_bottom_y_value,
+                    common_rectangle_top,
+                )
+            ]
+            data_without_aa_rectangle_pair = [
+                data_without_aa_left_right_x_value,
+                Vector(
+                    data_without_aa_bottom_y_value,
+                    common_rectangle_top,
+                )
+            ]
+            data_without_tca_rectangle_pair = [
+                data_without_tca_left_right_x_value,
+                Vector(
+                    data_without_tca_bottom_y_value,
+                    common_rectangle_top,
+                )
+            ]
+
+            data_without_ppp_title_str = CommonFigureString.ppp_metabolites
+            data_without_aa_title_str = CommonFigureString.aa_metabolites
+            data_without_tca_title_str = CommonFigureString.tca_metabolites
+        else:
+            data_without_aa_center_y_value = numbered_even_sequence(
+                bottom_panel_bottom_y, distance_inside_each_group, len(aa_removed_str_list) + 1)[::-1]
+            data_without_tca_center_y_value = numbered_even_sequence(
+                bottom_panel_bottom_y, distance_inside_each_group, len(tca_removed_str_list) + 1)[::-1]
+            data_without_ppp_center_y_value = numbered_even_sequence(
+                data_without_aa_center_y_value[0] + distance_between_group, distance_inside_each_group,
+                len(ppp_removed_str_list) + 1)[::-1]
+            other_metabolite_data_center_y_value = numbered_even_sequence(
+                data_without_tca_center_y_value[0] + distance_between_group, distance_inside_each_group,
+                len(other_metabolite_str_list) + 1)[::-1]
+            left_panel_width = 0.14
+            right_panel_width = 0.13
+            left_panel_left_right_x_value = Vector(
+                data_rectangle_overlap_area_margin, data_rectangle_overlap_area_margin + left_panel_width)
+            right_panel_left_right_x_value = Vector(
+                total_width - data_rectangle_overlap_area_margin - right_panel_width,
+                total_width - data_rectangle_overlap_area_margin)
+            text_left_offset = 0.02
+            bottom_rectangle_common_bottom = data_rectangle_overlap_area_margin
+            data_without_ppp_rectangle_pair = [
+                right_panel_left_right_x_value,
+                Vector(
+                    data_without_ppp_center_y_value[-1] - data_rectangle_text_margin,
+                    data_without_ppp_center_y_value[0] + data_rectangle_text_margin),
+            ]  # [(left, right), (bottom, top)]
+            data_without_aa_rectangle_pair = [
+                right_panel_left_right_x_value,
+                Vector(
+                    bottom_rectangle_common_bottom,
+                    data_without_aa_center_y_value[0] + data_rectangle_text_margin),
+            ]
+            data_without_tca_rectangle_pair = [
+                left_panel_left_right_x_value,
+                Vector(
+                    bottom_rectangle_common_bottom,
+                    data_without_tca_center_y_value[0] + data_rectangle_text_margin),
+            ]
+            left_panel_center_x = float(np.mean(left_panel_left_right_x_value))
+            right_panel_center_x = float(np.mean(right_panel_left_right_x_value))
+            other_metabolite_left_right_x_value = left_panel_left_right_x_value
+            data_without_ppp_left_right_x_value = right_panel_left_right_x_value
+            data_without_aa_left_right_x_value = right_panel_left_right_x_value
+            data_without_tca_left_right_x_value = left_panel_left_right_x_value
+            other_metabolite_title_center_x_value = left_panel_center_x
+            data_without_ppp_title_center_x_value = right_panel_center_x
+            data_without_aa_title_center_x_value = right_panel_center_x
+            data_without_tca_title_center_x_value = left_panel_center_x
+
+            data_without_ppp_title_str = result_label_name_dict[DataName.data_without_ppp]
+            data_without_aa_title_str = result_label_name_dict[DataName.data_without_aa]
+            data_without_tca_title_str = result_label_name_dict[DataName.data_without_tca]
+
         medium_data_without_combination_rectangle_config = {
             ParameterName.face_color: ColorConfig.light_medium_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order,
@@ -528,61 +689,39 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
             ParameterName.face_color: ColorConfig.light_medium_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order,
         }
-        bottom_rectangle_common_bottom = data_rectangle_overlap_area_margin
-
-        data_without_ppp_rectangle_pair = [
-            right_panel_left_right_x_value,
-            Vector(
-                data_without_ppp_center_y_value[-1] - data_rectangle_text_margin,
-                data_without_ppp_center_y_value[0] + data_rectangle_text_margin),
-        ]  # [(left, right), (bottom, top)]
-        data_without_aa_rectangle_pair = [
-            right_panel_left_right_x_value,
-            Vector(
-                bottom_rectangle_common_bottom,
-                data_without_aa_center_y_value[0] + data_rectangle_text_margin),
-        ]
-        data_without_tca_rectangle_pair = [
-            left_panel_left_right_x_value,
-            Vector(
-                bottom_rectangle_common_bottom,
-                data_without_tca_center_y_value[0] + data_rectangle_text_margin),
-        ]
-        left_panel_center_x = float(np.mean(left_panel_left_right_x_value))
-        right_panel_center_x = float(np.mean(right_panel_left_right_x_value))
 
         flux_range_string_dict = {
+            'other_metabolite_list': (
+                CommonFigureString.other_metabolite_list,
+                other_metabolite_left_right_x_value,
+                Vector(other_metabolite_title_center_x_value, other_metabolite_data_center_y_value[0]),
+                other_metabolite_data_center_y_value[1:],
+                other_metabolite_str_list,
+                None,
+                {},
+            ),
             DataName.data_without_ppp: (
-                result_label_name_dict[DataName.data_without_ppp],
-                right_panel_left_right_x_value,
-                Vector(right_panel_center_x, data_without_ppp_center_y_value[0]),
+                data_without_ppp_title_str,
+                data_without_ppp_left_right_x_value,
+                Vector(data_without_ppp_title_center_x_value, data_without_ppp_center_y_value[0]),
                 data_without_ppp_center_y_value[1:],
                 DataSensitivityMetabolicNetworkConfig.ppp_removed_list,
                 data_without_ppp_rectangle_pair,
                 medium_data_without_combination_rectangle_config,
             ),
             DataName.data_without_aa: (
-                result_label_name_dict[DataName.data_without_aa],
-                right_panel_left_right_x_value,
-                Vector(right_panel_center_x, data_without_aa_center_y_value[0]),
+                data_without_aa_title_str,
+                data_without_aa_left_right_x_value,
+                Vector(data_without_aa_title_center_x_value, data_without_aa_center_y_value[0]),
                 data_without_aa_center_y_value[1:],
                 aa_removed_str_list,
                 data_without_aa_rectangle_pair,
                 compartmental_data_rectangle_config,
             ),
-            'other_metabolite_list': (
-                CommonFigureString.other_metabolite_list,
-                left_panel_left_right_x_value,
-                Vector(left_panel_center_x, other_metabolite_data_center_y_value[0]),
-                other_metabolite_data_center_y_value[1:],
-                other_metabolite_str_list,
-                None,
-                {},
-            ),
             DataName.data_without_tca: (
-                result_label_name_dict[DataName.data_without_tca],
-                left_panel_left_right_x_value,
-                Vector(left_panel_center_x, data_without_tca_center_y_value[0]),
+                data_without_tca_title_str,
+                data_without_tca_left_right_x_value,
+                Vector(data_without_tca_title_center_x_value, data_without_tca_center_y_value[0]),
                 data_without_tca_center_y_value[1:],
                 DataSensitivityMetabolicNetworkConfig.tca_removed_list,
                 data_without_tca_rectangle_pair,
@@ -594,30 +733,6 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
             round_rectangle_config_list, common_round_rectangle_config_dict)
 
     elif mode == DataName.compartmental_data:
-        total_row_num = len(
-            DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_without_compartments)
-        all_available_row_num = len(
-            DataSensitivityMetabolicNetworkConfig.all_available_data_list_with_compartments)
-        title_distance = 0.045
-        text_bottom = 0.03
-        text_top = total_height - title_height - 0.02
-        # common_y_array = np.linspace(text_top, text_bottom, total_row_num + 2)
-        common_y_array = numbered_even_sequence(text_bottom, distance_inside_each_group, total_row_num)[::-1]
-        # left_x_range = Vector(0.02, 0.12)
-        left_panel_width = 0.14
-        left_panel_left = data_rectangle_overlap_area_margin
-        left_x_range = Vector(left_panel_left, left_panel_left + left_panel_width)
-        mid_panel_left = left_x_range[1] + 0.02
-        mid_panel_width = 0.15
-        # mid_x_range = Vector(0.15, 0.25)
-        mid_x_range = Vector(mid_panel_left, mid_panel_left + mid_panel_width)
-        # right_x_range = Vector(0.25, 0.32)
-        right_panel_left = mid_x_range[1] - 0.01
-        right_x_range = Vector(right_panel_left, total_width - data_rectangle_overlap_area_margin)
-        title_y_location = common_y_array[0] + title_distance
-        all_data_y_array = common_y_array[1:all_available_row_num + 1]
-        other_data_y_array = common_y_array
-        text_left_offset = 0.02
         medium_data_without_combination_rectangle_config = {
             ParameterName.face_color: ColorConfig.light_medium_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order + 0.1,
@@ -630,46 +745,135 @@ def data_availability_sensitivity_layout_generator(mode, current_title, result_l
             ParameterName.face_color: ColorConfig.dark_light_bright_blue,
             ParameterName.z_order: ZOrderConfig.default_patch_z_order,
         }
-        rectangle_minimal_bottom = data_rectangle_overlap_area_margin
-        inner_rectangle_bottom_top = Vector(
-            rectangle_minimal_bottom + data_rectangle_overlap_area_margin,
-            title_y_location + data_rectangle_text_margin + 0.005)
-        outer_rectangle_bottom_top = inner_rectangle_bottom_top + Vector(-1, 1) * data_rectangle_overlap_area_margin
-        # common_rectangle_bottom_top = Vector(
-        #     text_bottom - data_rectangle_text_margin, text_top + data_rectangle_text_margin)
-        medium_data_without_combination_rectangle_pair = [
-            left_x_range, outer_rectangle_bottom_top, ]  # [(left, right), (bottom, top)]
-        compartmental_data_rectangle_pair = [
-            mid_x_range, inner_rectangle_bottom_top, ]
-        all_data_result_rectangle_pair = [
-            Vector(mid_panel_left - data_rectangle_overlap_area_margin, right_x_range[1]),
-            outer_rectangle_bottom_top, ]
+
+        if separate:
+            experimentally_available_no_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_without_compartments_core)
+            experimentally_available_with_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_with_compartments_core)
+            all_available_with_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.all_available_data_list_with_compartments)
+            total_row_num = len(experimentally_available_no_compartments_data_list)
+            all_available_row_num = len(all_available_with_compartments_data_list)
+            distance_between_group = 0.02
+            title_distance = 0.01
+            double_title_height = 0.06
+            current_title_height = 0.038
+            rectangle_minimal_bottom = data_rectangle_overlap_area_margin
+            inner_rectangle_minimal_bottom = rectangle_minimal_bottom + data_rectangle_overlap_area_margin
+            text_bottom = inner_rectangle_minimal_bottom + data_rectangle_text_margin
+            common_y_array = numbered_even_sequence(text_bottom, distance_inside_each_group, total_row_num)[::-1]
+            medium_data_title_y_location = common_y_array[0] + title_distance + double_title_height / 2
+            medium_data_top = medium_data_title_y_location + double_title_height / 2
+            all_data_title_y_location = medium_data_top + current_title_height / 2
+            all_data_top = all_data_title_y_location + current_title_height / 2
+            all_data_y_array = common_y_array[:all_available_row_num + 1]
+            medium_data_y_array = common_y_array
+            text_left_offset = 0.03
+            inner_rectangle_bottom_top = Vector(inner_rectangle_minimal_bottom, medium_data_top)
+            outer_rectangle_bottom_top = Vector(rectangle_minimal_bottom, all_data_top)
+
+            mid_panel_expand = 0.01
+            common_panel_width = (total_width - distance_between_group * 3 - data_rectangle_overlap_area_margin) / 3
+            left_panel_left = distance_between_group
+            left_panel_right = left_panel_left + common_panel_width
+            left_x_range = Vector(left_panel_left, left_panel_right)
+            right_panel_left = left_panel_right + distance_between_group - mid_panel_expand
+            mid_panel_left = right_panel_left + data_rectangle_overlap_area_margin
+            mid_panel_right = mid_panel_left + common_panel_width + mid_panel_expand
+            mid_x_range = Vector(mid_panel_left, mid_panel_right)
+            right_panel_right = mid_panel_right + common_panel_width
+            right_x_range = Vector(mid_panel_right, right_panel_right)
+            right_rectangle_range = Vector(right_panel_left, right_panel_right)
+
+            medium_data_without_combination_rectangle_pair = [
+                left_x_range, inner_rectangle_bottom_top]  # [(left, right), (bottom, top)]
+            compartmental_data_rectangle_pair = [
+                mid_x_range, inner_rectangle_bottom_top]
+            all_data_result_rectangle_pair = [
+                right_rectangle_range, outer_rectangle_bottom_top, ]
+            medium_data_title_center = Vector(float(np.mean(left_x_range)), medium_data_title_y_location)
+            compartmental_data_title_center = Vector(float(np.mean(mid_x_range)), medium_data_title_y_location)
+            all_data_title_center = Vector(float(np.mean(right_rectangle_range)), all_data_title_y_location)
+            medium_data_title_str = CommonFigureString.experimental_mixed_data_wrap
+            compartmental_data_title_str = CommonFigureString.experimental_compartmentalized_data_wrap
+            all_data_title_str = CommonFigureString.all_compartmentalized_data
+        else:
+            experimentally_available_no_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_without_compartments)
+            experimentally_available_with_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_with_compartments)
+            all_available_with_compartments_data_list = (
+                DataSensitivityMetabolicNetworkConfig.all_available_data_list_with_compartments_core)
+            total_row_num = len(experimentally_available_no_compartments_data_list)
+            all_available_row_num = len(all_available_with_compartments_data_list)
+            title_distance = 0.045
+            text_bottom = 0.03
+            text_top = total_height - title_height - 0.02
+            # common_y_array = np.linspace(text_top, text_bottom, total_row_num + 2)
+            common_y_array = numbered_even_sequence(text_bottom, distance_inside_each_group, total_row_num)[::-1]
+            # left_x_range = Vector(0.02, 0.12)
+            left_panel_width = 0.14
+            left_panel_left = data_rectangle_overlap_area_margin
+            left_x_range = Vector(left_panel_left, left_panel_left + left_panel_width)
+            mid_panel_left = left_x_range[1] + 0.02
+            mid_panel_width = 0.15
+            # mid_x_range = Vector(0.15, 0.25)
+            mid_x_range = Vector(mid_panel_left, mid_panel_left + mid_panel_width)
+            # right_x_range = Vector(0.25, 0.32)
+            right_panel_left = mid_x_range[1] - 0.01
+            right_x_range = Vector(right_panel_left, total_width - data_rectangle_overlap_area_margin)
+            title_y_location = common_y_array[0] + title_distance
+            all_data_y_array = common_y_array[1:all_available_row_num + 1]
+            medium_data_y_array = common_y_array
+            text_left_offset = 0.02
+
+            rectangle_minimal_bottom = data_rectangle_overlap_area_margin
+            inner_rectangle_bottom_top = Vector(
+                rectangle_minimal_bottom + data_rectangle_overlap_area_margin,
+                title_y_location + data_rectangle_text_margin + 0.005)
+            outer_rectangle_bottom_top = inner_rectangle_bottom_top + Vector(-1, 1) * data_rectangle_overlap_area_margin
+            # common_rectangle_bottom_top = Vector(
+            #     text_bottom - data_rectangle_text_margin, text_top + data_rectangle_text_margin)
+            medium_data_without_combination_rectangle_pair = [
+                left_x_range, outer_rectangle_bottom_top, ]  # [(left, right), (bottom, top)]
+            compartmental_data_rectangle_pair = [
+                mid_x_range, inner_rectangle_bottom_top, ]
+            all_data_result_rectangle_pair = [
+                Vector(mid_panel_left - data_rectangle_overlap_area_margin, right_x_range[1]),
+                outer_rectangle_bottom_top, ]
+            medium_data_title_center = Vector(float(np.mean(left_x_range)), title_y_location)
+            compartmental_data_title_center = Vector(float(np.mean(mid_x_range)), title_y_location)
+            all_data_title_center = Vector(float(np.mean(right_x_range)), title_y_location)
+            medium_data_title_str = CommonFigureString.experimental_available_mid_data_double_wrap
+            compartmental_data_title_str = CommonFigureString.compartmental_data_wrap
+            all_data_title_str = CommonFigureString.all_available_compartmental_data_double_wrap
 
         flux_range_string_dict = {
             DataName.medium_data_without_combination: (
-                CommonFigureString.experimental_available_mid_data_double_wrap,
+                medium_data_title_str,
                 left_x_range,
-                Vector(float(np.mean(left_x_range)), title_y_location),
-                other_data_y_array,
-                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_without_compartments,
+                medium_data_title_center,
+                medium_data_y_array,
+                experimentally_available_no_compartments_data_list,
                 medium_data_without_combination_rectangle_pair,
                 medium_data_without_combination_rectangle_config,
             ),
             DataName.compartmental_data: (
-                CommonFigureString.compartmental_data_wrap,
+                compartmental_data_title_str,
                 mid_x_range,
-                Vector(float(np.mean(mid_x_range)), title_y_location),
-                other_data_y_array,
-                DataSensitivityMetabolicNetworkConfig.experimentally_available_data_list_with_compartments,
+                compartmental_data_title_center,
+                medium_data_y_array,
+                experimentally_available_with_compartments_data_list,
                 compartmental_data_rectangle_pair,
                 compartmental_data_rectangle_config,
             ),
             DataName.all_data_result_label: (
-                CommonFigureString.all_available_compartmental_data_double_wrap,
+                all_data_title_str,
                 right_x_range,
-                Vector(float(np.mean(right_x_range)), title_y_location),
+                all_data_title_center,
                 all_data_y_array,
-                DataSensitivityMetabolicNetworkConfig.all_available_data_list_with_compartments,
+                all_available_with_compartments_data_list,
                 all_data_result_rectangle_pair,
                 all_data_result_label_rectangle_config,
             ),

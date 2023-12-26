@@ -3,8 +3,6 @@ from .config import np, Vector, Keyword, ParameterName, ZOrderConfig, TextConfig
 from .config import BentChevronArrow, ChevronArrow, CompositeFigure, Rectangle, TextBox, RoundRectangle
 from .config import MIDDiagram, NetworkDiagram, CulturedCell, Mice, Human, CarbonBackbone, CommonElementConfig
 
-from ...common_functions import initialize_vector_input
-
 
 class DataAcquisitionDiagramConfig(object):
     normal_document_size = CommonElementConfig.normal_document_size
@@ -23,13 +21,14 @@ class DataAcquisitionDiagramConfig(object):
     smaller_document_text_height = 0.04
 
     document_text_config = {
-        ParameterName.font: TextConfig.main_text_font,
+        **CommonElementConfig.common_text_config,
+        # ParameterName.font: TextConfig.main_text_font,
         ParameterName.font_size: normal_document_size,
         ParameterName.width: document_text_width,
         ParameterName.height: document_text_height,
-        ParameterName.horizontal_alignment: HorizontalAlignment.center,
-        ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
-        ParameterName.z_order: text_z_order,
+        # ParameterName.horizontal_alignment: HorizontalAlignment.center,
+        # ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+        # ParameterName.z_order: text_z_order,
         # ParameterName.text_box: True,
     }
 
@@ -103,7 +102,7 @@ class DataAcquisitionDiagram(CompositeFigure):
                 constructed_obj.name: constructed_obj for constructed_obj in constructed_obj_list},
         }
         super().__init__(
-            optimization_diagram_dict, Vector(0, 0), size, background=True, **kwargs)
+            optimization_diagram_dict, Vector(0, 0), size, background=False, **kwargs)
 
 
 def title_text_config_list_generator(common_axis_location, different_axis_location_list, direction):
@@ -153,7 +152,8 @@ class BranchArrowMode(object):
 
 def one_to_three_branch_arrow(
         orientation_axis_name, tail_loc, head_loc, main_axis_loc, side_axis_distance,
-        bend_chevron_to_main_distance=0, mode=BranchArrowMode.parallel):
+        bend_chevron_to_main_distance=0, mode=BranchArrowMode.parallel,
+        config_class=DataAcquisitionDiagramConfig):
     if orientation_axis_name == ParameterName.x:
         if head_loc > tail_loc:
             direction = 1
@@ -181,7 +181,7 @@ def one_to_three_branch_arrow(
     main_arrow_config_dict = {
         ParameterName.tail_end_center: main_arrow_tail_head_pair[0],
         ParameterName.head: main_arrow_tail_head_pair[1],
-        **DataAcquisitionDiagramConfig.chevron_config,
+        **config_class.chevron_config,
     }
     if mode == BranchArrowMode.parallel:
         if orientation_axis_name == ParameterName.x:
@@ -201,12 +201,12 @@ def one_to_three_branch_arrow(
             {
                 ParameterName.tail_end_center: upper_arrow_tail_head_pair[0],
                 ParameterName.head: upper_arrow_tail_head_pair[1],
-                **DataAcquisitionDiagramConfig.chevron_config,
+                **config_class.chevron_config,
             },
             {
                 ParameterName.tail_end_center: bottom_arrow_tail_head_pair[0],
                 ParameterName.head: bottom_arrow_tail_head_pair[1],
-                **DataAcquisitionDiagramConfig.chevron_config,
+                **config_class.chevron_config,
             }
         ]
     else:
@@ -249,14 +249,14 @@ def one_to_three_branch_arrow(
             {
                 ParameterName.tail_end_center: upper_arrow_tail_head_pair[0],
                 ParameterName.head: upper_arrow_tail_head_pair[1],
-                **DataAcquisitionDiagramConfig.bend_chevron_config,
+                **config_class.bend_chevron_config,
                 ParameterName.arrow_head_direction: ParameterName.cw,
                 **specific_dict,
             },
             {
                 ParameterName.tail_end_center: bottom_arrow_tail_head_pair[0],
                 ParameterName.head: bottom_arrow_tail_head_pair[1],
-                **DataAcquisitionDiagramConfig.bend_chevron_config,
+                **config_class.bend_chevron_config,
                 ParameterName.arrow_head_direction: ParameterName.ccw,
                 **specific_dict,
             }
@@ -468,105 +468,18 @@ def data_acquisition_horizontal_diagram_generator():
 
     other_element_config_list = []
 
-    # text_config_list = [
-    #     {
-    #         ParameterName.string: 'Uniformly\n$\mathregular{^{13}}$C-labeled\nglucose',
-    #         ParameterName.center: Vector(vert_axis_list[0], text_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.document_text_config,
-    #     },
-    #     {
-    #         ParameterName.string: 'Labeling\nexperiments',
-    #         ParameterName.center: Vector(vert_axis_list[1], text_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.document_text_config,
-    #     },
-    #     {
-    #         ParameterName.string: 'Mass\nspectrometry',
-    #         ParameterName.center: Vector(vert_axis_list[2], text_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.document_text_config,
-    #     },
-    #     {
-    #         ParameterName.string: 'Experimental\nMID data',
-    #         ParameterName.center: Vector(vert_axis_list[3], text_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.document_text_config,
-    #     },
-    # ]
     text_config_list = title_text_config_list_generator(text_horiz_axis, vert_axis_list, current_direction)
 
     bend_chevron_to_main_distance = DataAcquisitionDiagramConfig.bend_chevron_to_main_distance
-    # upper_chevron_start_y_value = main_horiz_axis + bend_chevron_to_main_distance
-    # bottom_chevron_start_y_value = main_horiz_axis - bend_chevron_to_main_distance
-    # chevron_start_end_x_pair1 = chevron_start_end_x_value_list[0]
-    # bend_start1 = 0.6 * chevron_start_end_x_pair1[0] + 0.4 * chevron_start_end_x_pair1[1]
-    # chevron_obj_group_1 = [
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair1[0], main_horiz_axis),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair1[1], main_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.chevron_config,
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(bend_start1, upper_chevron_start_y_value),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair1[1], upper_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.bend_chevron_config,
-    #         ParameterName.tail_arrow: False,
-    #         ParameterName.arrow_head_direction: ParameterName.cw
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(bend_start1, bottom_chevron_start_y_value),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair1[1], bottom_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.bend_chevron_config,
-    #         ParameterName.tail_arrow: False,
-    #         ParameterName.arrow_head_direction: ParameterName.ccw
-    #     }
-    # ]
+
     chevron_obj_group_1 = one_to_three_branch_arrow(
         current_direction, *chevron_start_end_x_value_list[0], main_horiz_axis, upper_bottom_to_main_axis_distance,
         bend_chevron_to_main_distance=bend_chevron_to_main_distance, mode=BranchArrowMode.branch)
 
-    # chevron_start_end_x_pair2 = chevron_start_end_x_value_list[1]
-    # chevron_obj_group_2 = [
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair2[0], main_horiz_axis),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair2[1], main_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.chevron_config,
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair2[0], upper_horiz_axis),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair2[1], upper_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.chevron_config,
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair2[0], bottom_horiz_axis),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair2[1], bottom_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.chevron_config,
-    #     }
-    # ]
     chevron_obj_group_2 = one_to_three_branch_arrow(
         current_direction, *chevron_start_end_x_value_list[1], main_horiz_axis, upper_bottom_to_main_axis_distance,
         mode=BranchArrowMode.parallel)
 
-    # chevron_start_end_x_pair3 = chevron_start_end_x_value_list[2]
-    # bend_end3 = 0.5 * chevron_start_end_x_pair3[0] + 0.5 * chevron_start_end_x_pair3[1]
-    # chevron_obj_group_3 = [
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair3[0], main_horiz_axis),
-    #         ParameterName.head: Vector(chevron_start_end_x_pair3[1], main_horiz_axis),
-    #         **DataAcquisitionDiagramConfig.chevron_config,
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair3[0], upper_horiz_axis),
-    #         ParameterName.head: Vector(bend_end3, upper_chevron_start_y_value),
-    #         **DataAcquisitionDiagramConfig.bend_chevron_config,
-    #         ParameterName.head_arrow: False,
-    #         ParameterName.arrow_head_direction: ParameterName.cw
-    #     },
-    #     {
-    #         ParameterName.tail_end_center: Vector(chevron_start_end_x_pair3[0], bottom_horiz_axis),
-    #         ParameterName.head: Vector(bend_end3, bottom_chevron_start_y_value),
-    #         **DataAcquisitionDiagramConfig.bend_chevron_config,
-    #         ParameterName.head_arrow: False,
-    #         ParameterName.arrow_head_direction: ParameterName.ccw
-    #     }
-    # ]
     chevron_obj_group_3 = one_to_three_branch_arrow(
         current_direction, *chevron_start_end_x_value_list[2], main_horiz_axis, upper_bottom_to_main_axis_distance,
         bend_chevron_to_main_distance=bend_chevron_to_main_distance, mode=BranchArrowMode.merge)
@@ -574,20 +487,7 @@ def data_acquisition_horizontal_diagram_generator():
 
     carbon_labeling_scale = 0.1
     carbon_labeling_diagram_target_center = Vector(vert_axis_list[0] - 0.01, main_horiz_axis)
-    # carbon_labeling_diagram_current_center = CarbonBackbone.calculate_center(CarbonBackbone, carbon_labeling_scale)
-    # other_element_config_list.extend([
-    #     (
-    #         CarbonBackbone,
-    #         {
-    #             ParameterName.carbon_num: 6,
-    #             ParameterName.scale: carbon_labeling_scale,
-    #             ParameterName.bottom_left_offset:
-    #                 carbon_labeling_diagram_target_center - carbon_labeling_diagram_current_center,
-    #             ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #             ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    #         }
-    #     ),
-    # ])
+
     other_element_config_list.extend(
         carbon_diagram_generator(carbon_labeling_diagram_target_center, carbon_labeling_scale))
 
@@ -598,55 +498,7 @@ def data_acquisition_horizontal_diagram_generator():
     cultured_cell_target_center = Vector(labeling_experiments_x_value, upper_horiz_axis - 0.01)
     mice_target_center = Vector(labeling_experiments_x_value, main_horiz_axis - 0.005)
     human_target_center = Vector(labeling_experiments_x_value, bottom_horiz_axis - 0.02)
-    # cultured_cell_current_center = CulturedCell.calculate_center(CulturedCell, cultured_cell_scale)
-    # mice_current_center = Mice.calculate_center(Mice, mice_scale)
-    # human_current_center = Human.calculate_center(Human, human_scale)
-    # other_element_config_list.extend([
-    #     (
-    #         CulturedCell,
-    #         {
-    #             ParameterName.scale: cultured_cell_scale,
-    #             ParameterName.bottom_left_offset: cultured_cell_target_center - cultured_cell_current_center,
-    #             ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #             ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    #         }
-    #     ),
-    #     (
-    #         Mice,
-    #         {
-    #             ParameterName.scale: mice_scale,
-    #             ParameterName.bottom_left_offset: mice_target_center - mice_current_center,
-    #             ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #             ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    #         }
-    #     ),
-    #     (
-    #         Human,
-    #         {
-    #             ParameterName.scale: human_scale,
-    #             ParameterName.bottom_left_offset: human_target_center - human_current_center,
-    #             ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #             ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    #         }
-    #     ),
-    # ])
-    # text_config_list.extend([
-    #     {
-    #         ParameterName.string: 'Cultured cell labeling',
-    #         ParameterName.center: Vector(labeling_experiments_x_value, upper_horiz_axis + 0.04),
-    #         **DataAcquisitionDiagramConfig.predicted_mid_text_config_dict
-    #     },
-    #     {
-    #         ParameterName.string: 'Animal infusion',
-    #         ParameterName.center: Vector(labeling_experiments_x_value, main_horiz_axis + 0.06),
-    #         **DataAcquisitionDiagramConfig.predicted_mid_text_config_dict
-    #     },
-    #     {
-    #         ParameterName.string: 'Patient infusion',
-    #         ParameterName.center: Vector(labeling_experiments_x_value, bottom_horiz_axis + 0.05),
-    #         **DataAcquisitionDiagramConfig.predicted_mid_text_config_dict
-    #     },
-    # ])
+
     cultured_cell_text_center = cultured_cell_target_center + Vector(0, 0.05)
     mice_text_center = mice_target_center + Vector(0, 0.065)
     human_text_center = human_target_center + Vector(0, 0.07)
@@ -662,14 +514,7 @@ def data_acquisition_horizontal_diagram_generator():
     primary_data_common_x_value = vert_axis_list[2]
     primary_data_mid_diagram_scale = 0.08
     primary_data_vertical_gap = 0.03
-    # primary_data_vector_list = [
-    #     [0.26, 0.049, 0.051, 0.64],
-    #     [0.37, 0.052, 0.048, 0.53],
-    #     [0.22, 0.043, 0.057, 0.68],
-    #     [0.31, 0.053, 0.047, 0.59],
-    #     [0.27, 0.048, 0.052, 0.63],
-    #     [0.35, 0.056, 0.044, 0.55]
-    # ]
+
     top_text_distance = 0.015
     primary_data_width = primary_data_mid_diagram_scale
     primary_data_x_vector = Vector(-1, 1) * (
@@ -677,76 +522,12 @@ def data_acquisition_horizontal_diagram_generator():
     primary_data_y_vector = [upper_horiz_axis, main_horiz_axis, bottom_horiz_axis]
     primary_data_height = primary_data_mid_diagram_scale * MIDDiagram.total_height
     top_text_y_value = upper_horiz_axis + primary_data_height / 2 + top_text_distance
-    # primary_data_carbon_num = len(primary_data_vector_list[0])
-    # primary_data_previous_center_loc = MIDDiagram.calculate_center(
-    #     MIDDiagram, primary_data_mid_diagram_scale, primary_data_carbon_num)
-    # for mid_data_index, primary_data_vector in enumerate(primary_data_vector_list):
-    #     row_index = mid_data_index // 2
-    #     col_index = mid_data_index % 2
-    #     target_center_vector = Vector(primary_data_x_vector[col_index], primary_data_y_vector[row_index])
-    #     predicted_mid_diagram_bottom_left_offset = target_center_vector - primary_data_previous_center_loc
-    #     final_experimental_mid_diagram_dict = {
-    #         ParameterName.data_vector: np.array(primary_data_vector),
-    #         ParameterName.scale: primary_data_mid_diagram_scale,
-    #         ParameterName.bottom_left_offset: predicted_mid_diagram_bottom_left_offset,
-    #         ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #         ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    #     }
-    #     other_element_config_list.append((MIDDiagram, final_experimental_mid_diagram_dict))
-    # text_config_list.extend([
-    #     {
-    #         ParameterName.string: 'Lactate',
-    #         ParameterName.center: Vector(primary_data_x_vector[0], top_text_y_value),
-    #         **DataAcquisitionDiagramConfig.predicted_mid_text_config_dict
-    #     },
-    #     {
-    #         ParameterName.string: 'Pyruvate',
-    #         ParameterName.center: Vector(primary_data_x_vector[1], top_text_y_value),
-    #         **DataAcquisitionDiagramConfig.predicted_mid_text_config_dict
-    #     },
-    # ])
+
     primary_data_mid_diagram_list, primary_data_text_config_list = primary_mid_data_diagram_generator(
         primary_data_mid_diagram_scale, primary_data_x_vector, primary_data_y_vector,
         [Vector(primary_data_x, top_text_y_value) for primary_data_x in primary_data_x_vector])
     other_element_config_list.extend(primary_data_mid_diagram_list)
     text_config_list.extend(primary_data_text_config_list)
-
-    # final_experimental_mid_diagram_scale = 0.1
-    # final_experimental_mid_x_value = vert_axis_list[3]
-    # final_experimental_mid_data_vector = np.array([0.3, 0.05, 0.05, 0.6])
-    # final_experimental_center_y_value = main_horiz_axis - 0.005
-    # final_mid_diagram_height = MIDDiagram.total_height * final_experimental_mid_diagram_scale
-    # final_mid_text_distance = 0.01
-    # final_mid_text_height = DataAcquisitionDiagramConfig.document_text_height2
-    # final_mid_total_height = final_mid_diagram_height + final_mid_text_distance + final_mid_text_height
-    # final_mid_diagram_target_y_value = (
-    #         final_experimental_center_y_value + (final_mid_text_distance + final_mid_text_height) / 2)
-    # final_mid_diagram_target_center = Vector(final_experimental_mid_x_value, final_mid_diagram_target_y_value)
-    # final_mid_diagram_previous_center = MIDDiagram.calculate_center(
-    #     MIDDiagram, final_experimental_mid_diagram_scale, len(final_experimental_mid_data_vector))
-    # predicted_mid_diagram_bottom_left_offset = final_mid_diagram_target_center - final_mid_diagram_previous_center
-    # final_experimental_mid_diagram_dict = {
-    #     ParameterName.data_vector: final_experimental_mid_data_vector,
-    #     ParameterName.scale: final_experimental_mid_diagram_scale,
-    #     ParameterName.bottom_left_offset: predicted_mid_diagram_bottom_left_offset,
-    #     ParameterName.base_z_order: DataAcquisitionDiagramConfig.child_diagram_base_z_order,
-    #     ParameterName.z_order_increment: DataAcquisitionDiagramConfig.child_diagram_z_order_increment
-    # }
-    # other_element_config_list.append((MIDDiagram, final_experimental_mid_diagram_dict))
-    # final_mid_text_center = Vector(
-    #     final_experimental_mid_x_value,
-    #     final_experimental_center_y_value - (final_mid_diagram_height + final_mid_text_distance) / 2)
-    # text_config_list.append({
-    #     ParameterName.string: 'Experimental\nMID data',
-    #     ParameterName.center: final_mid_text_center,
-    #     **DataAcquisitionDiagramConfig.final_experimental_mid_text_config,
-    # })
-    # final_mid_background_config_dict = {
-    #     ParameterName.center: Vector(final_experimental_mid_x_value, main_horiz_axis),
-    #     ParameterName.height: final_mid_total_height + 0.06,
-    #     **DataAcquisitionDiagramConfig.final_experimental_mid_background_config,
-    # }
-    # other_element_config_list.append((RoundRectangle, final_mid_background_config_dict))
 
     (
         final_experimental_mid_diagram_list, final_experimental_mid_diagram_text_config_list
@@ -754,22 +535,6 @@ def data_acquisition_horizontal_diagram_generator():
     other_element_config_list.extend(final_experimental_mid_diagram_list)
     text_config_list.extend(final_experimental_mid_diagram_text_config_list)
 
-    # text_obj_list = []
-    # for text_config_dict in text_config_list:
-    #     text_obj = TextBox(**text_config_dict)
-    #     text_obj_list.append(text_obj)
-    # chevron_obj_list = []
-    # for chevron_arrow_config_dict in chevron_arrow_config_list:
-    #     if ParameterName.radius in chevron_arrow_config_dict:
-    #         chevron_class = BentChevronArrow
-    #     else:
-    #         chevron_class = ChevronArrow
-    #     chevron_arrow_obj = chevron_class(**chevron_arrow_config_dict)
-    #     chevron_obj_list.append(chevron_arrow_obj)
-    # other_element_obj_list = []
-    # for other_element_class, other_element_config in other_element_config_list:
-    #     other_element_obj = other_element_class(**other_element_config)
-    #     other_element_obj_list.append(other_element_obj)
     (
         text_obj_list, chevron_obj_list, other_element_obj_list
     ) = common_final_constructor(text_config_list, chevron_arrow_config_list, other_element_config_list)
@@ -859,4 +624,6 @@ def data_acquisition_vertical_diagram_generator():
         text_obj_list, chevron_obj_list, other_element_obj_list
     ) = common_final_constructor(text_config_list, chevron_arrow_config_list, other_element_config_list)
     return total_width, total_height, text_obj_list, chevron_obj_list, other_element_obj_list
+
+
 

@@ -152,7 +152,7 @@ class MFAConfig(CoreConstants):
     def __init__(
             self, common_flux_range, specific_flux_range_dict, dynamic_constant_flux_list,
             preset_constant_flux_value_dict, common_mix_ratio_range, mix_ratio_multiplier,
-            solver_type, solver_config_dict, combined_data=False):
+            solver_type, solver_config_dict, combined_data=False, miscellaneous_config_dict=None):
         self.common_flux_range = common_flux_range
         self.specific_flux_range_dict = specific_flux_range_dict
         self.dynamic_constant_flux_list = dynamic_constant_flux_list
@@ -163,6 +163,13 @@ class MFAConfig(CoreConstants):
         self.solver_type = solver_type
         self.solver_config_dict = solver_config_dict
         self.combined_data = combined_data
+        if miscellaneous_config_dict is None:
+            miscellaneous_config_dict = {}
+        assert isinstance(miscellaneous_config_dict, dict)
+        self.miscellaneous_config = miscellaneous_config_dict
 
     def copy(self):
         return copy.deepcopy(self)
+
+    def update_miscellaneous_config(self, new_miscellaneous_config_dict):
+        self.miscellaneous_config.update(new_miscellaneous_config_dict)

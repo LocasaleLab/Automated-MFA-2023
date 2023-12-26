@@ -1,23 +1,14 @@
 from ..common.config import ParameterName, Constant, DataName, Keywords
 from ..common.common_figure_materials import CommonFigureMaterials, KidneyCarcinomaRatioMaterials, \
-    KidneyCarcinomaRawMaterials, MultipleTumorRawMaterials, MetabolicNetworkConfig, FigureConfig, CommonFigureString
+    KidneyCarcinomaRawMaterials, MultipleTumorRawMaterials, MetabolicNetworkConfig, FigureConfig, CommonFigureString, \
+    calculate_center_bottom_offset, kidney_carcinoma_comparison_dict_generator
 from ..common.classes import Vector
-from ..figure_elements.element_dict import ElementName, element_dict
-from .common_functions import calculate_center_bottom_offset, calculate_subfigure_layout, \
+from ..figure_elements.elements import ElementName, Elements, element_dict
+from .common_functions import calculate_subfigure_layout, \
     single_subfigure_layout
 from ..figure_elements.data_figure.basic_data_figure.figure_data_loader import raw_flux_value_dict_data
 
-Subfigure = element_dict[ElementName.Subfigure]
-OptimizationDiagram = element_dict[ElementName.OptimizationDiagram]
-MetabolicNetworkWithLegend = element_dict[ElementName.MetabolicNetworkWithLegend]
-FluxComparisonScatterWithTitle = element_dict[ElementName.FluxComparisonScatterWithTitle]
-FluxComparisonViolinBoxWithTitleLegend = element_dict[ElementName.FluxComparisonViolinBoxWithTitleLegend]
-ProtocolDiagram = element_dict[ElementName.ProtocolDiagram]
-QuadMetabolicNetworkComparison = element_dict[ElementName.QuadMetabolicNetworkComparison]
-ExperimentDiagram = element_dict[ElementName.ExperimentDiagram]
-MetabolicNetworkWithExchangeFlux = element_dict[ElementName.NormalAndExchangeTwinNetwork]
-NormalAndExchangeNetworkMFAResultComparison = element_dict[ElementName.NormalAndExchangeNetworkMFAResultComparison]
-NetworkMFAResultComparison = element_dict[ElementName.NetworkMFAResultComparison]
+Subfigure = Elements.Subfigure
 
 # common_data_figure_scale = FigureConfig.common_data_figure_scale
 common_network_diagram_scale = 0.55
@@ -44,6 +35,9 @@ def common_result_label_constructor(condition, data_type):
         raise ValueError()
 
 
+ExperimentDiagram = Elements.ExperimentDiagram
+
+
 class SubfigureA(Subfigure):
     subfigure_label = 'a'
     subfigure_title = 'renal_carcinoma_experiment_diagram'
@@ -64,6 +58,9 @@ class SubfigureA(Subfigure):
         super().__init__(
             subfigure_element_dict, subfigure_bottom_left, subfigure_size,
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
+
+
+OptimizationDiagram = Elements.OptimizationDiagram
 
 
 class SubfigureB(Subfigure):
@@ -88,6 +85,9 @@ class SubfigureB(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
+ProtocolDiagram = Elements.ProtocolDiagram
+
+
 class SubfigureC(Subfigure):
     subfigure_label = 'c'
     subfigure_title = 'protocol_diagram_experimental'
@@ -110,6 +110,9 @@ class SubfigureC(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
+MetabolicNetworkWithLegend = Elements.MetabolicNetworkWithLegend
+
+
 class SubfigureD(Subfigure):
     subfigure_label = 'd'
     subfigure_title = 'complex_metabolic_network'
@@ -125,7 +128,7 @@ class SubfigureD(Subfigure):
             ParameterName.metabolic_network_config_dict:
                 KidneyCarcinomaRawMaterials.diagram_network_config_dict,
         }
-        metabolic_network_with_legend_obj = MetabolicNetworkWithExchangeFlux(**subfigure_d_config_dict)
+        metabolic_network_with_legend_obj = Elements.NormalAndExchangeTwinNetwork(**subfigure_d_config_dict)
 
         center = metabolic_network_with_legend_obj.calculate_center(
             metabolic_network_with_legend_obj, scale)
@@ -139,51 +142,7 @@ class SubfigureD(Subfigure):
             subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
 
 
-class OldSubfigureD(Subfigure):
-    subfigure_label = 'd'
-    subfigure_title = 'metabolic_network'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        scale = MetabolicNetworkConfig.common_scale
-        legend = True
-        center = MetabolicNetworkWithLegend.calculate_center(MetabolicNetworkWithLegend, scale, legend=legend)
-        bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-
-        subfigure_d_config_dict = {
-            ParameterName.bottom_left_offset: subfigure_bottom_left + bottom_offset + Vector(0.05, 0),
-            ParameterName.scale: scale,
-            ParameterName.legend: legend,
-            ParameterName.metabolic_network_config_dict: KidneyCarcinomaRawMaterials.common_diagram_network_config_dict
-            # ParameterName.metabolic_network_legend_config_dict: {}
-        }
-
-        metabolic_network_with_legend_obj = MetabolicNetworkWithLegend(**subfigure_d_config_dict)
-        subfigure_element_dict = {
-            metabolic_network_with_legend_obj.name: metabolic_network_with_legend_obj}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-def kidney_carcinoma_comparison_dict_generator(config_class):
-    common_kidney_carcinoma_comparison_dict = {
-        ParameterName.data_name: DataName.renal_carcinoma_invivo_infusion,
-        ParameterName.comparison_name: 'tumor_vs_kidney',
-        ParameterName.flux_name_list: config_class.flux_name_location_list,
-        ParameterName.mean: False,
-        ParameterName.display_flux_name_dict: config_class.display_flux_name_dict,
-        ParameterName.y_lim_list: config_class.y_lim_list,
-        ParameterName.y_ticks_list: config_class.y_ticks_list,
-        ParameterName.display_group_name_dict: config_class.class_display_name_dict,
-        ParameterName.name_dict: config_class.name_dict,
-        ParameterName.color_dict: config_class.color_dict,
-        ParameterName.legend: True,
-        ParameterName.common_x_label: CommonFigureString.patient_id,
-        ParameterName.compare_one_by_one: True,
-        ParameterName.scatter_line: False,
-        ParameterName.error_bar: True,
-    }
-    return common_kidney_carcinoma_comparison_dict
+FluxComparisonScatterWithTitle = Elements.FluxComparisonScatterWithTitle
 
 
 class SubfigureE(Subfigure):
@@ -241,7 +200,7 @@ class SubfigureF(Subfigure):
             }.items()
         }
 
-        quad_metabolic_network_comparison = NetworkMFAResultComparison(**{
+        quad_metabolic_network_comparison = Elements.NetworkMFAResultComparison(**{
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
             ParameterName.figure_data_parameter_dict: {
@@ -257,100 +216,6 @@ class SubfigureF(Subfigure):
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
         quad_metabolic_network_comparison.move_and_scale(
             bottom_left_offset=center_bottom_offset + Vector(0.01, 0.01))
-
-        subfigure_element_dict = {
-            quad_metabolic_network_comparison.name: quad_metabolic_network_comparison}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldSubfigureF(Subfigure):
-    subfigure_label = 'f'
-    subfigure_title = 'comparison_of_exchange_fluxes_between_renal_and_carcinoma'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        # scale = MetabolicNetworkConfig.common_scale
-        scale = 0.45
-        kidney_reaction_value_dict = raw_flux_value_dict_data.return_data(
-            renal_data_set_name, common_result_label_constructor('renal', renal_kidney_name))
-        carcinoma_reaction_value_dict = raw_flux_value_dict_data.return_data(
-            renal_data_set_name, common_result_label_constructor('renal', renal_carcinoma_name))
-        # special_metabolite_and_flux_dict = MetabolicNetworkConfig.common_experimental_setting_dict
-        condition_name_title_dict = KidneyCarcinomaRawMaterials.name_dict
-        reaction_value_dict_for_different_conditions = {
-            key: {
-                **KidneyCarcinomaRawMaterials.data_flux_network_config_dict,
-                ParameterName.visualize_flux_value: ParameterName.transparency,
-                ParameterName.reaction_raw_value_dict: reaction_value_dict
-            } for key, reaction_value_dict in {
-                Keywords.kidney: kidney_reaction_value_dict,
-                Keywords.carcinoma: carcinoma_reaction_value_dict
-            }.items()
-        }
-
-        quad_metabolic_network_comparison = NormalAndExchangeNetworkMFAResultComparison(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.condition: [Keywords.kidney, Keywords.carcinoma],
-                ParameterName.name_dict: condition_name_title_dict,
-                ParameterName.metabolic_network_config_dict: reaction_value_dict_for_different_conditions
-            }
-        })
-
-        center = quad_metabolic_network_comparison.calculate_center(
-            quad_metabolic_network_comparison, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        quad_metabolic_network_comparison.move_and_scale(
-            bottom_left_offset=center_bottom_offset + Vector(0.01, 0.01))
-
-        subfigure_element_dict = {
-            quad_metabolic_network_comparison.name: quad_metabolic_network_comparison}
-        super().__init__(
-            subfigure_element_dict, subfigure_bottom_left, subfigure_size,
-            subfigure_label=self.subfigure_label, subfigure_title=self.subfigure_title, background=False)
-
-
-class OldOldSubfigureF(Subfigure):
-    subfigure_label = 'f'
-    subfigure_title = 'comparison_of_exchange_fluxes_between_renal_and_carcinoma'
-
-    def __init__(self, subfigure_bottom_left=None, subfigure_size=None):
-        # scale = MetabolicNetworkConfig.common_scale
-        scale = 0.55
-        kidney_reaction_value_dict = raw_flux_value_dict_data.return_data(
-            renal_data_set_name, common_result_label_constructor('renal', renal_kidney_name))
-        carcinoma_reaction_value_dict = raw_flux_value_dict_data.return_data(
-            renal_data_set_name, common_result_label_constructor('renal', renal_carcinoma_name))
-        # special_metabolite_and_flux_dict = MetabolicNetworkConfig.common_experimental_setting_dict
-        condition_name_title_dict = KidneyCarcinomaRawMaterials.name_dict
-        reaction_value_dict_for_different_conditions = {
-            key: {
-                **KidneyCarcinomaRawMaterials.common_diagram_network_config_dict,
-                ParameterName.visualize_flux_value: ParameterName.transparency,
-                ParameterName.reaction_raw_value_dict: reaction_value_dict
-            } for key, reaction_value_dict in {
-                Keywords.kidney: kidney_reaction_value_dict,
-                Keywords.carcinoma: carcinoma_reaction_value_dict
-            }.items()
-        }
-
-        quad_metabolic_network_comparison = QuadMetabolicNetworkComparison(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale,
-            ParameterName.figure_data_parameter_dict: {
-                ParameterName.condition: [Keywords.kidney, Keywords.carcinoma],
-                ParameterName.name_dict: condition_name_title_dict,
-                ParameterName.metabolic_network_config_dict: reaction_value_dict_for_different_conditions
-            }
-        })
-
-        center = quad_metabolic_network_comparison.calculate_center(
-            quad_metabolic_network_comparison, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
-        quad_metabolic_network_comparison.move_and_scale(
-            bottom_left_offset=center_bottom_offset + Vector(-0.01, 0))
 
         subfigure_element_dict = {
             quad_metabolic_network_comparison.name: quad_metabolic_network_comparison}

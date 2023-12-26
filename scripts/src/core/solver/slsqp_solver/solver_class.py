@@ -48,11 +48,11 @@ def eq_func_jacob_constructor(flux_constraint_matrix, flux_constraint_right_side
 
 
 def default_optimizer_options(_solver_option_dict):
-    _loss_type = _solver_option_dict.get_option(ParamName.loss_type, ParamName.cross_entropy_loss)
-    _embedding_obj = _solver_option_dict.get_option(ParamName.slsqp_embedding_obj, False)
-    _tolerance = _solver_option_dict.get_option(ParamName.slsqp_tolerance, 1e-9)
-    _max_iter = _solver_option_dict.get_option(ParamName.slsqp_max_iter, 500)
-    return _loss_type, _embedding_obj, _tolerance, _max_iter
+    loss_type = _solver_option_dict.get_option(ParamName.loss_type, ParamName.cross_entropy_loss)
+    embedding_obj = _solver_option_dict.get_option(ParamName.slsqp_embedding_obj, False)
+    tolerance = _solver_option_dict.get_option(ParamName.slsqp_tolerance, 1e-9)
+    max_iter = _solver_option_dict.get_option(ParamName.slsqp_max_iter, 500)
+    return loss_type, embedding_obj, tolerance, max_iter
 
 
 class SLSQPSolver(BaseSolver):

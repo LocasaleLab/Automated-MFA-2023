@@ -30,7 +30,11 @@ def excel_sheet_information_process(
     if not pandas:
         current_sheet_information_dict[Keywords.sheet_name] = new_sheet_name
     for result_information_label, result_information_obj in result_information_dict.items():
-        current_sheet_information_dict[result_information_label] = str(result_information_obj)
+        if result_information_label == Keywords.data:
+            information_str = str(result_information_obj[Keywords.label])
+        else:
+            information_str = str(result_information_obj)
+        current_sheet_information_dict[result_information_label] = information_str
     sheet_information_dict[new_sheet_name] = current_sheet_information_dict
     sheet_name_dict[result_label] = new_sheet_name
     sheet_information_item_name_dict = {
@@ -349,7 +353,10 @@ def experimental_and_predicted_mid_materials_generator(
                     single_vector = True
                 else:
                     single_vector = False
-            current_vector_len = len(current_mid_vector)
+            if single_vector:
+                current_vector_len = len(current_mid_vector)
+            else:
+                current_vector_len = len(current_mid_vector[0])
             if append_name_and_mid and current_output_metabolite_name_list is not None:
                 current_output_metabolite_name_list.extend((metabolite_name for _ in range(current_vector_len)))
             if append_name_and_mid and current_mid_index_list is not None:

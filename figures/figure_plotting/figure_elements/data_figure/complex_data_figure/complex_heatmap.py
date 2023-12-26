@@ -1,6 +1,4 @@
-import numpy as np
-
-from ..config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, TextBox, \
+from ..config import np, DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, TextBox, \
     VerticalAlignment, CommonFigureString, default_parameter_extract, CommonElementConfig
 from ..basic_data_figure.heatmap_data_figure import DistanceFluxAnalysisHeatmapDataFigure, \
     SensitivityAnalysisHeatmapDataFigure
@@ -313,9 +311,10 @@ class ProtocolAllFluxHeatmap(CompositeFigure):
         self.total_height = title_box_bottom + title_box_height
         title_box_center = Vector(self.total_width / 2, title_box_bottom + title_box_height / 2)
         title_config_dict = {
-            ParameterName.font: DataFigureConfig.main_text_font,
+            **CommonElementConfig.common_text_config,
+            # ParameterName.font: DataFigureConfig.main_text_font,
             ParameterName.vertical_alignment: VerticalAlignment.baseline,
-            ParameterName.z_order: DataFigureConfig.figure_text_z_order,
+            # ParameterName.z_order: DataFigureConfig.figure_text_z_order,
             ParameterName.font_size: 10,
             ParameterName.font_weight: FontWeight.bold,
             ParameterName.text_box: False,

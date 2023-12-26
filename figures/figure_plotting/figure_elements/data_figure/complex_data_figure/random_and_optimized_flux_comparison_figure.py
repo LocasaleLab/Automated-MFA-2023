@@ -4,96 +4,14 @@ from ..config import DataFigureConfig, ParameterName, Vector, FontWeight, Compos
 from ..basic_data_figure.scatter_data_figure import EmbeddedSolutionScatterDataFigure
 from ..basic_data_figure.histogram_data_figure import TimeLossDistanceHistogramDataFigure
 from ..basic_data_figure.bar_data_figure import DistanceAndLossBarDataFigure
-from ...diagrams.element_dict import element_dict, ElementName
+from ...diagrams.elements import element_dict, ElementName, Elements
 
-AverageDiagram = element_dict[ElementName.AverageDiagram]
-RandomOptimizedDistanceDiagram = element_dict[ElementName.RandomOptimizedDistanceDiagram]
+AverageDiagram = Elements.AverageDiagram
+RandomOptimizedDistanceDiagram = Elements.RandomOptimizedDistanceDiagram
 
 
 class RandomOptimizedFluxComparisonConfig(object):
     common_legend_font_size = 9
-
-#
-# class RandomOptimizedFluxComparison(CompositeFigure):
-#     height_to_width_ratio = 0.55
-#
-#     def __init__(
-#             self, total_width=1, scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
-#         self.total_width = total_width
-#         total_height = total_width * self.height_to_width_ratio
-#         bottom_line = 0.01 * total_width
-#         complete_axis_height = 0.42 * total_width
-#         left_axis_width = 0.4 * total_width
-#         right_axis_width = 0.47 * total_width
-#         right_axis_left = left_axis_width + 0.032 * total_width
-#         right_axis_height = 0.25 * total_width
-#         right_upper_axis_bottom = right_axis_height + 0.025 * total_width
-#         legend_bottom = complete_axis_height + 0.03 * total_width
-#         legend_top = total_height - 0.01 * total_width
-#         x_axis_line_y_loc = bottom_line + 0.022 * total_width
-#         x_axis_line_x_range = Vector(0.15, 0.82) * right_axis_width + right_axis_left
-#
-#         common_color_dict = CommonFigureMaterials.histogram_color_dict
-#         embedded_solution_config_dict = {
-#             ParameterName.bottom_left: (0, bottom_line),
-#             ParameterName.size: [left_axis_width, complete_axis_height],
-#             ParameterName.figure_data_parameter_dict: {
-#                 ParameterName.data_name: DataName.hct116_cultured_cell_line,
-#                 ParameterName.color_dict: common_color_dict,
-#             },
-#         }
-#         legend_config_dict = {
-#             ParameterName.legend_center: Vector(0.5 * left_axis_width, (legend_top + legend_bottom) / 2),
-#             ParameterName.legend_area_size: Vector(left_axis_width, legend_top - legend_bottom),
-#             ParameterName.name_dict: CommonFigureMaterials.time_loss_name_dict,
-#             ParameterName.horiz_or_vertical: ParameterName.vertical,
-#             ParameterName.text_config_dict: {
-#                 ParameterName.font_size: 9,
-#                 ParameterName.font_weight: FontWeight.bold
-#             }
-#         }
-#         solution_distance_config_dict = {
-#             ParameterName.bottom_left: (right_axis_left, right_upper_axis_bottom),
-#             ParameterName.size: [right_axis_width, right_axis_height],
-#             ParameterName.figure_data_parameter_dict: {
-#                 ParameterName.figure_class: ParameterName.solution_distance_data,
-#                 ParameterName.data_name: DataName.hct116_cultured_cell_line,
-#                 ParameterName.color_dict: common_color_dict,
-#                 ParameterName.legend: True,
-#                 ParameterName.legend_config_dict: legend_config_dict
-#             },
-#         }
-#         distance_and_loss_config_dict = {
-#             ParameterName.bottom_left: (right_axis_left, bottom_line),
-#             ParameterName.size: [right_axis_width, right_axis_height],
-#             ParameterName.figure_data_parameter_dict: {
-#                 ParameterName.data_name: DataName.hct116_cultured_cell_line,
-#             },
-#         }
-#         x_axis_line_config_dict = {
-#             ParameterName.start: Vector(x_axis_line_x_range[0], x_axis_line_y_loc),
-#             ParameterName.end: Vector(x_axis_line_x_range[1], x_axis_line_y_loc),
-#             **DataFigureConfig.common_axis_line_param_dict_generator(scale)
-#         }
-#
-#         subfigure_element_dict = {
-#             'embedded_solution_scatter_figure': {
-#                 'embedded_solution_scatter_figure':
-#                     EmbeddedSolutionScatterDataFigure(**embedded_solution_config_dict)},
-#             'solution_distance_histogram_figure': {
-#                 'solution_distance_histogram_figure':
-#                     TimeLossDistanceHistogramDataFigure(**solution_distance_config_dict)
-#             },
-#             'distance_and_loss_figure': {
-#                 'distance_and_loss_figure':
-#                     DistanceAndLossBarDataFigure(**distance_and_loss_config_dict),
-#                 'x_axis_line': Line(**x_axis_line_config_dict)
-#             },
-#         }
-#         super().__init__(
-#             subfigure_element_dict, Vector(0, 0), Vector(total_width, total_height),
-#             bottom_left_offset=bottom_left_offset, scale=scale,
-#             base_z_order=base_z_order, z_order_increment=z_order_increment, background=False, **kwargs)
 
 
 class RandomOptimizedFigureConfig(object):
@@ -196,7 +114,7 @@ class RandomOptimizedFluxLayout(CompositeFigure):
             subfigure_element_dict, Vector(0, 0), Vector(total_width, total_height), background=False, **kwargs)
 
 
-class RandomOptimizedLossDistanceComparison(CompositeFigure):
+class RandomOptimizedLossDistanceWithDiagramComparison(CompositeFigure):
     height_to_width_ratio = 0.55
 
     def __init__(self, total_width=1, scale=1, **kwargs):
@@ -275,9 +193,13 @@ class RandomOptimizedLossDistanceComparison(CompositeFigure):
             ParameterName.legend_center: figure_legend_center,
             ParameterName.legend_area_size: figure_legend_size,
             ParameterName.name_dict: CommonFigureMaterials.distance_and_loss_name_dict,
+            ParameterName.location_config_dict: {
+                ParameterName.total_verti_edge_ratio: 0.1,
+                ParameterName.row_verti_edge_ratio: 0.5,
+            },
         }
         figure_legend_obj = common_legend_generator(
-            figure_legend_config_dict, CommonFigureMaterials.distance_and_loss_color_dict)
+            figure_legend_config_dict, CommonFigureMaterials.distance_and_loss_legend_color_dict)
 
         distance_and_loss_config_dict = {
             ParameterName.bottom_left: right_axis_bottom_left,
@@ -316,6 +238,8 @@ class RandomOptimizedLossDistanceComparison(CompositeFigure):
         random_optimization_distance_diagram.move_and_scale(
             bottom_left_offset=target_center_of_left_diagram - center_of_distance_diagram)
 
+        distance_and_loss_figure = DistanceAndLossBarDataFigure(**distance_and_loss_config_dict)
+
         subfigure_element_dict = {
             'random_optimization_distance_diagram': {
                 'random_optimization_distance_diagram': random_optimization_distance_diagram,
@@ -323,8 +247,7 @@ class RandomOptimizedLossDistanceComparison(CompositeFigure):
                 'title': random_optimization_distance_diagram_title
             },
             'distance_and_loss_figure': {
-                'distance_and_loss_figure':
-                    DistanceAndLossBarDataFigure(**distance_and_loss_config_dict),
+                'distance_and_loss_figure': distance_and_loss_figure,
                 'x_axis_line': Line(**x_axis_line_config_dict),
                 'title': distance_and_loss_figure_title,
                 'legend': figure_legend_obj,
@@ -334,3 +257,91 @@ class RandomOptimizedLossDistanceComparison(CompositeFigure):
             subfigure_element_dict, Vector(0, 0), Vector(total_width, total_height), background=False,
             scale=scale, **kwargs)
 
+
+class RandomOptimizedLossDistanceComparison(CompositeFigure):
+    height_to_width_ratio = 0.55
+
+    def __init__(self, scale=1, **kwargs):
+        total_width = 0.7
+        self.total_width = total_width
+        right_axis_height = 0.21
+        right_axis_width = 0.68
+        right_axis_bottom = 0
+        right_axis_left = 0.005
+        right_axis_bottom_left = Vector(right_axis_left, right_axis_bottom)
+        right_axis_size = Vector(right_axis_width, right_axis_height)
+        right_axis_top = right_axis_bottom + right_axis_height
+        x_axis_line_y_loc = right_axis_bottom + 0.02
+        x_axis_line_x_range = Vector(0.13, 0.72) * right_axis_width + right_axis_left
+        title_height = 0.03
+        right_title_bottom = right_axis_top + 0.0035
+        right_title_center_y = right_title_bottom + title_height / 2
+        right_title_center = Vector(right_axis_left + right_axis_width / 2, right_title_center_y)
+        right_title_top = right_title_bottom + title_height
+
+        legend_bottom = right_title_top + 0.007
+        legend_height = 0.05
+        legend_center_y = legend_bottom + legend_height / 2
+        figure_legend_width = right_axis_width
+        figure_legend_center = Vector(
+            0.5 * figure_legend_width, legend_center_y)
+        figure_legend_size = Vector(figure_legend_width, legend_height)
+        legend_top = legend_bottom + legend_height
+
+        total_height = legend_top
+        self.height_to_width_ratio = total_height / total_width
+
+        figure_legend_config_dict = {
+            ParameterName.horiz_or_vertical: ParameterName.horizontal,
+            ParameterName.text_config_dict: {
+                ParameterName.font_size: RandomOptimizedFluxComparisonConfig.common_legend_font_size,
+                ParameterName.font_weight: FontWeight.bold
+            },
+            ParameterName.legend_center: figure_legend_center,
+            ParameterName.legend_area_size: figure_legend_size,
+            ParameterName.name_dict: CommonFigureMaterials.distance_and_loss_name_dict,
+            ParameterName.location_config_dict: {
+                ParameterName.total_verti_edge_ratio: 0.1,
+                ParameterName.row_verti_edge_ratio: 0.5,
+            },
+        }
+        figure_legend_obj = common_legend_generator(
+            figure_legend_config_dict, CommonFigureMaterials.distance_and_loss_legend_color_dict)
+
+        distance_and_loss_config_dict = {
+            ParameterName.bottom_left: right_axis_bottom_left,
+            ParameterName.size: right_axis_size,
+            ParameterName.figure_data_parameter_dict: {
+                ParameterName.data_name: DataName.hct116_cultured_cell_line_squared_loss,
+                ParameterName.common_y_lim: (0, 5.5),
+                ParameterName.y_tick_interval: 1
+            },
+        }
+        x_axis_line_config_dict = {
+            ParameterName.start: Vector(x_axis_line_x_range[0], x_axis_line_y_loc),
+            ParameterName.end: Vector(x_axis_line_x_range[1], x_axis_line_y_loc),
+            **DataFigureConfig.common_axis_line_param_dict_generator(scale)
+        }
+        distance_and_loss_figure_title_config_dict = {
+            **RandomOptimizedFigureConfig.common_title_text_config,
+            ParameterName.font_size: 11,
+            ParameterName.width: right_axis_width,
+            ParameterName.height: title_height,
+            ParameterName.string: 'Distance and loss comparison',
+            ParameterName.center: right_title_center,
+        }
+        distance_and_loss_figure_title = TextBox(**distance_and_loss_figure_title_config_dict)
+
+        distance_and_loss_figure = DistanceAndLossBarDataFigure(**distance_and_loss_config_dict)
+
+        subfigure_element_dict = {
+            'distance_and_loss_figure': {
+                'distance_and_loss_figure': distance_and_loss_figure,
+                'x_axis_line': Line(**x_axis_line_config_dict),
+                'title': distance_and_loss_figure_title,
+                'legend': figure_legend_obj,
+            },
+        }
+        super().__init__(
+            subfigure_element_dict, Vector(0, 0), Vector(total_width, total_height), background=False,
+            scale=scale, **kwargs)

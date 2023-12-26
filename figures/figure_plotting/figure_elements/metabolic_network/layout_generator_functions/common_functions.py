@@ -127,27 +127,28 @@ def cycle_layout(
 
 
 def arrange_text_by_row(
-        current_flux_range_string_dict, text_left_offset, text_config_list, title_config, normal_text_config,
+        current_flux_range_string_dict, text_left_offset, output_text_config_list, title_config, normal_text_config,
         round_rectangle_config_list, common_round_rectangle_config_dict):
     for data_label, (
-            current_display_label_text, left_right_x_range, title_center_vector, text_row_y_location_list,
-            string_list, data_rectangle_pair, data_rectangle_config
+            current_title_str, left_right_x_range, title_center_vector, normal_text_row_y_location_list,
+            normal_text_string_list, data_rectangle_pair, data_rectangle_config
     ) in current_flux_range_string_dict.items():
-        if current_display_label_text is not None:
-            text_config_list.append({
+        if current_title_str is not None:
+            output_text_config_list.append({
                 **title_config,
-                ParameterName.string: current_display_label_text,
+                ParameterName.string: current_title_str,
                 ParameterName.center: title_center_vector,
             })
         current_text_item_left, current_text_item_right = left_right_x_range
-        for row_index, (row_y_location, string_row) in enumerate(zip(text_row_y_location_list, string_list)):
+        for row_index, (row_y_location, string_row) in enumerate(zip(
+                normal_text_row_y_location_list, normal_text_string_list)):
             current_col_num = len(string_row)
             col_width = (current_text_item_right - current_text_item_left) / current_col_num
             each_col_left_x_location = \
                 np.linspace(current_text_item_left, current_text_item_right, current_col_num + 1)[:-1] \
                 + text_left_offset
             for left_x_location, current_string in zip(each_col_left_x_location, string_row):
-                text_config_list.append({
+                output_text_config_list.append({
                     **normal_text_config,
                     ParameterName.string: current_string,
                     ParameterName.center: Vector(
