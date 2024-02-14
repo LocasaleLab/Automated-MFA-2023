@@ -1,7 +1,6 @@
 from .packages import np, mp, tqdm, threadpool_limits
-from ..common.config import Keywords, random_seed
-from scripts.src.core.solver.solver_construction_functions.solver_constructor import specific_solver_constructor, \
-    base_solver_constructor, common_solver_constructor
+from .config import Keywords, random_seed, specific_solver_constructor, base_solver_constructor
+
 from .feasible_solution_generator import universal_feasible_solution_generator, complicated_feasible_solution_generator
 
 
@@ -148,7 +147,7 @@ def common_parallel_solver(
         (
             result_list, result_label, result_information, flux_name_index_dict,
             target_experimental_mid_data_dict, current_optimization_num, start_index,
-            each_case_target_optimization_num) = raw_result
+            each_case_target_optimization_num) = current_raw_result
         pbar.update(current_optimization_num)
         final_result_obj.parallel_add_and_save_result(
             result_list, result_label, result_information, flux_name_index_dict,

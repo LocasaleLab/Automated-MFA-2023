@@ -1,18 +1,15 @@
 from scripts.src.common.classes import FinalResult
-from scripts.src.common.functions import net_flux_matrix_generator, calculate_raw_and_net_distance, \
+from scripts.src.common.functions import calculate_raw_and_net_distance, \
     special_result_label_converter, analyze_simulated_flux_value_dict
-from scripts.src.common.plotting_functions import group_violin_box_distribution_plot, group_bar_plot, \
-    scatter_plot_for_simulated_result, FigurePlotting
-from scripts.src.common.config import Color, Keywords, net_flux_list, random_seed
-from scripts.src.common.third_party_packages import np, manifold, decomposition
+from scripts.src.common.plotting_functions import group_violin_box_distribution_plot, scatter_plot_for_simulated_result, FigurePlotting
+from scripts.src.common.config import Keywords, net_flux_list, random_seed, FigureData
+from scripts.src.common.third_party_packages import np, decomposition
 from scripts.src.common.result_processing_functions import experimental_mid_prediction
 
 from scripts.data.simulated_data.simulated_data_loader import simulated_data_loader
 
 from common_and_plotting_functions.functions import check_and_mkdir_of_direct
-from common_and_plotting_functions.figure_data_format import FigureData
 from common_and_plotting_functions.config import FigureDataKeywords
-from common_and_plotting_functions.core_plotting_functions import cmap_mapper_generator, shape_category_list
 from ..common.result_processing_functions import loss_data_distribution_plotting, reconstruct_and_filter_data_dict, \
     time_distribution_plotting, result_verification, multiple_repeat_result_processing, \
     traditional_method_result_selection
@@ -27,8 +24,8 @@ def initialize_figure_plotting():
     global figure_plotting
     if figure_plotting is not None:
         return
-    from figures.figure_plotting.common.config import ParameterName
-    from figures.figure_plotting.figure_elements.elements import Elements
+    from figures.figure_content.common.config import ParameterName
+    from figures.figure_content.common.elements import Elements
     figure_plotting = FigurePlotting(ParameterName, Elements)
 
 
@@ -68,12 +65,11 @@ def normal_result_process(final_result_obj, final_mapping_dict, solver_dict):
         result_verification(solver_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict)
     loss_percentile = config.loss_percentile
     if config.repeat_each_analyzed_set:
+        optimization_num = 20000
         if result_name.value == 'lung_tumor_invivo_infusion':
             repeat_time_each_analyzed_set = 3
-            optimization_num = 6666
         else:
             repeat_time_each_analyzed_set = config.repeat_time_each_analyzed_set
-            optimization_num = 20000
         final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict = multiple_repeat_result_processing(
             solver_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
             repeat_division_num=repeat_time_each_analyzed_set, each_optimization_num=optimization_num,
@@ -393,6 +389,7 @@ def solution_embedding_and_visualization(
                 filtered_net_unoptimized_distance, unoptimized_loss_array)
         }
 
+    from figure_plotting_package.common.core_plotting_functions import cmap_mapper_generator, shape_category_list
     min_value = None
     max_value = 8
     cmap = 'copper'
@@ -522,13 +519,14 @@ def metabolic_network_plotting(
             for flux_name, flux_index in final_flux_name_index_dict[raw_result_label].items()}
         raw_flux_value_dict[raw_result_label] = current_reaction_value_dict
 
-        output_file_path = f'{figure_output_direct}/metabolic_network_{raw_result_label}.pdf'
+        # output_file_path = f'{figure_output_direct}/metabolic_network_{raw_result_label}.pdf'
+        figure_name = f'metabolic_network_{raw_result_label}'
         figure_plotting.metabolic_flux_model_function(
-            output_file_path, (8.5, 8.5),
+            figure_output_direct, figure_name,
             input_metabolite_set, c13_labeling_metabolite_set, experimental_mid_metabolite_set,
             experimental_mixed_mid_metabolite_set,
             biomass_metabolite_set, boundary_flux_set, current_reaction_value_dict=current_reaction_value_dict,
-            infusion=infusion)
+            infusion=infusion, figure_size=(8.5, 8.5))
     figure_raw_data = FigureData(FigureDataKeywords.raw_flux_value_dict, result_name)
     figure_raw_data.save_data(raw_flux_value_dict=raw_flux_value_dict)
 

@@ -68,9 +68,10 @@ def default_parameter_extract(
     def single_extract(_option_dict, _key, _default_value):
         if force or _key in _option_dict:
             if pop:
-                return _option_dict.pop(_key)
+                _value = _option_dict.pop(_key)
             else:
-                return _option_dict[_key]
+                _value = _option_dict[_key]
+            return _value
         else:
             return _default_value
 
@@ -89,24 +90,4 @@ def default_parameter_extract(
         return result_list
     else:
         raise ValueError()
-
-
-def round_to_str_with_fixed_point(raw_num, decimal_num=0):
-    if decimal_num >= 0:
-        base_num = int(10 ** decimal_num)
-        round_num = int(np.round(raw_num * base_num, 0))
-        integer_part = int(round_num / base_num)
-        decimal_part = round_num % base_num
-    else:
-        integer_part = int(np.round(raw_num, decimal_num))
-        decimal_part = 0
-    if decimal_num <= 0:
-        final_string = f'{integer_part}'
-    else:
-        decimal_part_str = f'{decimal_part}'
-        decimal_part_rest_len = decimal_num - len(decimal_part_str)
-        if decimal_part_rest_len > 0:
-            decimal_part_str = f'{"0" * decimal_part_rest_len}{decimal_part_str}'
-        final_string = f'{integer_part}.{decimal_part_str}'
-    return final_string
 

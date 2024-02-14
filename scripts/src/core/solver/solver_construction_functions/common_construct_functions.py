@@ -82,6 +82,8 @@ def mixing_equation_constructor(
     def data_mixing_equation_dict_generator(_experimental_mid_data_obj_dict):
         _data_mixing_equation_dict = {}
         for experimental_metabolite_name, experimental_mid_data in _experimental_mid_data_obj_dict.items():
+            if experimental_mid_data.excluded_from_mfa:
+                continue
             nested_metabolite_compartment_list = []
             if experimental_mid_data.combined:
                 standard_name_list = experimental_mid_data.combined_standard_name_list
@@ -375,8 +377,8 @@ def calculate_optimal_entropy(exp_data_np_vector_list, eps_for_log=CoreConstants
             raise ValueError('Experimental data vector is None!')
         optimal_cross_entropy += np_log_eps(
             current_exp_data_vector, current_exp_data_vector, eps_for_log)
-    if np.isnan(optimal_cross_entropy):
-        raise ValueError('Optimal cross entropy is not a number!')
+        if np.isnan(optimal_cross_entropy):
+            raise ValueError('Optimal cross entropy is not a number!')
     return optimal_cross_entropy
 
 

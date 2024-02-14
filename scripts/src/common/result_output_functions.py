@@ -1,4 +1,3 @@
-
 from common_and_plotting_functions.functions import replace_result_label_to_sheet_name, isdigit
 
 from .third_party_packages import np, pd, xlsxwriter

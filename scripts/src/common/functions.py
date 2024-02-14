@@ -23,6 +23,35 @@ def mid_name_process(raw_mid_name):
     return modified_str
 
 
+def tissue_name_breakdown(raw_name):
+    tissue_sep = CoreConstants.specific_tissue_sep
+    plus = '+'
+    prefix = None
+    search_start = 0
+    main_body_list = []
+    while True:
+        sep_location = raw_name.find(tissue_sep, search_start)
+        if sep_location == -1:
+            break
+        else:
+            this_prefix = raw_name[search_start:sep_location]
+            if prefix is None:
+                prefix = this_prefix
+            else:
+                assert this_prefix == prefix
+            body_start = sep_location + len(tissue_sep)
+            next_plus_location = raw_name.find(plus, sep_location)
+            if next_plus_location == -1:
+                main_body_list.append(raw_name[body_start:])
+                break
+            else:
+                next_search_start = next_plus_location + 1
+                main_body_list.append(raw_name[body_start:next_search_start])
+                search_start = next_search_start
+    main_body = ''.join(main_body_list)
+    return prefix, main_body
+
+
 def excel_column_letter_to_0_index(raw_column_str):
     final_index = -1
     for loc_index, letter in enumerate(raw_column_str[::-1]):

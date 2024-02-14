@@ -2,9 +2,10 @@ from .built_in_packages import defaultdict
 from .third_party_packages import plt, np
 from .config import Color
 from common_and_plotting_functions.functions import replace_invalid_file_name
-from common_and_plotting_functions.core_plotting_functions import axis_appearance_setting, HeatmapValueFormat, \
+from figure_plotting_package.common.core_plotting_functions import axis_appearance_setting, HeatmapValueFormat, \
     core_plot_violin_box_plot, core_single_ax_bar_plot, raw_heat_map_plotting, \
     violin_box_color_list_generator, heatmap_text_str_list_generator, core_scatter_plotting, raw_cbar_plotting
+from figure_plotting_package.common.classes import Vector
 
 
 def group_scatter_color_generator(
@@ -21,7 +22,7 @@ def group_scatter_color_generator(
     if min_obj_value is not None or max_obj_value is not None:
         complete_obj_vector = complete_obj_vector.clip(min_obj_value, max_obj_value)
 
-    # To make the node with smallest obj as the darkest one
+    # To make the node with the smallest obj as the darkest one
     alpha_value_vector = min_alpha + (max_alpha - min_alpha) * (
             (max_obj_value - complete_obj_vector) / (max_obj_value - min_obj_value))
     cmap_colors = plt.get_cmap(cmap_name).colors
@@ -583,14 +584,27 @@ class FigurePlotting(object):
         self.ParameterName = ParameterName
         self.Figure = Elements.Figure
         self.Elements = Elements
+        self.default_figure_size = Vector(8.5, 8.5)
+
+    def _common_draw_function(
+            self, figure_name, target_obj, figure_output_direct, figure_size=None):
+        if figure_size is None:
+            figure_size = self.default_figure_size
+        if isinstance(target_obj, (tuple, list)):
+            other_obj_list = target_obj
+        else:
+            other_obj_list = [target_obj]
+        current_figure = self.Figure(
+            figure_name, other_obj_list=other_obj_list, figure_size=figure_size,
+            figure_output_direct=figure_output_direct)
+        current_figure.draw()
 
     def metabolic_flux_model_function(
-            self, output_file_path, figure_size,
+            self, figure_output_direct, figure_name,
             input_metabolite_set, c13_labeling_metabolite_set, mid_data_metabolite_set, mixed_mid_data_metabolite_set,
-            biomass_metabolite_set, boundary_flux_set, current_reaction_value_dict=None, infusion=False):
+            biomass_metabolite_set, boundary_flux_set, current_reaction_value_dict=None, infusion=False,
+            figure_size=None):
         ParameterName = self.ParameterName
-        Elements = self.Elements
-        Figure = self.Figure
         experimental_setting_dict = {
             ParameterName.input_metabolite_set: input_metabolite_set,
             ParameterName.c13_labeling_metabolite_set: c13_labeling_metabolite_set,
@@ -600,7 +614,7 @@ class FigurePlotting(object):
             ParameterName.boundary_flux_set: boundary_flux_set,
         }
         metabolic_network_config_dict = {
-            ParameterName.bottom_left_offset: (0.1, 0.1),
+            ParameterName.bottom_left_offset: Vector(0.1, 0.1),
             ParameterName.scale: 0.8,
             ParameterName.infusion: infusion,
             **experimental_setting_dict
@@ -610,30 +624,17 @@ class FigurePlotting(object):
                 ParameterName.reaction_raw_value_dict: current_reaction_value_dict,
                 ParameterName.visualize_flux_value: ParameterName.transparency
             })
-        metabolic_network_obj = Elements.MetabolicNetwork(**metabolic_network_config_dict)
-        current_figure = Figure(
-            'Metabolic Network', {'metabolic_network': metabolic_network_obj}, figure_size=figure_size,
-            save_path=output_file_path)
-        current_figure.draw()
+        metabolic_network_obj = self.Elements.MetabolicNetwork(**metabolic_network_config_dict)
+        self._common_draw_function(
+            figure_name, metabolic_network_obj, figure_output_direct, figure_size)
 
     def mid_prediction_function(
-            self, data_name, result_label, mid_name_list, output_direct, figure_config_dict, figure_size):
+            self, data_name, result_label, mid_name_list, output_direct, figure_config_dict, figure_size=None):
         ParameterName = self.ParameterName
-        Elements = self.Elements
-        Figure = self.Figure
-        # mid_comparison_figure = element_dict[ElementName.MIDComparisonGridBarWithLegendDataFigure](**{
-        #     ParameterName.bottom_left_offset: (0.15, 0.15),
-        #     ParameterName.total_width: 1,
-        #     ParameterName.scale: 0.7,
-        #     ParameterName.figure_data_parameter_dict: {
-        #         ParameterName.data_name: data_name,
-        #         ParameterName.result_label: result_label,
-        #         ParameterName.mid_name_list: mid_name_list,
-        #     },
-        # })
         current_mid_comparison_figure_config_dict = {
-            ParameterName.bottom_left: (0.15, 0.05),
-            ParameterName.size: (1, 0.8),
+            # ParameterName.bottom_left: Vector(0.15, 0.05),
+            # ParameterName.size: Vector(1, 0.8),
+            ParameterName.bottom_left_offset: Vector(0.15, 0.05),
             ParameterName.scale: 0.7,
             ParameterName.figure_data_parameter_dict: {
                 ParameterName.legend: False,
@@ -649,19 +650,21 @@ class FigurePlotting(object):
         current_mid_comparison_figure_config_dict[ParameterName.figure_data_parameter_dict].update(
             new_figure_data_parameter_dict)
         current_mid_comparison_figure_config_dict.update(figure_config_dict)
-        mid_comparison_figure = Elements.MIDComparisonGridBarDataFigure(
+        mid_comparison_figure = self.Elements.MIDComparisonGridBarWithLegendDataFigure(
             **current_mid_comparison_figure_config_dict)
-        output_file_path = f'{output_direct}/{result_label}.pdf'
-        current_figure = Figure(
-            'Metabolic Network', {'metabolic_network': mid_comparison_figure}, figure_size=figure_size,
-            save_path=output_file_path)
-        current_figure.draw()
+        # output_file_path = f'{output_direct}/{result_label}.pdf'
+        # if figure_size is None:
+        #     figure_size = self.default_figure_size
+        # current_figure = self.Figure(
+        #     result_label, other_obj_list=[mid_comparison_figure], figure_size=figure_size,
+        #     figure_output_direct=output_direct)
+        # current_figure.draw()
+        self._common_draw_function(
+            result_label, mid_comparison_figure, output_direct, figure_size)
 
     def multi_tumor_figure_plotting(
             self, data_name, flux_location_nested_list, output_direct, figure_size):
         ParameterName = self.ParameterName
-        Elements = self.Elements
-        Figure = self.Figure
 
         figure_data_parameter_dict = {
             ParameterName.data_name: ParameterName.multiple_tumor,
@@ -673,16 +676,17 @@ class FigurePlotting(object):
                 'brain': 'purple',
             }
         }
-        loss_grid_comparison_figure = Elements.FluxComparisonScatterWithTitle(**{
+        loss_grid_comparison_figure = self.Elements.FluxComparisonScatterWithTitle(**{
             ParameterName.total_width: 0.4,
-            ParameterName.bottom_left_offset: (0.15, 0.15),
+            ParameterName.bottom_left_offset: Vector(0.15, 0.15),
             ParameterName.scale: 2,
             ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
-        output_file_path = f'{output_direct}/grid_flux_comparison_{data_name}.pdf'
-        current_figure = Figure(
-            'Grid Comparison Figure',
-            {'loss_grid_comparison_figure': loss_grid_comparison_figure}, figure_size=figure_size,
-            save_path=output_file_path)
-        current_figure.draw()
+        figure_name = f'grid_flux_comparison_{data_name}'
+        # current_figure = self.Figure(
+        #     figure_name, other_obj_list=[loss_grid_comparison_figure], figure_size=figure_size,
+        #     figure_output_direct=output_direct)
+        # current_figure.draw()
+        self._common_draw_function(
+            figure_name, loss_grid_comparison_figure, output_direct, figure_size)
 

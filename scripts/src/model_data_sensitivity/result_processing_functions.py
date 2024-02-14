@@ -1,6 +1,6 @@
 from scripts.src.common.built_in_packages import abc
 from scripts.src.common.third_party_packages import np
-from scripts.src.common.config import Color, Direct, Keywords as CommonKeywords, random_seed
+from scripts.src.common.config import Color, Direct, Keywords as CommonKeywords, random_seed, FigureData
 from scripts.src.common.classes import FinalResult
 from scripts.src.common.plotting_functions import group_violin_box_distribution_plot, \
     multi_row_col_scatter_plot_for_result_selection, heat_map_plotting, HeatmapValueFormat
@@ -10,9 +10,8 @@ from ..common.result_output_functions import output_raw_flux_data, output_predic
 from ..common.functions import analyze_simulated_flux_value_dict, link_flux_name, \
     determine_order_by_specific_data_dict, calculate_raw_and_net_distance
 
+from figure_plotting_package.common.core_plotting_functions import heatmap_and_box3d_parameter_preparation
 from common_and_plotting_functions.functions import check_and_mkdir_of_direct
-from common_and_plotting_functions.figure_data_format import FigureData
-from common_and_plotting_functions.core_plotting_functions import heatmap_and_box3d_parameter_preparation
 from common_and_plotting_functions.config import FigureDataKeywords, DefaultDict
 
 from scripts.src.core.common.config import CoreConstants
@@ -73,7 +72,10 @@ class CurrentFinalResult(FinalResult):
             self, solver_dict, final_information_dict, result_process_name, result_process_func,
             each_case_target_optimization_num, *args, **kwargs):
         self.final_information_dict = final_information_dict
-        raw_data_analyzing_num = each_case_target_optimization_num
+        if each_case_target_optimization_num is None:
+            raw_data_analyzing_num = 0
+        else:
+            raw_data_analyzing_num = each_case_target_optimization_num
         for current_result_label in solver_dict.keys():
             (
                 loss_data_array, solution_data_array, flux_name_index_dict, _,
@@ -1006,6 +1008,33 @@ def optimization_from_averaged_solution_result_processing_func(
         final_predicted_data_dict, common_flux_name_index_dict, simulated_flux_value_dict,
         net_flux_list, replace_flux_dict, analyzed_set_size_list, selected_min_loss_size_list, flux_range
 ):
+    def distance_between_average_and_reoptimized_solution(
+            initial_averaged_diff_vector_dict, raw_selected_diff_vector_dict):
+        for analyzed_size in analyzed_set_size_list:
+            for selected_size in selected_min_loss_size_list:
+                try:
+                    averaged_data_vector_list = initial_averaged_diff_vector_dict[selected_size][analyzed_size]
+                    reoptimized_data_vector_list = raw_selected_diff_vector_dict[selected_size][analyzed_size]
+                except KeyError:
+                    net_diff_vector_between_averaged_and_reoptimized_list = None
+                    net_distance_between_averaged_and_reoptimized_list = None
+                else:
+                    net_diff_vector_between_averaged_and_reoptimized_list = [
+                        reoptimized_data_vector - averaged_data_vector
+                        for reoptimized_data_vector, averaged_data_vector
+                        in zip(reoptimized_data_vector_list, averaged_data_vector_list)]
+                    net_distance_between_averaged_and_reoptimized_list = [
+                        np.sqrt(np.sum(net_diff_vector_between_averaged_and_reoptimized ** 2))
+                        for net_diff_vector_between_averaged_and_reoptimized in
+                        net_diff_vector_between_averaged_and_reoptimized_list
+                    ]
+                add_empty_obj(diff_vector_between_averaged_and_reoptimized_dict, list, selected_size, analyzed_size)
+                add_empty_obj(net_distance_between_averaged_and_reoptimized_dict, list, selected_size, analyzed_size)
+                diff_vector_between_averaged_and_reoptimized_dict[selected_size][analyzed_size] = (
+                    net_diff_vector_between_averaged_and_reoptimized_list)
+                net_distance_between_averaged_and_reoptimized_dict[selected_size][analyzed_size] = (
+                    net_distance_between_averaged_and_reoptimized_list)
+
     print(f'Start result analysis for {result_name}...')
     final_flux_absolute_distance_dict = {}
     final_flux_relative_distance_dict = {}
@@ -1026,6 +1055,8 @@ def optimization_from_averaged_solution_result_processing_func(
     raw_selected_loss_value_dict = {}
     loss_of_mean_solution_dict = None
     raw_selected_predicted_data_dict = {}
+    diff_vector_between_averaged_and_reoptimized_dict = {}
+    net_distance_between_averaged_and_reoptimized_dict = {}
     max_loss_value = 0
     min_value, max_value = flux_range
 
@@ -1119,6 +1150,8 @@ def optimization_from_averaged_solution_result_processing_func(
         flux_relative_distance_of_initial_averaged_solutions_dict,
         _
     ) = averaged_solution_data_obj.return_averaged_data(data_label)
+    distance_between_average_and_reoptimized_solution(
+        initial_averaged_diff_vector_dict, raw_selected_diff_vector_dict)
 
     flatten_2d_data_dict(initial_raw_selected_flux_value_dict)
     flatten_2d_data_dict(initial_raw_selected_diff_vector_dict)
@@ -1127,6 +1160,7 @@ def optimization_from_averaged_solution_result_processing_func(
     flatten_2d_data_dict(net_euclidian_distance_of_initial_raw_selected_dict)
     flatten_2d_data_dict(net_relative_error_of_initial_raw_selected_dict)
     flatten_2d_data_dict(net_relative_error_of_initial_averaged_solutions_dict)
+    flatten_2d_data_dict(diff_vector_between_averaged_and_reoptimized_dict)
     figure_raw_data = FigureData(FigureDataKeywords.raw_model_distance, result_name)
     figure_raw_data.save_data(
         initial_raw_selected_flux_value_dict=initial_raw_selected_flux_value_dict,
@@ -1135,7 +1169,6 @@ def optimization_from_averaged_solution_result_processing_func(
         initial_raw_selected_diff_vector_dict=initial_raw_selected_diff_vector_dict,
         initial_averaged_diff_vector_dict=initial_averaged_diff_vector_dict,
         raw_selected_diff_vector_dict=raw_selected_diff_vector_dict,
-        # common_flux_name_list=list(common_flux_name_simulated_value_dict.keys()),
         common_flux_name_list=common_flux_name_list,
         flux_relative_distance_of_initial_averaged_solutions_dict=flux_relative_distance_of_initial_averaged_solutions_dict,
         final_flux_relative_distance_dict=final_flux_relative_distance_dict,
@@ -1158,6 +1191,8 @@ def optimization_from_averaged_solution_result_processing_func(
         x_label_index_dict=x_label_index_dict, y_label_index_dict=y_label_index_dict,
         analyzed_set_size_list=analyzed_set_size_list, selected_min_loss_size_list=selected_min_loss_size_list,
         raw_selected_predicted_data_dict=raw_selected_predicted_data_dict,
+        diff_vector_between_averaged_and_reoptimized_dict=diff_vector_between_averaged_and_reoptimized_dict,
+        net_distance_between_averaged_and_reoptimized_dict=net_distance_between_averaged_and_reoptimized_dict,
     )
 
 
@@ -1182,6 +1217,7 @@ def multiple_simulated_data_result_processing_func(
     max_net_euclidian_distance = 0
     raw_selected_flux_value_dict = {}
     selected_averaged_flux_value_dict = {}
+    separate_selected_averaged_flux_value_dict = {}
     raw_selected_diff_vector_dict = {}
     selected_averaged_diff_vector_dict = {}
     net_all_selected_relative_error_dict = {}
@@ -1285,6 +1321,17 @@ def multiple_simulated_data_result_processing_func(
         selected_min_loss_size: index for index, selected_min_loss_size in enumerate(selected_min_loss_size_list)}
 
     if not optimization_from_averaged_solutions:
+        for analyzed_set_size in analyzed_set_size_list:
+            for selected_min_loss_size in selected_min_loss_size_list:
+                for result_index, result_label in enumerate(nested_simulated_flux_value_dict_dict.keys()):
+                    data_label = final_information_dict[result_label][Keywords.data][Keywords.index_label]
+                    start_result_index = result_index * repeat_time_each_analyzed_set
+                    end_result_index = start_result_index + repeat_time_each_analyzed_set
+                    add_empty_obj(
+                        separate_selected_averaged_flux_value_dict, dict, analyzed_set_size, selected_min_loss_size
+                    )[data_label] = selected_averaged_flux_value_dict[
+                        analyzed_set_size][selected_min_loss_size][start_result_index:end_result_index]
+
         print('Saving result files...')
         # output_analyzed_raw_flux_and_predicted_mid_data(
         #     analyzed_set_size_list, selected_min_loss_size_list,
@@ -1295,6 +1342,7 @@ def multiple_simulated_data_result_processing_func(
         figure_raw_data.save_data(
             raw_selected_flux_value_dict=raw_selected_flux_value_dict,
             selected_averaged_flux_value_dict=selected_averaged_flux_value_dict,
+            separate_selected_averaged_flux_value_dict=separate_selected_averaged_flux_value_dict,
             raw_selected_diff_vector_dict=raw_selected_diff_vector_dict,
             selected_averaged_diff_vector_dict=selected_averaged_diff_vector_dict,
             common_flux_name_list=common_flux_name_list,

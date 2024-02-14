@@ -79,7 +79,7 @@ class MIDData(object):
     def __init__(
             self, raw_data_list=None, raw_data_vector: np.ndarray = None, raw_name: str = None,
             data_vector: np.ndarray = None, combined_raw_name_list=(), compartment_list=None,
-            tissue_list=None, to_standard_name_dict=None, ms_total_sum_threshold=None):
+            tissue_list=None, to_standard_name_dict=None, ms_total_sum_threshold=None, excluded_from_mfa=False):
         if to_standard_name_dict is None:
             to_standard_name_dict = default_transform_dict
         combined = False
@@ -124,6 +124,10 @@ class MIDData(object):
         self.full_name = compartmental_mid_name_constructor(
             tissue_specific_name_constructor(metabolite_name, tissue_list),
             compartment_list)
+        self.excluded_from_mfa = excluded_from_mfa
+
+    def exclude_this_mid(self):
+        self.excluded_from_mfa = True
 
     def normalize(self, eps_for_mid=CoreConstants.eps_for_mid):
         if self.data_vector is None and self.raw_data_vector is not None:
@@ -157,10 +161,11 @@ class MIDData(object):
         return '{}: {}'.format(name_str, data_str)
 
 
-def average_multiple_mid_data(mid_data_list):
+def average_multiple_mid_data(mid_data_list, output_std=False):
     first_mid_obj = mid_data_list[0]
     num_mid_obj = len(mid_data_list)
     assert first_mid_obj.data_vector is not None
+    data_vector_list = [first_mid_obj.data_vector]
     complete_data_vector = np.copy(first_mid_obj.data_vector)
     common_name = first_mid_obj.name
     common_combined_standard_name_list = first_mid_obj.combined_standard_name_list
@@ -173,6 +178,7 @@ def average_multiple_mid_data(mid_data_list):
         assert new_mid_obj.tissue == common_tissue
         assert new_mid_obj.data_vector is not None
         complete_data_vector += new_mid_obj.data_vector
+        data_vector_list.append(new_mid_obj.data_vector)
     final_data_vector = complete_data_vector / num_mid_obj
     new_mid_data_obj = MIDData(
         raw_name=common_name,
@@ -180,7 +186,11 @@ def average_multiple_mid_data(mid_data_list):
         compartment_list=common_compartment,
         tissue_list=common_tissue, to_standard_name_dict=first_mid_obj.to_standard_name_dict,
         ms_total_sum_threshold=first_mid_obj.ms_total_sum_threshold)
-    return new_mid_data_obj
+    if not output_std:
+        return new_mid_data_obj
+    else:
+        std_data_vector = np.std(data_vector_list, axis=0)
+        return new_mid_data_obj, std_data_vector
 
 
 class MFAData(object):
@@ -203,3 +213,47 @@ class MFAData(object):
         self.ratio_dict_to_objective_func = ratio_dict_to_objective_func
         self.list_of_case_name = list_of_case_name
         self.mid_data_obj_dict_for_construction = mid_data_obj_dict_for_construction
+
+
+def average_multiple_mfa_data(mfa_data_list, output_std=False, common_data_name=None):
+    def average_experimental_mid_data_obj_dict(mid_data_obj_dict_list):
+        mid_data_obj_list_dict = {}
+        for mid_data_obj_dict in mid_data_obj_dict_list:
+            for mid_name, mid_data_obj in mid_data_obj_dict.items():
+                if mid_name not in mid_data_obj_list_dict:
+                    mid_data_obj_list_dict[mid_name] = []
+                mid_data_obj_list_dict[mid_name].append(mid_data_obj)
+        mean_mid_data_obj_dict = {}
+        std_mid_data_vector_dict = {}
+        for mid_name, mid_data_obj_list in mid_data_obj_list_dict.items():
+            new_mid_data_obj, std_data_vector = average_multiple_mid_data(mid_data_obj_list, output_std=True)
+            mean_mid_data_obj_dict[mid_name] = new_mid_data_obj
+            std_mid_data_vector_dict[mid_name] = std_data_vector
+        return mean_mid_data_obj_dict, std_mid_data_vector_dict
+
+    first_mfa_obj = mfa_data_list[0]
+    assert len(first_mfa_obj.experimental_mid_data_obj_dict) != 0
+    mid_data_obj_dict_list = [first_mfa_obj.experimental_mid_data_obj_dict]
+    if common_data_name is None:
+        common_data_name = 'Average'
+    common_input_metabolite_obj_data_dict = first_mfa_obj.input_metabolite_obj_data_dict
+    common_combined_data = first_mfa_obj.combined_data
+    common_ratio_dict_to_objective_func = first_mfa_obj.ratio_dict_to_objective_func
+    common_list_of_case_name = first_mfa_obj.list_of_case_name
+    for new_mfa_obj in mfa_data_list[1:]:
+        assert new_mfa_obj.input_metabolite_obj_data_dict == common_input_metabolite_obj_data_dict
+        assert new_mfa_obj.combined_data == common_combined_data
+        if new_mfa_obj.combined_data:
+            assert new_mfa_obj.list_of_case_name == common_list_of_case_name
+        assert len(new_mfa_obj.experimental_mid_data_obj_dict) != 0
+        assert new_mfa_obj.ratio_dict_to_objective_func == common_ratio_dict_to_objective_func
+        mid_data_obj_dict_list.append(new_mfa_obj.experimental_mid_data_obj_dict)
+    mean_mid_data_obj_dict, std_mid_data_vector_dict = average_experimental_mid_data_obj_dict(mid_data_obj_dict_list)
+    new_mfa_data_obj = MFAData(
+        common_data_name, mean_mid_data_obj_dict,
+        common_input_metabolite_obj_data_dict, combined_data=common_combined_data,
+        ratio_dict_to_objective_func=common_ratio_dict_to_objective_func)
+    if not output_std:
+        return new_mfa_data_obj
+    else:
+        return new_mfa_data_obj, std_mid_data_vector_dict

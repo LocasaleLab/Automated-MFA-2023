@@ -1,4 +1,4 @@
-from figures.figure_plotting.common.built_in_packages import FigureName
+from .figure_content.figure_content_loader import FigureName
 
 
 def arg_setting(subparsers):
@@ -23,7 +23,7 @@ def main(figure_parser=None, args=None):
     if figure_name is None:
         figure_parser.print_help()
     else:
-        from figures.figure_plotting.main import figure_plotting_main
+        from .figure_content.figure_content_loader import figure_plotting_main
         figure_plotting_main(figure_name)
 
 

@@ -13,10 +13,13 @@ def data_obj_generator(simulated_data_obj, specific_data_keep_list):
     return new_simulated_experimental_mid_data_obj_dict
 
 
-def information_dict_generator(process_type_label, simulated_flux_value_dict):
-    return {
+def information_dict_generator(process_type_label, simulated_flux_value_dict, index_label=None):
+    target_information_dict = {
         Keywords.label: process_type_label,
         Keywords.simulated_flux_value_dict: simulated_flux_value_dict}
+    if index_label is not None:
+        target_information_dict[Keywords.index_label] = index_label
+    return target_information_dict
 
 
 def simulated_list_data_and_information_dict_generator(
@@ -29,7 +32,7 @@ def simulated_list_data_and_information_dict_generator(
         current_new_process_type_label = f'{process_type_label}_{simulated_index}'
         modified_data_dict[current_new_process_type_label] = experimental_mid_data_obj_dict
         information_dict[current_new_process_type_label] = information_dict_generator(
-            process_type_label, flux_value_dict)
+            process_type_label, flux_value_dict, current_new_process_type_label)
         common_or_dict_simulated_flux_value_dict[current_new_process_type_label] = flux_value_dict
     return common_or_dict_simulated_flux_value_dict
 

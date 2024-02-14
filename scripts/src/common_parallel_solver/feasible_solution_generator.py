@@ -1,7 +1,5 @@
-from scripts.src.common.built_in_packages import mp, os
-from scripts.src.common.third_party_packages import np
-from common_and_plotting_functions.functions import check_and_mkdir_of_direct, npz_load, npz_save
-from scripts.src.core.sampler.np_sampler.sampler_class import OptGpSampler
+from .packages import np, mp
+from .config import OptGpSampler
 
 
 def universal_feasible_solution_generator(solver_obj, target_size):
@@ -11,7 +9,6 @@ def universal_feasible_solution_generator(solver_obj, target_size):
         return complicated_feasible_solution_generator(solver_obj, target_size)
     else:
         return complicated_feasible_solution_generator(solver_obj, target_size)
-        # return generate_and_save_feasible_solutions(solver_obj, target_size)
 
 
 def optimized_feasible_solution_generator_sampler(solver_obj, target_size, tf2_sampler_option_dict):
@@ -93,33 +90,34 @@ def parallel_denovo_generator(solver_obj, target_size, parallel_size, thinning):
     return final_result_matrix
 
 
-def generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path=None):
-    parallel_size = 4
-    thinning = 30
-    minimal_sample_size = 100
-    if target_size < minimal_sample_size:
-        sample_size = minimal_sample_size
-    else:
-        sample_size = target_size
-    current_result_matrix = parallel_denovo_generator(solver_obj, sample_size, parallel_size, thinning)
-    if result_storage_path is not None:
-        check_and_mkdir_of_direct(result_storage_path, file_path=True)
-        npz_save(result_storage_path, input_matrix=current_result_matrix)
-    if target_size < sample_size:
-        current_result_matrix = current_result_matrix[:target_size, :]
-    return current_result_matrix
+# def generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path=None):
+#     parallel_size = 4
+#     thinning = 30
+#     minimal_sample_size = 100
+#     if target_size < minimal_sample_size:
+#         sample_size = minimal_sample_size
+#     else:
+#         sample_size = target_size
+#     current_result_matrix = parallel_denovo_generator(solver_obj, sample_size, parallel_size, thinning)
+#     if result_storage_path is not None:
+#         check_and_mkdir_of_direct(result_storage_path, file_path=True)
+#         npz_save(result_storage_path, input_matrix=current_result_matrix)
+#     if target_size < sample_size:
+#         current_result_matrix = current_result_matrix[:target_size, :]
+#     return current_result_matrix
 
 
-def feasible_flux_input_generator(solver_obj, target_size, result_storage_path, refresh=False):
-    if not os.path.isfile(result_storage_path) or refresh:
-        input_matrix = generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path)
-    else:
-        input_matrix = npz_load(result_storage_path, 'input_matrix')
-        if input_matrix.shape[0] < target_size:
-            input_matrix = generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path)
-        elif input_matrix.shape[0] > target_size:
-            input_matrix = input_matrix[:target_size, :]
-    return input_matrix
+# def feasible_flux_input_generator(solver_obj, target_size, result_storage_path, refresh=False):
+#     import os
+#     if not os.path.isfile(result_storage_path) or refresh:
+#         input_matrix = generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path)
+#     else:
+#         input_matrix = npz_load(result_storage_path, 'input_matrix')
+#         if input_matrix.shape[0] < target_size:
+#             input_matrix = generate_and_save_feasible_solutions(solver_obj, target_size, result_storage_path)
+#         elif input_matrix.shape[0] > target_size:
+#             input_matrix = input_matrix[:target_size, :]
+#     return input_matrix
 
 
 def flux_vector_tensor_generator(raw_solution_flux_input, batch_size, flux_input_tensor_func):

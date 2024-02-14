@@ -26,14 +26,18 @@ def load_averaged_solutions(
     if selection_size > optimized_size:
         return []
     else:
-        if data_label.startswith(DataSetting.all_data_batch.value):
-            data_label = DataSetting.all_data_batch
-        elif data_label.startswith(DataSetting.raw_data_batch.value):
-            data_label = DataSetting.raw_data_batch
+        storage_data_name = data_label
+        batched_result_data_label = None
+        if storage_data_name.startswith(DataSetting.all_data_batch.value):
+            storage_data_name = DataSetting.all_data_batch
+            batched_result_data_label = str(data_label)
+        elif storage_data_name.startswith(DataSetting.raw_data_batch.value):
+            storage_data_name = DataSetting.raw_data_batch
+            batched_result_data_label = str(data_label)
         if config_label.startswith(Keywords.squared_loss):
-            data_label = squared_loss_data_dict[data_label]
+            storage_data_name = squared_loss_data_dict[storage_data_name]
         averaged_solution_matrix = averaged_solution_data_obj.return_averaged_flux_solutions(
-            data_label, optimized_size, selection_size)
+            storage_data_name, optimized_size, selection_size, batched_result_data_label)
         return averaged_solution_matrix
 
 

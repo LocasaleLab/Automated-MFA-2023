@@ -1,10 +1,9 @@
 from common_and_plotting_functions.functions import check_and_mkdir_of_direct
-from common_and_plotting_functions.figure_data_format import FigureData
 from common_and_plotting_functions.config import FigureDataKeywords
 
 from .third_party_packages import np
 from .plotting_functions import group_violin_box_distribution_plot, group_bar_plot, multi_row_col_bar_plot
-from .config import Keywords, Color, random_seed
+from .config import Keywords, Color, random_seed, FigureData
 from .functions import mid_name_process, add_empty_obj
 
 
@@ -150,7 +149,7 @@ def mid_name_list_generator_for_multiple_labeling_substrate(raw_metabolite_list,
 
 def experimental_mid_prediction(
         experiment_name, complex_predicted_data_dict, final_target_experimental_mid_data_dict,
-        mid_prediction_output_direct, subset_index_dict=None, mid_tissue_raw_name_dict=None):
+        mid_prediction_output_direct, subset_index_dict=None, mid_tissue_raw_name_dict=None, direct_plotting=False):
     final_group_mid_dict = {}
     final_stderr_dict = {}
     final_complete_data_dict = {}
@@ -208,14 +207,16 @@ def experimental_mid_prediction(
                 current_tissue_mid_prediction_output_direct = '{}/{}'.format(
                     current_result_mid_prediction_output_direct, tissue_name)
                 check_and_mkdir_of_direct(current_tissue_mid_prediction_output_direct)
-                group_bar_plot(
-                    each_tissue_average_data_dict, error_bar_data_dict=each_tissue_error_bar_data_dict,
-                    output_direct=current_tissue_mid_prediction_output_direct, ylim=(0, 1))
+                if direct_plotting:
+                    group_bar_plot(
+                        each_tissue_average_data_dict, error_bar_data_dict=each_tissue_error_bar_data_dict,
+                        output_direct=current_tissue_mid_prediction_output_direct, ylim=(0, 1))
         else:
             final_complete_data_dict[result_label] = (result_specific_plotting_data_dict, current_error_bar_data_dict)
-            group_bar_plot(
-                result_specific_plotting_data_dict, error_bar_data_dict=current_error_bar_data_dict,
-                output_direct=current_result_mid_prediction_output_direct, ylim=(0, 1))
+            if direct_plotting:
+                group_bar_plot(
+                    result_specific_plotting_data_dict, error_bar_data_dict=current_error_bar_data_dict,
+                    output_direct=current_result_mid_prediction_output_direct, ylim=(0, 1))
     figure_raw_data = FigureData(FigureDataKeywords.mid_comparison, experiment_name)
     figure_raw_data.save_data(final_complete_data_dict=final_complete_data_dict)
 
@@ -251,7 +252,13 @@ def reconstruct_and_filter_data_dict(
 
 
 def common_flux_comparison_func(
-        current_important_flux_list, common_flux_name_index_dict, current_data_array, data_dict_for_plotting, key_name):
+        current_important_flux_list, common_flux_name_index_dict, current_data_array, data_dict_for_plotting, key_name,
+        reversible_flux_title_constructor=None):
+    def default_reversible_flux_title_constructor(flux_name_0, flux_name_1):
+        return f'{flux_name_0} - {flux_name_1}'
+
+    if reversible_flux_title_constructor is None:
+        reversible_flux_title_constructor = default_reversible_flux_title_constructor
     for flux_name in current_important_flux_list:
         if isinstance(flux_name, str):
             flux_title = flux_name
@@ -265,7 +272,8 @@ def common_flux_comparison_func(
                     for tmp_flux_name, flux_index in common_flux_name_index_dict.items()}
                 calculated_flux_array = flux_func(flux_name_value_dict)
             else:
-                flux_title = '{} - {}'.format(flux_name[0], flux_name[1])
+                # flux_title = '{} - {}'.format(flux_name[0], flux_name[1])
+                flux_title = reversible_flux_title_constructor(*flux_name)
                 flux_index1 = common_flux_name_index_dict[flux_name[0]]
                 flux_index2 = common_flux_name_index_dict[flux_name[1]]
                 calculated_flux_array = (

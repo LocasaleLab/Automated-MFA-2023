@@ -22,7 +22,7 @@ running_mode = RunningMode.flux_analysis
 load_previous_results = True
 
 # current_experiment_name = ExperimentName.raw_model_raw_data
-current_experiment_name = ExperimentName.raw_model_all_data
+# current_experiment_name = ExperimentName.raw_model_all_data
 # current_experiment_name = ExperimentName.prune_branches_all_data
 # current_experiment_name = ExperimentName.merge_reversible_reaction_all_data
 # current_experiment_name = ExperimentName.different_constant_flux
@@ -33,7 +33,7 @@ current_experiment_name = ExperimentName.raw_model_all_data
 # current_experiment_name = ExperimentName.different_flux_range
 # current_experiment_name = ExperimentName.different_flux_range_all_data
 # current_experiment_name = ExperimentName.different_constant_flux_all_data
-# current_experiment_name = ExperimentName.optimization_from_raw_data_average_solutions
+current_experiment_name = ExperimentName.optimization_from_raw_data_average_solutions
 # current_experiment_name = ExperimentName.optimization_from_all_data_average_solutions
 # current_experiment_name = ExperimentName.optimization_from_batched_simulated_raw_data
 # current_experiment_name = ExperimentName.optimization_from_batched_simulated_all_data
@@ -53,7 +53,14 @@ analysis_solver = ParamName.slsqp_numba_python_solver
 # analysis_solver = ParamName.slsqp_numba_nopython_solver
 # analysis_solver = ParamName.slsqp_solver
 
-test_raw_model_analysis = True
+test_raw_model_analysis = False
+if current_experiment_name in {
+    # ExperimentName.optimization_from_raw_data_average_solutions,
+    # ExperimentName.optimization_from_all_data_average_solutions,
+    ExperimentName.optimization_from_batched_simulated_raw_data_average_solutions,
+    ExperimentName.optimization_from_batched_simulated_all_data_average_solutions,
+}:
+    test_raw_model_analysis = True
 analyzed_set_size_list, selected_min_loss_size_list = return_analyzed_set_and_selected_min_loss_set(
     test_raw_model_analysis, current_experiment_name)
 if test_raw_model_analysis:
@@ -66,7 +73,7 @@ average_solution_optimization_selection_parameters_dict = complete_optimization_
 (
     batched_simulated_analyzed_set_size_list, batched_simulated_selected_min_loss_size_list
 ) = return_analyzed_set_and_selected_min_loss_set(True, current_experiment_name)
-batched_simulated_repeat_time_each_analyzed_set = 1
+batched_simulated_repeat_time_each_analyzed_set = 3
 data_sensitivity_simulated_analyzed_set_size_list = [50000, 20000]
 data_sensitivity_repeat_time_each_analyzed_set = 5
 
@@ -120,7 +127,7 @@ def running_settings(test_mode, experiment_name):
                 ExperimentName.optimization_from_batched_simulated_raw_data,
                 ExperimentName.optimization_from_batched_simulated_all_data_with_squared_loss,
                 ExperimentName.optimization_from_batched_simulated_raw_data_with_squared_loss}:
-            each_case_target_optimization_num = 60000
+            each_case_target_optimization_num = 100000
             result_process_name = Keywords.raw_model_batched_simulated_data_result_process
             loss_percentile = None
         elif experiment_name in {

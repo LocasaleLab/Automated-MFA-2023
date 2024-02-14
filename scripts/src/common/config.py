@@ -1,5 +1,8 @@
 from .third_party_packages import np
-from common_and_plotting_functions.config import Direct as ParentDirect, Keywords as ParentKeywords
+from common_and_plotting_functions.config import Direct as GeneralDirect, Keywords as ParentKeywords, \
+    FigureDataKeywords
+from figure_plotting_package.common.figure_data_format import BasicFigureData as RawBasicFigureData, \
+    FigureData as RawFigureData
 
 random_seed = np.random.default_rng(4536251)
 
@@ -9,6 +12,7 @@ class Keywords(object):
     data = 'data'
     config = 'config'
     label = 'label'
+    index_label = 'index_label'
     comment = 'comment'
 
     # Parallel keywords:
@@ -51,9 +55,9 @@ class Keywords(object):
     simulated_output_all_mid_data_dict_list = 'output_all_mid_data_dict_list'
 
 
-class Direct(object):
-    common_submitted_raw_data_direct = ParentDirect.common_submitted_raw_data_direct
-    tmp_data_direct = ParentDirect.figure_raw_data_direct
+class Direct(GeneralDirect):
+    common_submitted_raw_data_direct = GeneralDirect.common_submitted_raw_data_direct
+    tmp_data_direct = GeneralDirect.figure_raw_data_direct
     flux_result_xlsx_filename = f'{ParentKeywords.flux_raw_data}.xlsx'
     mid_result_xlsx_filename = f'{ParentKeywords.mid_raw_data}.xlsx'
     solver_description_xlsx_filename = f'{ParentKeywords.solver_descriptions}.xlsx'
@@ -79,6 +83,15 @@ class Direct(object):
     simulated_data_direct_name = 'simulated_data'
     simulated_output_xlsx_file_direct = f'{common_submitted_raw_data_direct}/{simulated_data_direct_name}'
     simulated_output_pickle_direct = simulated_output_py_file_direct
+
+
+class FigureData(RawFigureData):
+    def __init__(self, data_prefix, data_name):
+        super().__init__(GeneralDirect.figure_raw_data_direct, data_prefix, data_name)
+
+
+class BasicFigureData(RawBasicFigureData):
+    data_direct = GeneralDirect.figure_raw_data_direct
 
 
 class DataType(object):

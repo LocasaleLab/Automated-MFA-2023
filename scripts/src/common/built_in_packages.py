@@ -14,3 +14,6 @@ import enum
 class ValueEnum(enum.Enum):
     def __str__(self):
         return self.value
+
+    def startswith(self, substr):
+        return self.value.startswith(substr)

@@ -136,12 +136,12 @@ and `scripts/data/simulated_data` respectively. This option has following option
 
 `-b, --batch_num n`:
 
-This parameter is used to generated batched (determined by `n`) predefined fluxes and corresponding simulated MID data.
+This parameter is used to generated batched (determined by `n`) known fluxes and corresponding simulated MID data.
 It is used in verifying the performance of algorithm in multiple simulated data.
 
 `-f, --new_flux`:
 
-If this optional parameter appear, new predefined flux optimized from PHDGH mass spectrometry data will be generated.
+If this optional parameter appear, new known flux optimized from PHDGH mass spectrometry data will be generated.
 Otherwise, the stored flux vector will be loaded.
 
 `-n, --with_noise`:
@@ -190,12 +190,12 @@ not specified, all jobs in this analysis rely on the basic model (`base_model`).
 
 | Job name in this script                                          | Simulated data size | MID coverage                 | Initial solutions                                                    | Description                                                                                                                                           |
 |------------------------------------------------------------------|---------------------|------------------------------|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `raw_model_all_data`                                             | Single              | All-available MID            | Randomly sampled                                                     | Basic optimization based on simulated all-available MID data generated from one predefined flux vector.                                               |
-| `raw_model_raw_data`                                             | Single              | Experimentally-available MID | Randomly sampled                                                     | Basic optimization based on simulated experimentally-available MID data generated from one predefined flux vector.                                    |
+| `raw_model_all_data`                                             | Single              | All-available MID            | Randomly sampled                                                     | Basic optimization based on simulated all-available MID data generated from one known flux vector.                                                    |
+| `raw_model_raw_data`                                             | Single              | Experimentally-available MID | Randomly sampled                                                     | Basic optimization based on simulated experimentally-available MID data generated from one known flux vector.                                         |
 | `optimization_from_all_data_average_solutions`                   | Single              | All-available MID            | Averaged solutions of `raw_model_all_data`                           | Optimization starting from averaged solutions of `raw_model_all_data` based on simulated all-available MID data.                                      |
 | `optimization_from_raw_data_average_solutions`                   | Single              | Experimentally-available MID | Averaged solutions of `raw_model_raw_data`                           | Optimization starting from averaged solutions of `raw_model_raw_data` based on simulated experimentally-available MID data.                           |
-| `optimization_from_batched_simulated_all_data`                   | 30                  | All-available MID            | Randomly sampled                                                     | Optimization based on multiple simulated all-available MID data generated from 30 distantly distributed predefined flux vectors.                      |
-| `optimization_from_batched_simulated_raw_data`                   | 30                  | Experimentally-available MID | Randomly sampled                                                     | Optimization based on multiple simulated experimentally-available MID data generated from 30 distantly distributed predefined flux vectors.           |
+| `optimization_from_batched_simulated_all_data`                   | 30                  | All-available MID            | Randomly sampled                                                     | Optimization based on multiple simulated all-available MID data generated from 30 distantly distributed known flux vectors.                           |
+| `optimization_from_batched_simulated_raw_data`                   | 30                  | Experimentally-available MID | Randomly sampled                                                     | Optimization based on multiple simulated experimentally-available MID data generated from 30 distantly distributed known flux vectors.                |
 | `optimization_from_batched_simulated_all_data_average_solutions` | 30                  | All-available MID            | Averaged solutions of `optimization_from_batched_simulated_all_data` | Optimization starting from averaged solutions of `optimization_from_batched_simulated_all_data` based on simulated all-available MID data.            |
 | `optimization_from_batched_simulated_raw_data_average_solutions` | 30                  | Experimentally-available MID | Averaged solutions of `optimization_from_batched_simulated_raw_data` | Optimization starting from averaged solutions of `optimization_from_batched_simulated_raw_data` based on simulated experimentally-available MID data. |
 | `data_sensitivity`                                               | Single              | Varied in each set           | Randomly sampled                                                     | Optimization from datasets with different data availability.                                                                                          |

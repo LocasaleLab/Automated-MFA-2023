@@ -1,8 +1,5 @@
-from common_and_plotting_functions.figure_data_format import BasicFigureData
-from common_and_plotting_functions.config import FigureDataKeywords
-
 from ..common.built_in_packages import ValueEnum
-from ..common.config import Keywords as GeneralKeywords
+from ..common.config import Keywords as GeneralKeywords, FigureDataKeywords, BasicFigureData
 
 
 raw_config_first = True
@@ -763,11 +760,18 @@ class AverageSolution(BasicFigureData):
             DataSetting.raw_data_batch_squared_loss: ExperimentName.optimization_from_batched_simulated_raw_data_with_squared_loss,
         }
 
-    def return_averaged_flux_solutions(self, data_name, optimized_size, selection_size):
-        complete_data_name = self.complete_data_name_dict[data_name]
+    def return_averaged_flux_solutions(
+            self, storage_data_name, optimized_size, selection_size, batched_result_data_label=None):
+        complete_data_name = self.complete_data_name_dict[storage_data_name]
         averaged_data_obj = self._return_figure_data(complete_data_name)
-        selected_averaged_flux_value_dict = averaged_data_obj.selected_averaged_flux_value_dict
-        return selected_averaged_flux_value_dict[optimized_size][selection_size]
+        if batched_result_data_label is not None:
+            separate_selected_averaged_flux_value_dict = averaged_data_obj.separate_selected_averaged_flux_value_dict
+            target_averaged_flux_value = separate_selected_averaged_flux_value_dict[optimized_size][selection_size][
+                batched_result_data_label]
+        else:
+            selected_averaged_flux_value_dict = averaged_data_obj.selected_averaged_flux_value_dict
+            target_averaged_flux_value = selected_averaged_flux_value_dict[optimized_size][selection_size]
+        return target_averaged_flux_value
 
     def return_averaged_data(self, data_name):
         complete_data_name = self.complete_data_name_dict[data_name]
