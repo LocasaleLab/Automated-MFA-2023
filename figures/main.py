@@ -15,6 +15,10 @@ def arg_setting(subparsers):
         '-t', '--test_mode', action='store_true', default=False,
         help='Whether the code is executed in test mode, which means less sample number and shorter time.'
     )
+    figure_parser.add_argument(
+        '-s', '--svg', action='store_true', default=False,
+        help='Store the figure in SVG format.'
+    )
     figure_parser.set_defaults(func=figure_running)
 
 
@@ -24,7 +28,7 @@ def main(figure_parser=None, args=None):
         figure_parser.print_help()
     else:
         from .figure_content.figure_content_loader import figure_plotting_main
-        figure_plotting_main(figure_name)
+        figure_plotting_main(figure_name, output_svg=args.svg)
 
 
 if __name__ == '__main__':

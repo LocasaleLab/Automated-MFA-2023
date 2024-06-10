@@ -5,7 +5,9 @@ from .model_metabolite_to_standard_name_dict import model_metabolite_to_standard
 
 class ModelList(object):
     base_model = 'base_model'
+    base_model_with_glns_m = 'base_model_with_glns_m'
     base_model_with_glc_tca_buffer = 'base_model_with_glc_tca_buffer'
+    base_model_with_glc_tca_buffer_glns_m = 'base_model_with_glc_tca_buffer_glns_m'
     invivo_infusion_model = 'invivo_infusion_model'
     invivo_infusion_model_with_oac_buffer = 'invivo_infusion_model_with_oac_buffer'
 
@@ -23,6 +25,10 @@ def model_loader(model_type, model_parameter=None):
     elif model_type == ModelList.base_model_with_glc_tca_buffer:
         from .base_model import base_model_with_glc_tca_buffer
         current_model = base_model_with_glc_tca_buffer
+    elif model_type == ModelList.base_model_with_glc_tca_buffer_glns_m:
+        from .base_model import base_model_with_glc_tca_buffer_glns_m as current_model
+    elif model_type == ModelList.base_model_with_glns_m:
+        from .base_model import base_model_with_glns_m as current_model
     elif model_type == ModelList.invivo_infusion_model:
         from .invivo_infusion_model import invivo_infusion_model
         current_model = invivo_infusion_model

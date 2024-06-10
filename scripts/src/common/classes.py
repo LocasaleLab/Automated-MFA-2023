@@ -7,7 +7,8 @@ from .functions import mid_name_process
 
 class FinalResult(object):
     def __init__(
-            self, project_output_direct, common_data_output_direct, result_name, maximal_save_point=5000):
+            self, project_output_direct, common_data_output_direct, result_name, maximal_save_point=5000,
+            suffix=None):
         self.project_output_direct = project_output_direct
         self.project_common_data_output_direct = common_data_output_direct
         self.result_name = result_name
@@ -46,10 +47,12 @@ class FinalResult(object):
         self.final_information_dict = {}
         self.final_flux_name_index_dict = {}
         self.final_target_experimental_mid_data_dict = {}
+        self.processed_mid_name_dict = {}
 
         self.data_count_dict = {}
         assert isinstance(maximal_save_point, int)
         self.maximal_save_point = maximal_save_point
+        self.suffix = suffix
 
     def update_experimental_name_mid_value_dict(
             self, target_experimental_mid_data_dict, emu_name_experimental_name_dict):
@@ -155,6 +158,17 @@ class FinalResult(object):
                 print(f'{solution_index} of {total_solution_num} are predicted.')
         return new_mid_data_dict
 
+    @staticmethod
+    def add_suffix_to_result_label(raw_result_label, suffix=None):
+        if suffix is None:
+            return raw_result_label
+        else:
+            return f'{raw_result_label}_{suffix}'
+
+    def _update_result_label(self, raw_result_label):
+        updated_result_label = self.add_suffix_to_result_label(raw_result_label, self.suffix)
+        return updated_result_label
+
     def _load_data(
             self, solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
             flux_name_index_dict_path, target_experimental_mid_data_dict_path):
@@ -249,20 +263,21 @@ class FinalResult(object):
         self.data_count_dict[current_result_label] += current_solution_array.shape[0]
 
     def parallel_add_and_save_result(
-            self, result_list, current_result_label, current_result_information, flux_name_index_dict,
+            self, result_list, raw_result_label, current_result_information, flux_name_index_dict,
             target_experimental_mid_data_dict, start_index, target_total_optimization_num):
+        result_label = self._update_result_label(raw_result_label)
         current_solution_array, current_time_array, current_loss_array, current_predicted_dict = result_list
         self._merge_to_final_result_dict(
-            current_result_label, current_solution_array, current_time_array, current_loss_array,
+            result_label, current_solution_array, current_time_array, current_loss_array,
             current_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
-        current_data_count = self.data_count_dict[current_result_label]
+        current_data_count = self.data_count_dict[result_label]
         if current_data_count >= target_total_optimization_num or current_data_count % self.maximal_save_point == 0:
-            final_solution_array = np.array(self.final_solution_data_dict[current_result_label])
-            final_time_array = np.array(self.final_time_data_dict[current_result_label])
-            final_loss_array = np.array(self.final_loss_data_dict[current_result_label])
+            final_solution_array = np.array(self.final_solution_data_dict[result_label])
+            final_time_array = np.array(self.final_time_data_dict[result_label])
+            final_loss_array = np.array(self.final_loss_data_dict[result_label])
             self._save_data(
-                current_result_label, final_solution_array, final_time_array, final_loss_array,
-                self.final_predicted_data_dict[current_result_label],
+                result_label, final_solution_array, final_time_array, final_loss_array,
+                self.final_predicted_data_dict[result_label],
                 current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
 
     def add_and_save_result(
@@ -273,7 +288,7 @@ class FinalResult(object):
             current_result_label, final_solution_array, final_time_array, final_loss_array,
             final_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
 
-    def iteration(self, current_result_label, process_mid_name=True):
+    def iteration(self, raw_result_label, process_mid_name=True, result_label_suffix_tuple=()):
         # def mid_name_process(raw_mid_name):
         #     emu_sep = CoreConstants.emu_carbon_list_str_sep
         #     modified_str_list = []
@@ -289,45 +304,116 @@ class FinalResult(object):
         #         str_start = new_start
         #     modified_str = ''.join(modified_str_list)
         #     return modified_str
+        if len(result_label_suffix_tuple) == 0:
+            with_suffix = False
+            result_label_suffix_tuple = (None,)
+        else:
+            with_suffix = True
+        loss_array_list = []
+        time_array_list = []
+        solution_array_list = []
+        flux_name_index_dict = None
+        processed_mid_name_dict = self.processed_mid_name_dict
+        predicted_data_dict = {}
+        target_experimental_mid_data_dict = {}
+        result_information_dict = None
 
-        (
-            solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
-            flux_name_index_dict_path, target_experimental_mid_data_dict_path) = self._generate_path(
-            current_result_label)
-        (
-            solution_array, time_array, loss_array, raw_predicted_dict, result_information_dict,
-            flux_name_index_dict, raw_target_experimental_mid_data_dict) = self._load_data(
-            solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
-            flux_name_index_dict_path, target_experimental_mid_data_dict_path)
+        for result_label_suffix in result_label_suffix_tuple:
+            result_label = self.add_suffix_to_result_label(raw_result_label, result_label_suffix)
 
-        processed_mid_name_dict = {}
-        if process_mid_name:
-            predicted_data_dict = {}
-            for mid_name, mid_value in raw_predicted_dict.items():
-                if mid_name not in processed_mid_name_dict:
-                    processed_mid_name = mid_name_process(mid_name)
-                    processed_mid_name_dict[mid_name] = processed_mid_name
+            (
+                solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
+                flux_name_index_dict_path, target_experimental_mid_data_dict_path) = self._generate_path(
+                result_label)
+            try:
+                (
+                    tmp_solution_array, tmp_time_array, tmp_loss_array, tmp_raw_predicted_dict,
+                    tmp_result_information_dict, tmp_flux_name_index_dict, tmp_raw_target_experimental_mid_data_dict
+                ) = self._load_data(
+                    solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
+                    flux_name_index_dict_path, target_experimental_mid_data_dict_path)
+            except FileNotFoundError:
+                continue
+            print(f'Load data set named as {result_label} with {tmp_loss_array.shape[0]} items')
+            if flux_name_index_dict is None:
+                flux_name_index_dict = tmp_flux_name_index_dict
+            else:
+                assert flux_name_index_dict == tmp_flux_name_index_dict
+            if result_information_dict is None:
+                result_information_dict = tmp_result_information_dict
+            else:
+                assert result_information_dict == tmp_result_information_dict
+
+            if not with_suffix:
+                loss_array_list = tmp_loss_array
+                time_array_list = tmp_time_array
+                solution_array_list = tmp_solution_array
+            else:
+                loss_array_list.append(tmp_loss_array)
+                time_array_list.append(tmp_time_array)
+                solution_array_list.append(tmp_solution_array)
+
+            for mid_name, mid_value in tmp_raw_predicted_dict.items():
+                if process_mid_name:
+                    if mid_name not in processed_mid_name_dict:
+                        processed_mid_name = mid_name_process(mid_name)
+                        processed_mid_name_dict[mid_name] = processed_mid_name
+                    else:
+                        processed_mid_name = processed_mid_name_dict[mid_name]
                 else:
-                    processed_mid_name = processed_mid_name_dict[mid_name]
-                predicted_data_dict[processed_mid_name] = mid_value
-            target_experimental_mid_data_dict = {}
-            for raw_mid_name, experimental_mid_data in raw_target_experimental_mid_data_dict.items():
+                    processed_mid_name = mid_name
+                if processed_mid_name not in predicted_data_dict:
+                    predicted_data_dict[processed_mid_name] = []
+                predicted_data_dict[processed_mid_name].extend(mid_value)
+            for raw_mid_name, experimental_mid_data in tmp_raw_target_experimental_mid_data_dict.items():
                 if raw_mid_name in predicted_data_dict:
                     processed_mid_name = raw_mid_name
                 elif raw_mid_name in processed_mid_name_dict:
                     processed_mid_name = processed_mid_name_dict[raw_mid_name]
                 else:
-                    raise ValueError()
-                target_experimental_mid_data_dict[processed_mid_name] = experimental_mid_data
+                    processed_mid_name = raw_mid_name
+                if processed_mid_name not in target_experimental_mid_data_dict:
+                    target_experimental_mid_data_dict[processed_mid_name] = experimental_mid_data
+                else:
+                    assert np.all(experimental_mid_data == target_experimental_mid_data_dict[processed_mid_name])
+
+            # if process_mid_name:
+            #     processed_mid_name_dict = {}
+            #     predicted_data_dict = {}
+            #     for mid_name, mid_value in raw_predicted_dict.items():
+            #         if mid_name not in processed_mid_name_dict:
+            #             processed_mid_name = mid_name_process(mid_name)
+            #             processed_mid_name_dict[mid_name] = processed_mid_name
+            #         else:
+            #             processed_mid_name = processed_mid_name_dict[mid_name]
+            #         predicted_data_dict[processed_mid_name] = mid_value
+            #     target_experimental_mid_data_dict = {}
+            #     for raw_mid_name, experimental_mid_data in raw_target_experimental_mid_data_dict.items():
+            #         if raw_mid_name in predicted_data_dict:
+            #             processed_mid_name = raw_mid_name
+            #         elif raw_mid_name in processed_mid_name_dict:
+            #             processed_mid_name = processed_mid_name_dict[raw_mid_name]
+            #         else:
+            #             raise ValueError()
+            #         target_experimental_mid_data_dict[processed_mid_name] = experimental_mid_data
+            # else:
+            #     predicted_data_dict = raw_predicted_dict
+            #     # target_experimental_mid_data_dict = {}
+            #     # for raw_mid_name in raw_predicted_dict.keys():
+            #     #     processed_mid_name = mid_name_process(raw_mid_name)
+            #     #     if processed_mid_name in raw_target_experimental_mid_data_dict:
+            #     #         target_experimental_mid_data_dict[raw_mid_name] = raw_target_experimental_mid_data_dict[
+            #     #             processed_mid_name]
+            #     target_experimental_mid_data_dict = raw_target_experimental_mid_data_dict
+
+        if with_suffix:
+            loss_array = np.concatenate(loss_array_list)
+            time_array = np.concatenate(time_array_list)
+            solution_array = np.vstack(solution_array_list)
         else:
-            predicted_data_dict = raw_predicted_dict
-            # target_experimental_mid_data_dict = {}
-            # for raw_mid_name in raw_predicted_dict.keys():
-            #     processed_mid_name = mid_name_process(raw_mid_name)
-            #     if processed_mid_name in raw_target_experimental_mid_data_dict:
-            #         target_experimental_mid_data_dict[raw_mid_name] = raw_target_experimental_mid_data_dict[
-            #             processed_mid_name]
-            target_experimental_mid_data_dict = raw_target_experimental_mid_data_dict
+            loss_array = loss_array_list
+            time_array = time_array_list
+            solution_array = solution_array_list
         return loss_array, solution_array, flux_name_index_dict, result_information_dict, predicted_data_dict, \
             target_experimental_mid_data_dict, time_array
 
@@ -358,7 +444,8 @@ class FinalResult(object):
             self.final_time_data_dict[result_label]
         ) = self.iteration(result_label)
 
-    def load_previous_results(self, result_label):
+    def load_previous_results(self, raw_result_label):
+        result_label = self._update_result_label(raw_result_label)
         (
             solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
             flux_name_index_dict_path, target_experimental_mid_data_dict_path) = self._generate_path(result_label)

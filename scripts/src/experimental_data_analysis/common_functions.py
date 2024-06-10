@@ -1,7 +1,7 @@
 from scripts.src.core.solver.solver_construction_functions.solver_constructor import common_solver_constructor, \
     base_solver_constructor
 from scripts.src.core.common.classes import MFAConfig
-from ..common.functions import update_parameter_object
+from ..common.functions import update_parameter_object, special_result_label_converter
 from ..common.result_output_functions import solver_output
 
 from scripts.src.common.config import Keywords
@@ -10,7 +10,8 @@ from scripts.src.common_parallel_solver.common_parallel_solver import common_sol
 from .inventory import RunningMode, DataModelType
 from .specific_data_model_combination.common_data_model_loader import common_data_model_function_loader
 from .result_processing_functions import CurrentFinalResult, result_label_generator, \
-    experimental_mid_and_raw_data_plotting, normal_result_process, hct116_result_process, traditional_method_result_process
+    experimental_mid_and_raw_data_plotting, normal_result_process, hct116_result_process, \
+    traditional_method_result_process
 from . import config
 Direct = config.Direct
 
@@ -20,12 +21,16 @@ def mfa_data_loader(data_model_result_label_generator, data_model_parameter_key_
     result_information_dict = {}
     for param_dict in total_param_list:
         mfa_data = data_wrap_obj.return_dataset(param_dict)
-        # obj_threshold_key = default_parameter_extract(param_dict, Keywords.obj_threshold_key, None)
-        # result_label = result_label_generator(mfa_data, obj_threshold_key)
         result_label = data_model_result_label_generator(*[param_dict[key] for key in data_model_parameter_key_list])
         mfa_data_dict[result_label] = mfa_data
         result_information_dict[result_label] = param_dict
     return mfa_data_dict, result_information_dict
+
+
+def unoptimized_initial_solution_loader(result_obj, model_label, data_label, config_label, parameter_dict):
+    unoptimized_result_label = special_result_label_converter(data_label, Keywords.unoptimized)
+    unoptimized_solution_array = result_obj.final_solution_data_dict[unoptimized_result_label]
+    return unoptimized_solution_array
 
 
 def solver_dict_constructor(parameter_label_content_dict):
@@ -63,7 +68,7 @@ def raw_experimental_data_plotting(solver_dict, result_information_dict, final_r
 
 
 def result_display(solver_dict, final_result_obj, data_model_name):
-    if data_model_name == DataModelType.hct116_cultured_cell_line:
+    if data_model_name in {DataModelType.hct116_cultured_cell_line, DataModelType.hct116_cultured_cell_line_with_glns_m}:
         result_process_func = hct116_result_process
     elif data_model_name.name.endswith(Keywords.traditional_method):
         result_process_func = traditional_method_result_process
@@ -101,16 +106,18 @@ def experimental_data_analysis_common_dispatcher(
         result_information = result_information_dict[result_label]
         other_information_dict = {}
         new_mfa_config = mfa_config.copy()
-        if result_label.endswith(Keywords.unoptimized):
-            new_mfa_config.update_miscellaneous_config({
-                Keywords.unoptimized: True
-            })
-        elif Keywords.squared_loss in result_label:
+        # if result_label.endswith(Keywords.unoptimized):
+        #     new_mfa_config.update_miscellaneous_config({
+        #         Keywords.unoptimized: True
+        #     })
+        if Keywords.squared_loss in result_label:
             new_mfa_config = MFAConfig(
                 common_parameter.common_flux_range, common_parameter.specific_flux_range_dict,
                 common_parameter.test_dynamic_constant_flux_list, common_parameter.test_preset_constant_flux_value_dict,
                 common_parameter.common_mix_ratio_range, common_parameter.mix_ratio_multiplier, config.solver_type,
                 common_parameter.squared_loss_config_dict)
+        if Keywords.miscellaneous in result_information:
+            new_mfa_config.update_miscellaneous_config(result_information[Keywords.miscellaneous])
         parameter_label_content_dict[result_label] = (
             (None, data_label, None), (mfa_model, mfa_data_obj, new_mfa_config),
             result_information, other_information_dict
@@ -119,7 +126,9 @@ def experimental_data_analysis_common_dispatcher(
     if running_mode == RunningMode.flux_analysis:
         common_solver(
             parameter_label_content_dict, test_mode, final_result_obj, each_case_target_optimization_num,
-            config.report_interval, parallel_parameter_dict, config.load_previous_results)
+            config.report_interval, parallel_parameter_dict, load_results=config.load_previous_results,
+            predefined_initial_solution_matrix_loader=unoptimized_initial_solution_loader
+        )
     else:
         solver_dict, same_model_dict, same_data_dict = solver_dict_constructor(parameter_label_content_dict)
         if running_mode == RunningMode.raw_experimental_data_plotting:

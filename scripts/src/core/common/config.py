@@ -4,7 +4,8 @@ class CoreConstants(object):
     eps_for_log = 1e-10
     eps_for_mid = 1e-5
     eps_for_computation = 1e-10
-    eps_for_sampling = 1e-11
+    # eps_for_sampling = 1e-11
+    eps_for_sampling = 1e-20
     natural_c13_ratio = 0.01109
     maximal_unconstrained_flux_value = 1e8
 
@@ -35,6 +36,9 @@ class CoreConstants(object):
 
     # biomass_flux_id = 'BIOMASS_maintenance'
     biomass_flux_id = 'BIOMASS_REACTION'
+    convolution_id = 'CONV'
+    cycle_solve_id = 'CYCLE_SOLVE'
+    single_emu_id = 'SINGLE_EMU'
 
     success_code = 0
     limit_reached_code = 9
@@ -100,6 +104,7 @@ class ParamName(object):
     beta1 = 'beta1'
     beta2 = 'beta2'
     epsilon = 'epsilon'
+    singular_eps_ratio = 'singular_eps_ratio'
 
     # debug option
     debug = 'debug'
@@ -110,6 +115,7 @@ class ParamName(object):
 
     # result output
     batch_mid_loss_tensor = 'batch_mid_loss_tensor'
+    raw_difference_tensor = 'raw_difference_tensor'
     total_batch_loss_tensor = 'total_batch_loss_tensor'
     target_emu_value_list = 'target_emu_value_list'
 
@@ -134,8 +140,25 @@ class ParamName(object):
     total_stored_distribution_num = 'total_stored_distribution_num'
 
     # tf2 slsqp parameter
+    report_interval = 'report_interval'
     delta_p_threshold = 'delta_p_threshold'
+    allowed_update_failed_time = 'allowed_update_failed_time'
+    jacobian_threshold = 'jacobian_threshold'
+    allowed_sqp_search_failed_time = 'allowed_sqp_search_failed_time'
+    gradient_repeat_time = 'gradient_repeat_time'
+    division_eps = 'division_eps'
     boundary_eps = 'boundary_eps'
+    alpha_eps = 'alpha_eps'
+    lamb = 'lamb'
+    rel_tol = 'rel_tol'
+    red_c = 'red_c'
+    exp_c = 'exp_c'
+    qr_approximate = 'qr_approximate'
+    adjust_ratio = 'adjust_ratio'
+    step_size_c_one = 'step_size_c_one'
+    step_size_c_two = 'step_size_c_two'
+    step_size_rho = 'step_size_rho'
+    min_step_size = 'min_step_size'
 
     # tf2 sa parameter
     batch_index_tensor = 'batch_index_tensor'

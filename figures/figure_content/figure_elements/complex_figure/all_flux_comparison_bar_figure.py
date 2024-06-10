@@ -157,13 +157,17 @@ class OptimizedAllFluxComparisonBarDataFigure(CompositeFigure):
         data_name = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.data_name, None, pop=True)
         if data_name in {
-                DataName.hct116_cultured_cell_line, DataName.hct116_cultured_cell_line_squared_loss}:
+                DataName.hct116_cultured_cell_line, DataName.hct116_cultured_cell_line_squared_loss,
+                DataName.hct116_cultured_cell_line_with_glns_m}:
             target_class = HCT116OptimizedFluxErrorBarDataFigure
         elif data_name in {
-                DataName.optimization_from_solutions_raw_data, DataName.optimization_from_solutions_all_data}:
-            re_optimized = default_parameter_extract(
+                DataName.optimization_from_solutions_raw_data, DataName.optimization_from_solutions_all_data,
+                DataName.raw_model_raw_data, DataName.raw_model_all_data,
+                DataName.raw_model_with_glns_m_raw_data, DataName.raw_model_with_glns_m_all_data,
+        }:
+            diff_between_averaged_and_re_optimized = default_parameter_extract(
                 figure_data_parameter_dict, ParameterName.optimized, False)
-            if re_optimized:
+            if diff_between_averaged_and_re_optimized:
                 target_class = AveragedReoptimizdDifferenceFluxErrorBarDataFigure
             else:
                 target_class = SimulatedDataOptimizedFluxErrorBarDataFigure

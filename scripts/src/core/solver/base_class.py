@@ -10,7 +10,8 @@ class BaseSolver(object):
     def __init__(
             self, flux_name_index_dict, complete_emu_dim_dict, complete_flux_constraint_matrix,
             complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix=None,
-            emu_mid_equation_dict=None, input_emu_data_dict=None, experimental_mid_data_obj_dict=None,
+            emu_mid_equation_dict=None, emu_name_dependency_dict=None, complete_emu_obj_index_dict=None,
+            input_emu_data_dict=None, experimental_mid_data_obj_dict=None,
             nested_mix_equation_dict=None, mix_ratio_multiplier=None, all_target_metabolite_name_carbon_num_dict=None,
             verbose=False, solver_option_dict=None, solver_memo: SolverMemo = None, name=None):
         if solver_option_dict is None:
@@ -34,6 +35,8 @@ class BaseSolver(object):
         self.max_bound_vector = max_bound_vector
 
         self.emu_mid_equation_dict = emu_mid_equation_dict
+        self.emu_name_dependency_dict = emu_name_dependency_dict
+        self.complete_emu_obj_index_dict = complete_emu_obj_index_dict
         self.input_emu_data_dict = input_emu_data_dict
         self.experimental_mid_data_obj_dict = experimental_mid_data_obj_dict
         self.nested_mix_equation_dict = nested_mix_equation_dict
@@ -59,7 +62,7 @@ class BaseSolver(object):
 
     def __copy__(self):
         flux_name_index_dict = dict(self.flux_name_index_dict)
-        complete_emu_dim_dict = dict(self.complete_emu_dim_dict)
+        complete_emu_dim_dict = self.complete_emu_dim_dict.copy()
         complete_flux_constraint_matrix = self.complete_flux_constraint_matrix.copy()
         complete_right_side_list = list(self.complete_right_side_list)
         min_bound_vector = self.min_bound_vector.copy()
@@ -67,6 +70,8 @@ class BaseSolver(object):
         projection_matrix = copy.copy(self.projection_matrix)
         emu_mid_equation_dict = copy.copy(self.emu_mid_equation_dict)
         input_emu_data_dict = copy.copy(self.input_emu_data_dict)
+        emu_name_dependency_dict = copy.deepcopy(self.emu_name_dependency_dict)
+        complete_emu_obj_index_dict = copy.deepcopy(self.complete_emu_obj_index_dict)
         experimental_mid_data_obj_dict = copy.copy(self.experimental_mid_data_obj_dict)
         nested_mix_equation_dict = copy.deepcopy(self.nested_mix_equation_dict)
         all_target_metabolite_name_carbon_num_dict = copy.copy(self.all_target_metabolite_name_carbon_num_dict)
@@ -77,7 +82,8 @@ class BaseSolver(object):
             complete_flux_constraint_matrix=complete_flux_constraint_matrix,
             complete_right_side_list=complete_right_side_list, min_bound_vector=min_bound_vector,
             max_bound_vector=max_bound_vector, projection_matrix=projection_matrix,
-            emu_mid_equation_dict=emu_mid_equation_dict, input_emu_data_dict=input_emu_data_dict,
+            emu_mid_equation_dict=emu_mid_equation_dict, emu_name_dependency_dict=emu_name_dependency_dict,
+            complete_emu_obj_index_dict=complete_emu_obj_index_dict, input_emu_data_dict=input_emu_data_dict,
             experimental_mid_data_obj_dict=experimental_mid_data_obj_dict,
             nested_mix_equation_dict=nested_mix_equation_dict, mix_ratio_multiplier=self.mix_ratio_multiplier,
             all_target_metabolite_name_carbon_num_dict=all_target_metabolite_name_carbon_num_dict,

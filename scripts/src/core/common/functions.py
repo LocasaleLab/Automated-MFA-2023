@@ -16,6 +16,13 @@ def natural_dist(carbon_num, c13_ratio=CoreConstants.natural_c13_ratio):
     return np.array(output)
 
 
+def natural_dist_array(atom_num, isotope_abundance_vector):
+    final_array = isotope_abundance_vector
+    for _ in range(1, atom_num):
+        final_array = np.convolve(final_array, isotope_abundance_vector, mode='full')
+    return final_array
+
+
 def np_list_conv(array_list):
     result_array = array_list[0]
     for input_array in array_list[1:]:

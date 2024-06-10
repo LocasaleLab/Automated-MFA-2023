@@ -250,8 +250,18 @@ def output_simulated_results_pickle_files(
     pickle_save(target_results_obj, output_pickle_file_path)
 
 
+def generate_completely_new_solution(slsqp_solver_obj, target_flux_vector_num):
+    final_flux_vector_list = []
+    while len(final_flux_vector_list) < target_flux_vector_num:
+        current_flux_vector, final_obj, _ = slsqp_solver_obj.solve()
+        final_flux_vector_list.append(current_flux_vector)
+        finished_num = len(final_flux_vector_list)
+        print(f'{finished_num} finished. {target_flux_vector_num - finished_num} rested')
+    return final_flux_vector_list
+
+
 def generate_new_solution_with_minimal_distance(
-        slsqp_solver_obj, preset_flux_vector_list, target_flux_vector_num, minimal_net_distance):
+        current_result_label, slsqp_solver_obj, preset_flux_vector_list, target_flux_vector_num, minimal_net_distance):
     from .simulated_flux_vector_and_mid_data import simulated_flux_value_dict
     *_, net_flux_matrix, _ = analyze_simulated_flux_value_dict(
         simulated_flux_value_dict, net_flux_list, normal_flux_name_index_dict=slsqp_solver_obj.flux_name_index_dict)
@@ -265,7 +275,7 @@ def generate_new_solution_with_minimal_distance(
         model_data_sensitivity_config.Direct.output_direct, model_data_sensitivity_config.Direct.common_data_direct,
         ExperimentName.raw_model_raw_data)
     (
-        _, solution_data_array, flux_name_index_dict, *_) = final_result_obj.iteration('raw_model__raw_data')
+        _, solution_data_array, flux_name_index_dict, *_) = final_result_obj.iteration(current_result_label)
     preset_flux_vector_list.extend(solution_data_array)
 
     while len(final_flux_vector_list) < target_flux_vector_num:
@@ -291,7 +301,7 @@ def generate_new_solution_with_minimal_distance(
 
 
 def simulated_mid_data_generator(
-        new_optimization_flux=False, simulated_data_batch_num=1, index=None, with_noise=False):
+        new_optimization_flux=False, simulated_data_batch_num=1, index=None, with_noise=False, with_glns_m=False):
     phgdh_data_class = 'phgdh_type'
     all_metabolite_data_class = 'all_metabolite'
     # data_class = phgdh_data_class
@@ -301,30 +311,60 @@ def simulated_mid_data_generator(
     # noise_factor = 0.3
     noise_factor = 0.2
     minimal_net_distance = 500
+    load_from_previous_simulated_data = True
+    preset_flux = True
+    preset_initial_flux_vector = None
 
-    model_name = ModelList.base_model
+    if with_glns_m:
+        model_name = ModelList.base_model_with_glns_m
+        current_result_label = 'raw_model__raw_data_with_glns_m'
+        # backup_pickle_file_name = 'simulated_batched_flux_vector_and_mid_data_with_glns_m_backup'
+        backup_pickle_file_name = 'simulated_batched_flux_vector_and_mid_data_backup'
+        if preset_flux:
+            from .preset_glns_flux_vector import simulated_flux_vector
+            preset_initial_flux_vector = simulated_flux_vector
+    else:
+        model_name = ModelList.base_model
+        current_result_label = 'raw_model__raw_data'
+        backup_pickle_file_name = 'simulated_batched_flux_vector_and_mid_data_backup'
     user_defined_model = model_loader(model_name)
     mfa_model = common_model_constructor(user_defined_model)
-    data_wrap_obj, keyword = common_data_loader(DataType.hct116_cultured_cell_line, test_mode=True)
-    mfa_data = data_wrap_obj.return_dataset()
+    if load_from_previous_simulated_data:
+        from .simulated_flux_vector_and_mid_data import simulated_mfa_data_obj
+        mfa_data = simulated_mfa_data_obj
+    else:
+        data_wrap_obj, keyword = common_data_loader(DataType.hct116_cultured_cell_line, test_mode=True)
+        mfa_data = data_wrap_obj.return_dataset()
     slsqp_solver_obj = common_solver_constructor(mfa_model, mfa_data, slsqp_mfa_config, verbose=False)
 
     final_flux_vector_list = []
-    backup_pickle_file_path = (f'{Direct.simulated_output_pickle_direct}/'
-                               f'simulated_batched_flux_vector_and_mid_data_backup')
-    previous_data_dict = pickle_load(backup_pickle_file_path)
+    backup_pickle_file_path = f'{Direct.simulated_output_pickle_direct}/{backup_pickle_file_name}'
 
-    from .simulated_flux_vector_and_mid_data import simulated_flux_vector as standard_simulated_flux_vector
-    if new_optimization_flux:
-        preset_flux_vector_list = previous_data_dict[Keyword.simulated_final_flux_vector_list]
-        final_flux_vector_list = generate_new_solution_with_minimal_distance(
-            slsqp_solver_obj, preset_flux_vector_list, simulated_data_batch_num, minimal_net_distance)
+    if preset_flux:
+        assert preset_initial_flux_vector is not None and len(slsqp_solver_obj.flux_name_index_dict) == len(
+            preset_initial_flux_vector)
+        final_flux_vector_list = [preset_initial_flux_vector]
+    elif new_optimization_flux:
+        if simulated_data_batch_num > 1:
+            previous_data_dict = pickle_load(backup_pickle_file_path)
+            preset_flux_vector_list = previous_data_dict[Keyword.simulated_final_flux_vector_list]
+            final_flux_vector_list = generate_new_solution_with_minimal_distance(
+                current_result_label, slsqp_solver_obj, preset_flux_vector_list, simulated_data_batch_num,
+                minimal_net_distance)
+        else:
+            final_flux_vector_list = generate_completely_new_solution(slsqp_solver_obj, simulated_data_batch_num)
     else:
         if simulated_data_batch_num > 1:
+            previous_data_dict = pickle_load(backup_pickle_file_path)
             final_flux_vector_list = previous_data_dict[Keyword.simulated_final_flux_vector_list]
             if len(final_flux_vector_list) > simulated_data_batch_num:
                 final_flux_vector_list = final_flux_vector_list[:simulated_data_batch_num]
         else:
+            if with_glns_m:
+                from scripts.data.simulated_data.simulated_flux_vector_and_mid_data_with_glns_m import (
+                    simulated_flux_vector as standard_simulated_flux_vector)
+            else:
+                from .simulated_flux_vector_and_mid_data import simulated_flux_vector as standard_simulated_flux_vector
             final_flux_vector = standard_simulated_flux_vector
             for _ in range(simulated_data_batch_num):
                 final_flux_vector_list.append(final_flux_vector.copy())
@@ -387,7 +427,7 @@ def simulated_mid_data_generator(
     flux_name_index_dict = mfa_model.flux_name_index_dict
 
     output_py_file_path, output_xlsx_file_path, output_pickle_file_path = simulated_output_file_name_constructor(
-        index, with_noise, simulated_data_batch_num > 1)
+        index, with_noise, simulated_data_batch_num > 1, with_glns_m)
 
     output_simulated_results_xlsx_files(
         flux_name_index_dict, final_flux_vector_list, output_mid_data_dict_list, output_all_mid_data_dict_list,

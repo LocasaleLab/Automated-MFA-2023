@@ -87,24 +87,28 @@ def base_solver_constructor(
         mfa_model, mfa_data, mfa_config, combined_data=combined_data)
     base_solver = BaseSolver(
         updated_flux_name_index_dict, mfa_model.complete_emu_dim_dict, complete_flux_constraint_matrix,
-        complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix,
-        mfa_model.emu_mid_equation_dict, input_emu_data_dict, mfa_data.experimental_mid_data_obj_dict,
-        nested_mix_equation_dict, mix_ratio_multiplier, all_target_metabolite_name_carbon_num_dict,
+        complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix=projection_matrix,
+        emu_mid_equation_dict=mfa_model.emu_mid_equation_dict,
+        emu_name_dependency_dict=mfa_model.emu_name_dependency_dict,
+        complete_emu_obj_index_dict=mfa_model.complete_emu_obj_index_dict, input_emu_data_dict=input_emu_data_dict,
+        experimental_mid_data_obj_dict=mfa_data.experimental_mid_data_obj_dict,
+        nested_mix_equation_dict=nested_mix_equation_dict, mix_ratio_multiplier=mix_ratio_multiplier,
+        all_target_metabolite_name_carbon_num_dict=all_target_metabolite_name_carbon_num_dict,
         verbose=verbose, solver_option_dict=mfa_config.solver_config_dict, solver_memo=solver_memo, name=name)
     return base_solver
 
 
-def solver_converter_old(previous_solver: BaseSolver, new_solver_constructor, new_solver_option_dict):
-    new_solver = new_solver_constructor(
-        previous_solver.flux_name_index_dict, previous_solver.complete_emu_dim_dict,
-        previous_solver.complete_flux_constraint_matrix,
-        previous_solver.complete_right_side_list, previous_solver.min_bound_vector, previous_solver.max_bound_vector,
-        previous_solver.projection_matrix, previous_solver.emu_mid_equation_dict, previous_solver.input_emu_data_dict,
-        previous_solver.experimental_mid_data_obj_dict,
-        previous_solver.nested_mix_equation_dict, previous_solver.mix_ratio_multiplier,
-        previous_solver.all_target_metabolite_name_carbon_num_dict,
-        previous_solver.verbose, solver_option_dict=new_solver_option_dict, )
-    return new_solver
+# def solver_converter_old(previous_solver: BaseSolver, new_solver_constructor, new_solver_option_dict):
+#     new_solver = new_solver_constructor(
+#         previous_solver.flux_name_index_dict, previous_solver.complete_emu_dim_dict,
+#         previous_solver.complete_flux_constraint_matrix,
+#         previous_solver.complete_right_side_list, previous_solver.min_bound_vector, previous_solver.max_bound_vector,
+#         previous_solver.projection_matrix, previous_solver.emu_mid_equation_dict, previous_solver.input_emu_data_dict,
+#         previous_solver.experimental_mid_data_obj_dict,
+#         previous_solver.nested_mix_equation_dict, previous_solver.mix_ratio_multiplier,
+#         previous_solver.all_target_metabolite_name_carbon_num_dict,
+#         previous_solver.verbose, solver_option_dict=new_solver_option_dict, )
+#     return new_solver
 
 
 def solver_converter(previous_solver: BaseSolver, new_solver_constructor, new_solver_option_dict, copy=False):

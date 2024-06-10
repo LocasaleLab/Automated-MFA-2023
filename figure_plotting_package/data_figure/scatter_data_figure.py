@@ -96,7 +96,8 @@ class BasicScatterDataFigure(DataFigure):
                 ParameterName.y_tick_labels_list,
                 ParameterName.figure_type
             )]
-        self.error_bar = default_parameter_extract(figure_data_parameter_dict, ParameterName.error_bar, False)
+        self.error_bar = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.error_bar, False)
 
         if ParameterName.legend in figure_data_parameter_dict:
             legend = figure_data_parameter_dict[ParameterName.legend]
@@ -146,7 +147,19 @@ class BasicScatterDataFigure(DataFigure):
             scale=scale, bottom_left_offset=bottom_left_offset, base_z_order=base_z_order,
             z_order_increment=z_order_increment)
         for data_dict in self.complete_data_dict_list:
-            move_and_scale_for_dict(data_dict, scale=scale)
+            if isinstance(data_dict, dict):
+                move_and_scale_for_dict(data_dict, scale=scale)
+            elif isinstance(data_dict, list):
+                for each_data_dict in data_dict:
+                    move_and_scale_for_dict(each_data_dict, scale=scale)
+            else:
+                raise ValueError()
+        for scatter_line in self.complete_scatter_line_list:
+            if scatter_line is not None:
+                for _, _, *detailed_line_param_dict in scatter_line:
+                    if len(detailed_line_param_dict) > 0:
+                        move_and_scale_for_dict(detailed_line_param_dict[0], scale=scale)
+        pass
 
 
 def common_figure_config_dict_generator(axis_label_format_dict, scale=1):

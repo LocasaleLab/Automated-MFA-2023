@@ -44,6 +44,9 @@ class CommonFigureString(object):
     global_optimum = 'Global optimal point'
     local_optimum = 'Local optimal point'
     random_point = 'Random point'
+    traditional_method = 'Traditional method solutions'
+    traditional_method_wrap = 'Traditional method\nsolutions'
+    traditional_method_double_wrap = 'Traditional\nmethod\nsolutions'
     selected_solution = 'Selected solutions'
     selected_solution_wrap = 'Selected\nsolutions'
     averaged_solution = 'Averaged solutions'
@@ -145,6 +148,7 @@ class CommonFigureString(object):
     difference_from_known_flux_raw_data = f'{difference_from_known_flux} {in_raw_data}'
 
     experimental_data = 'Experimental data'
+    simulated_data = 'Simulated data'
     all_data = 'All data'
     raw_model = 'Raw model'
     raw_config_bound = 'Raw config (Medium LB + Medium UB)'
@@ -220,6 +224,13 @@ class CommonFigureString(object):
             f'${CommonFigureString.math_m} = {selection_size}$, '
             f'${CommonFigureString.m_over_n} = {int(optimization_size / selection_size)}' r'^{-1}$')
         return target_str
+
+    @staticmethod
+    def add_availability(raw_title, availability):
+        if availability == ParameterName.all_data_mode:
+            return f'{raw_title}: {CommonFigureString.all_available_mid_data}'
+        elif availability == ParameterName.experimental:
+            return f'{raw_title}: {CommonFigureString.experimental_available_mid_data}'
 
 
 class MetabolicNetworkConfig(object):
@@ -838,9 +849,12 @@ class CommonFigureMaterials(object):
     local_optimum_str = CommonFigureString.local_optimum
     random_point_str = CommonFigureString.random_point
 
+    traditional_solution_str = CommonFigureString.traditional_method
     selected_solution_str = CommonFigureString.selected_solution
     averaged_solution_str = CommonFigureString.averaged_solution
     reoptimized_solution_str = CommonFigureString.reoptimized_solution
+    traditional_solution_wrap_str = CommonFigureString.traditional_method_wrap
+    traditional_solution_double_wrap_str = CommonFigureString.traditional_method_double_wrap
     selected_solution_wrap_str = CommonFigureString.selected_solution_wrap
     averaged_solution_wrap_str = CommonFigureString.averaged_solution_wrap
     reoptimized_solution_wrap_str = CommonFigureString.reoptimized_solution_wrap
@@ -884,15 +898,21 @@ class CommonFigureMaterials(object):
     }
 
     def select_average_solution_name_color_dict(
-            self, with_reoptimization=False, different_simulated_data=False, wrap_name=True):
+            self, with_reoptimization=False, with_traditional_method=False,
+            different_simulated_data=False, with_simulated_mid_data=False, wrap_name=True, traditional_double_wrap=True):
         if wrap_name:
             selected_solution_str = self.selected_solution_wrap_str
             averaged_solution_str = self.averaged_solution_wrap_str
             reoptimized_solution_str = self.reoptimized_solution_wrap_str
+            if traditional_double_wrap:
+                traditional_solution_str = self.traditional_solution_double_wrap_str
+            else:
+                traditional_solution_str = self.traditional_solution_wrap_str
         else:
             selected_solution_str = self.selected_solution_str
             averaged_solution_str = self.averaged_solution_str
             reoptimized_solution_str = self.reoptimized_solution_str
+            traditional_solution_str = self.traditional_solution_str
         different_simulated_solution_distance_wrap_str = self.different_simulated_solution_distance_wrap_str
 
         base_name_dict = {
@@ -912,6 +932,15 @@ class CommonFigureMaterials(object):
                 **base_color_dict,
                 ParameterName.optimized: ColorConfig.reoptimized_solution_text_color,
             }
+        if with_traditional_method:
+            base_name_dict = {
+                ParameterName.traditional: traditional_solution_str,
+                **base_name_dict,
+            }
+            base_color_dict = {
+                ParameterName.traditional: ColorConfig.different_simulated_distance,
+                **base_color_dict,
+            }
         if different_simulated_data:
             base_name_dict = {
                 ParameterName.different_simulated_distance: different_simulated_solution_distance_wrap_str,
@@ -920,6 +949,15 @@ class CommonFigureMaterials(object):
             base_color_dict = {
                 ParameterName.different_simulated_distance: ColorConfig.different_simulated_distance,
                 **base_color_dict,
+            }
+        if with_simulated_mid_data:
+            base_name_dict = {
+                **base_name_dict,
+                ParameterName.simulated: CommonFigureString.simulated_data,
+            }
+            base_color_dict = {
+                **base_color_dict,
+                ParameterName.simulated: ColorConfig.reoptimized_solution_color,
             }
         return base_name_dict, base_color_dict
 
@@ -954,6 +992,13 @@ class CommonFigureMaterials(object):
         ['2PG_c+3PG_c', 'PEP_c', 'PYR_c+PYR_m', 'LAC_c'],
         ['CIT_c+CIT_m+ICIT_m', 'AKG_c+AKG_m', 'GLU_c+GLU_m'],
         ['SUC_m', 'FUM_m', 'MAL_c+MAL_m', 'ASP_c+ASP_m']
+    ]
+
+    all_data_mid_name_list = [
+        ['GLC_c', 'FRU6P_c', 'E4P_c'],
+        ['3PG_c', 'PEP_c', 'PYR_c', 'LAC_c'],
+        ['CIT_c', 'AKG_c', 'GLU_c'],
+        ['SUC_m', 'FUM_m', 'MAL_m', 'ASP_m']
     ]
 
     # common_flux_location_nested_list = [
@@ -1003,6 +1048,12 @@ class PHGDHRawMaterials(object):
             350: 1,
         }
     }
+
+
+all_index_flux_name_location_list = [
+    ['cancer_index', 'tca_index'],
+    ['non_canonical_tca_index', 'mas_index'],
+]
 
 
 class KidneyCarcinomaRawMaterials(object):
@@ -1159,6 +1210,13 @@ class KidneyCarcinomaRatioMaterials(KidneyCarcinomaRawMaterials):
     ]
 
 
+class KidneyCarcinomaAllIndexMaterials(KidneyCarcinomaRatioMaterials):
+    flux_name_location_list = all_index_flux_name_location_list
+    display_flux_name_dict = common_display_flux_dict
+    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, KidneyCarcinomaRatioMaterials.y_lim_dict)
+    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, KidneyCarcinomaRatioMaterials.y_ticks_dict)
+
+
 class KidneyCarcinomaRawSupMaterials(KidneyCarcinomaRawMaterials):
     y_lim_dict = {
         'GLC_input': (0, 450),
@@ -1185,6 +1243,23 @@ class KidneyCarcinomaRatioSupMaterials(KidneyCarcinomaRatioMaterials):
     y_ticks_list = attach_feature_to_flux_name_list(
         KidneyCarcinomaRatioMaterials.flux_name_location_list,
         KidneyCarcinomaRawSupMaterials.y_ticks_dict, KidneyCarcinomaRatioMaterials.y_ticks_list)
+
+
+class KidneyCarcinomaAllIndexSupMaterials(KidneyCarcinomaAllIndexMaterials):
+    y_lim_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaAllIndexMaterials.flux_name_location_list, {
+            **KidneyCarcinomaRatioSupMaterials.y_lim_dict,
+            'mas_index': (-2.1, 1.2),
+        }, KidneyCarcinomaAllIndexMaterials.y_lim_list)
+    y_ticks_list = attach_feature_to_flux_name_list(
+        KidneyCarcinomaAllIndexMaterials.flux_name_location_list, {
+            **KidneyCarcinomaRatioSupMaterials.y_ticks_dict,
+            'mas_index': [-2, -1, 0, 1],
+        }, KidneyCarcinomaAllIndexMaterials.y_ticks_list)
+    p_value_y_value_list = [
+        [0.88, 0.13],
+        [0.88, 0.11],
+    ]
 
 
 class MultipleTumorRawMaterials(object):
@@ -1438,7 +1513,7 @@ class ColonCancerRawMaterials(object):
         Keywords.high_glucose: 'Normal glucose',
         Keywords.low_glucose: 'Low glucose',
     }
-    loss_y_lim = [0, 7.0001]
+    loss_y_lim = [0, 7.1]
     loss_y_ticks = np.arange(*loss_y_lim, 1)
     loss_y_tick_labels = ['{:.1f}'.format(y_tick) for y_tick in loss_y_ticks]
     metabolic_network_config_dict = {
@@ -1455,7 +1530,9 @@ class ColonCancerRawMaterials(object):
             500: 1,
         }
     }
+    with_glns_m = True
     normal_network_fixed_flux_string_dict = {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)}
+
     common_diagram_network_config_dict = {
         **MetabolicNetworkConfig.common_diagram_network_setting_dict,
         ParameterName.boundary_flux_set: 'ASP_input',
@@ -1465,6 +1542,7 @@ class ColonCancerRawMaterials(object):
     diagram_network_config_dict = {
         ParameterName.normal_network: {
             **common_diagram_network_config_dict,
+            ParameterName.with_glns_m: with_glns_m,
             ParameterName.reaction_text_dict: {
                 **normal_network_fixed_flux_string_dict,
                 **MetabolicNetworkConfig.normal_network_display_text_dict,
@@ -1515,6 +1593,17 @@ class ColonCancerRatioMaterials(ColonCancerRawMaterials):
     ]
 
 
+class ColonCancerAllIndexMaterials(ColonCancerRatioMaterials):
+    flux_name_location_list = all_index_flux_name_location_list
+    display_flux_name_dict = common_display_flux_dict
+    y_lim_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_lim_dict)
+    y_ticks_list = attach_feature_to_flux_name_list(flux_name_location_list, ColonCancerRawMaterials.y_ticks_dict)
+    p_value_y_value_list = [
+        [0.9, 0.9],
+        [0.93, 0.9],
+    ]
+
+
 class ColonCancerRawSupMaterials(ColonCancerRawMaterials):
     p_value_y_value_list = [
         [0.9, 0.9],
@@ -1527,6 +1616,35 @@ class ColonCancerRatioSupMaterials(ColonCancerRatioMaterials):
     p_value_y_value_list = [
         [0.9, 0.9],
         [0.9, 0.9],
+    ]
+
+
+class ColonCancerAllIndexSupMaterials(ColonCancerAllIndexMaterials, ColonCancerRatioSupMaterials):
+    # y_lim_list = attach_feature_to_flux_name_list(
+    #     ColonCancerAllIndexMaterials.flux_name_location_list, {
+    #         **ColonCancerRatioSupMaterials.y_lim_dict,
+    #         'mas_index': (-2.1, 1.2),
+    #     }, ColonCancerAllIndexMaterials.y_lim_list)
+    # y_ticks_list = attach_feature_to_flux_name_list(
+    #     ColonCancerAllIndexMaterials.flux_name_location_list, {
+    #         **ColonCancerRatioSupMaterials.y_ticks_dict,
+    #         'mas_index': [-2, -1, 0, 1],
+    #     }, ColonCancerAllIndexMaterials.y_ticks_list)
+    y_lim_list = attach_feature_to_flux_name_list(
+        ColonCancerAllIndexMaterials.flux_name_location_list, {
+            'cancer_index': (-0.1, 1.3),
+            'tca_index': (-0.2, 1.2),
+            'non_canonical_tca_index': (-0.2, 1.2),
+            'mas_index': (-10, 30),
+        })
+    y_ticks_list = attach_feature_to_flux_name_list(
+        ColonCancerAllIndexMaterials.flux_name_location_list, {
+            **ColonCancerRatioSupMaterials.y_ticks_dict,
+            'mas_index': [-10, 0, 10, 20, 30],
+        })
+    p_value_y_value_list = [
+        [0.93, 0.93],
+        [0.93, 0.93],
     ]
 
 
@@ -1547,9 +1665,9 @@ def p_value_parameters_processing_func(config_class):
     return extra_parameter_dict
 
 
-def kidney_carcinoma_comparison_dict_generator(config_class):
+def kidney_carcinoma_comparison_dict_generator(config_class, data_set_name=DataName.renal_carcinoma_invivo_infusion):
     common_kidney_carcinoma_comparison_dict = {
-        ParameterName.data_name: DataName.renal_carcinoma_invivo_infusion,
+        ParameterName.data_name: data_set_name,
         ParameterName.comparison_name: 'tumor_vs_kidney',
         ParameterName.flux_name_list: config_class.flux_name_location_list,
         ParameterName.mean: False,
@@ -1564,15 +1682,16 @@ def kidney_carcinoma_comparison_dict_generator(config_class):
         ParameterName.compare_one_by_one: True,
         ParameterName.scatter_line: False,
         ParameterName.error_bar: True,
+        ParameterName.show_raw_data_points: True,
+        ParameterName.marker_size: 4,
     }
     common_kidney_carcinoma_comparison_dict.update(p_value_parameters_processing_func(config_class))
     return common_kidney_carcinoma_comparison_dict
 
 
-def colon_cancer_comparison_dict_generator(config_class):
+def colon_cancer_comparison_dict_generator(config_class, data_set_name=DataName.colon_cancer_cell_line):
     common_colon_cancer_comparison_dict = {
-        # ParameterName.figure_title: Title.comparison_between_normal_flank_tumor,
-        ParameterName.data_name: DataName.colon_cancer_cell_line,
+        ParameterName.data_name: data_set_name,
         ParameterName.comparison_name: 'high_low_glucose',
         ParameterName.mean: False,
         ParameterName.flux_name_list: config_class.flux_name_location_list,
@@ -1595,7 +1714,9 @@ def colon_cancer_comparison_dict_generator(config_class):
             ParameterName.y_label_format_dict: {
                 ParameterName.axis_label_distance: 0.035
             }
-        }
+        },
+        ParameterName.show_raw_data_points: True,
+        ParameterName.marker_size: 4,
     }
     common_colon_cancer_comparison_dict.update(p_value_parameters_processing_func(config_class))
     return common_colon_cancer_comparison_dict

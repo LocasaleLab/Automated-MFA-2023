@@ -13,8 +13,8 @@ display_value_format_string = NetworkGeneralConfig.display_value_format_string
 def set_and_convert_network_elements(
         metabolite_list, reaction_list, subnetwork_list=None, other_text_list=(), other_obj_list=(),
         input_metabolite_set=None, c13_labeling_metabolite_set=None, mid_data_metabolite_set=None,
-        mixed_mid_data_metabolite_set=None, biomass_metabolite_set=None, boundary_flux_set=None,
-        hidden_metabolite_set=None, hidden_reaction_set=None,
+        mixed_mid_data_metabolite_set=None, biomass_metabolite_set=None, invalid_metabolite_set=None,
+        boundary_flux_set=None, hidden_metabolite_set=None, hidden_reaction_set=None,
         metabolite_data_sensitivity_state_dict=None, reaction_data_sensitivity_state_dict=None,
         display_flux_name=False, reaction_text_dict=None, reaction_text_config_dict=None,
         reaction_raw_value_dict=None, flux_value_mapper=None, extra_parameter_dict=None):
@@ -39,6 +39,8 @@ def set_and_convert_network_elements(
         mixed_mid_data_metabolite_set = set()
     if biomass_metabolite_set is None:
         biomass_metabolite_set = set()
+    if invalid_metabolite_set is None:
+        invalid_metabolite_set = set()
     if boundary_flux_set is None:
         boundary_flux_set = set()
     if hidden_metabolite_set is None:
@@ -81,6 +83,8 @@ def set_and_convert_network_elements(
                 metabolite_obj.set_mixed_mid_data_state(True)
         if metabolite_obj.metabolite_name in biomass_metabolite_set:
             metabolite_obj.set_biomass_flux_state(True)
+        if metabolite_obj.metabolite_name in invalid_metabolite_set:
+            metabolite_obj.set_invalid_state(True)
         if metabolite_obj.metabolite_name in metabolite_data_sensitivity_state_dict:
             metabolite_obj.set_data_sensitivity_state(
                 metabolite_data_sensitivity_state_dict[metabolite_obj.metabolite_name])
@@ -96,10 +100,17 @@ def set_and_convert_network_elements(
             reaction_obj.set_boundary_flux(True)
         if display_flux_name:
             pass
-        elif display_flux_value and reaction_obj.net_value is not None:
-            reaction_obj.set_display_text(display_value_format_string.format(reaction_obj.net_value))
-            if flux_value_mapper is not None:
-                reaction_obj.update_extra_parameter_dict(flux_value_mapper(reaction_obj.net_value))
+        elif display_flux_value:
+            if reaction_obj.net_value is not None:
+                flux_value = reaction_obj.net_value
+            elif reaction_raw_value_dict is not None and reaction_obj.reaction_name in reaction_raw_value_dict:
+                flux_value = reaction_raw_value_dict[reaction_obj.reaction_name]
+            else:
+                flux_value = None
+            if flux_value is not None:
+                reaction_obj.set_display_text(display_value_format_string.format(flux_value))
+                if flux_value_mapper is not None:
+                    reaction_obj.update_extra_parameter_dict(flux_value_mapper(flux_value))
         elif reaction_obj.reaction_name in reaction_text_dict:
             reaction_obj.set_display_text(reaction_text_dict[reaction_obj.reaction_name])
             reaction_obj.update_display_text_config_item(reaction_text_config_dict)
@@ -138,10 +149,10 @@ class MetabolicNetwork(CompositeFigure):
             metabolite_data_sensitivity_state_dict=None, reaction_data_sensitivity_state_dict=None,
             display_flux_name=False, reaction_text_dict=None, reaction_text_config_dict=None,
             reaction_raw_value_dict=None, visualize_flux_value=None, visualize_flux_param_dict=None,
-            infusion=False, absolute_value_output_value_dict=None, extra_parameter_dict=None,
+            infusion=False, with_glns_m=False, absolute_value_output_value_dict=None, extra_parameter_dict=None,
             scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
         metabolite_list = MetaboliteList(infusion)
-        reaction_list = ReactionList(infusion)
+        reaction_list = ReactionList(infusion, with_glns_m)
         subnetwork_list = SubnetworkList(infusion)
         other_text_list = []
         flux_value_mapper = None
@@ -179,19 +190,22 @@ class MetabolicNetworkLegend(CompositeFigure):
     total_width = LegendConfig.legend_width
 
     def __init__(
-            self, mode=ParameterName.normal,
-            scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
-        patch_raw_obj_dict, text_param_dict, total_width, total_height = legend_layout_generator(mode)
+            self, mode=ParameterName.normal, legend_config_dict=None, extra_parameter_dict=None, **kwargs):
+        patch_raw_obj_dict, text_param_dict, total_width, total_height = legend_layout_generator(
+            mode, legend_config_dict)
         self.height_to_width_ratio = total_height / total_width
         common_text_param_dict = LegendConfig.common_text_param_dict
         patch_obj_list = [
             patch_raw_obj.to_element()
             for name, patch_raw_obj in patch_raw_obj_dict.items()
         ]
+        if extra_parameter_dict is None:
+            extra_parameter_dict = {}
         text_box_list = [
             TextBox(**{
                 **text_basic_param_dict,
-                **common_text_param_dict
+                **common_text_param_dict,
+                **extra_parameter_dict,
             })
             for text_basic_param_dict in text_param_dict.values()
         ]
@@ -203,9 +217,7 @@ class MetabolicNetworkLegend(CompositeFigure):
         super().__init__(
             metabolic_legend_element_dict,
             # bottom_left_offset, Vector(scale, scale * self.height_to_width_ratio),
-            Vector(0, 0), Vector(total_width, total_height),
-            scale=scale, bottom_left_offset=bottom_left_offset, base_z_order=base_z_order,
-            z_order_increment=z_order_increment, **kwargs)
+            Vector(0, 0), Vector(total_width, total_height), **kwargs)
 
 
 class MetabolicNetworkTextComment(CompositeFigure):

@@ -610,9 +610,9 @@ class AverageDiagram(ProtocolDiagram):
 
         if mode == ParameterName.simulated:
             title_string = 'Euclidean distance'
-        elif (
-                mode == ParameterName.sensitivity or mode == ParameterName.experimental
-                or mode == ParameterName.simulated_reoptimization):
+        elif mode in {
+                ParameterName.sensitivity, ParameterName.experimental,
+                ParameterName.simulated_reoptimization, ParameterName.simulated_without_reoptimization}:
             title_string = 'Average of selected solutions'
         elif mode == ParameterName.optimization_from_average_solutions:
             title_string = 'Optimization'

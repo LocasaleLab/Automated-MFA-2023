@@ -15,6 +15,7 @@ class Metabolite(object):
         self.with_mid_data = False
         self.with_mixed_mid_data = False
         self.with_biomass_flux = False
+        self.invalid_state = False
         self.other_color_state = None
         self._initialize_tags()
 
@@ -58,6 +59,10 @@ class Metabolite(object):
         self.with_biomass_flux = with_biomass_flux
         return self
 
+    def set_invalid_state(self, invalid_state: bool):
+        self.invalid_state = invalid_state
+        return self
+
     def set_data_sensitivity_state(self, other_color_state):
         self.other_color_state = other_color_state
         return self
@@ -75,5 +80,5 @@ class Metabolite(object):
             self.center, self.metabolite_name, self.display_metabolite_name,
             self.as_input_metabolite, self.as_c13_labeling_metabolite,
             self.with_mid_data, self.with_mixed_mid_data, self.with_biomass_flux,
-            self.other_color_state,
+            self.invalid_state, self.other_color_state,
             scale=scale, bottom_left_offset=bottom_left_offset, **self.extra_parameter_dict)

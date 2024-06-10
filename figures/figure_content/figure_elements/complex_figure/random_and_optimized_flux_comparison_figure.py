@@ -1,5 +1,6 @@
 from ...common.config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, \
-    common_legend_generator, TextBox, TextConfig, ZOrderConfig, VerticalAlignment, HorizontalAlignment, GeneralElements
+    common_legend_generator, TextBox, TextConfig, ZOrderConfig, VerticalAlignment, HorizontalAlignment, \
+    GeneralElements, default_parameter_extract
 from ...common.common_figure_materials import CommonFigureMaterials
 from ..data_figure.scatter_data_figure import EmbeddedSolutionScatterDataFigure
 from ..data_figure.histogram_data_figure import TimeLossDistanceHistogramDataFigure
@@ -116,41 +117,47 @@ class RandomOptimizedFluxLayout(CompositeFigure):
 class RandomOptimizedLossDistanceWithDiagramComparison(CompositeFigure):
     height_to_width_ratio = 0.55
 
-    def __init__(self, total_width=1, scale=1, **kwargs):
+    def __init__(
+            self, figure_data_parameter_dict, scale=1, **kwargs):
+        total_width = default_parameter_extract(figure_data_parameter_dict, ParameterName.total_width, 1, pop=True)
+        horiz_or_vertical = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.horiz_or_vertical, ParameterName.horizontal, pop=True)
+
         self.total_width = total_width
+
         left_axis_bottom_margin = 0.02 * total_width
         left_axis_top_margin = 0.01 * total_width
-        # complete_axis_height = 0.4 * total_width
-        complete_axis_height = 0.28
-        # right_axis_height = 0.3 * total_width
         right_axis_height = 0.21
-        left_axis_width = 0.33 * total_width
-        right_axis_width = 0.68 * total_width
         right_axis_bottom = 0
-        right_axis_left = left_axis_width - 0.005 * total_width
+
+        if horiz_or_vertical == ParameterName.horizontal:
+            left_axis_width = 0.33 * total_width
+            left_axis_height = 0.28
+            right_axis_width = 0.68 * total_width
+            right_axis_left = left_axis_width - 0.005 * total_width
+            left_diagram_center_x = left_axis_width / 2
+        elif horiz_or_vertical == ParameterName.vertical:
+            left_axis_width = 0.45 * total_width
+            left_axis_height = 0.25
+            right_axis_width = 0.9 * total_width
+            right_axis_left = 0.04 * total_width
+            left_diagram_center_x = right_axis_width / 2
+        else:
+            raise ValueError()
+
         right_axis_bottom_left = Vector(right_axis_left, right_axis_bottom)
         right_axis_size = Vector(right_axis_width, right_axis_height)
         right_axis_top = right_axis_bottom + right_axis_height
-        # x_axis_line_y_loc = right_axis_bottom + 0.02
-        # x_axis_line_x_range = Vector(0.13, 0.72) * right_axis_width + right_axis_left
         x_axis_line_y_loc = right_axis_bottom + 0.02
         x_axis_line_x_range = Vector(0.12, 0.72) * right_axis_width + right_axis_left
-        target_center_of_left_diagram = Vector(
-            left_axis_width / 2,
-            left_axis_bottom_margin + complete_axis_height / 2)
         title_height = 0.03
-        left_title_bottom = left_axis_bottom_margin + complete_axis_height
-        left_title_center_y = left_title_bottom + title_height / 2
-        left_title_center = Vector(left_axis_width / 2, left_title_center_y)
-        left_title_top = left_title_bottom + title_height
-        # right_title_bottom = right_axis_top + 0.005 * total_width
+
         right_title_bottom = right_axis_top + 0.0035
         right_title_center_y = right_title_bottom + title_height / 2
         right_title_center = Vector(right_axis_left + right_axis_width / 2, right_title_center_y)
         right_title_top = right_title_bottom + title_height
 
         legend_bottom = right_title_top + 0.007
-        # legend_height = 0.14 * total_width
         legend_height = 0.098
         legend_center_y = legend_bottom + legend_height / 2
         diagram_legend_width = 0.55 * right_axis_width
@@ -164,13 +171,26 @@ class RandomOptimizedLossDistanceWithDiagramComparison(CompositeFigure):
         figure_legend_size = Vector(figure_legend_width, legend_height)
         legend_top = legend_bottom + legend_height
 
+        if horiz_or_vertical == ParameterName.horizontal:
+            left_axis_center_y = left_axis_bottom_margin + left_axis_height / 2
+        elif horiz_or_vertical == ParameterName.vertical:
+            left_axis_center_y = legend_top + left_axis_bottom_margin + left_axis_height / 2
+        else:
+            raise ValueError()
+        target_center_of_left_diagram = Vector(left_diagram_center_x, left_axis_center_y)
+
+        left_title_bottom = left_axis_center_y + left_axis_height / 2
+        left_title_center_y = left_title_bottom + title_height / 2
+        left_title_center = Vector(left_diagram_center_x, left_title_center_y)
+        left_title_top = left_title_bottom + title_height
+
         total_height = max(left_title_top + left_axis_top_margin, legend_top)
         self.height_to_width_ratio = total_height / total_width
 
         common_legend_config_dict = {
             ParameterName.horiz_or_vertical: ParameterName.vertical,
             ParameterName.text_config_dict: {
-                ParameterName.font_size: RandomOptimizedFluxComparisonConfig.common_legend_font_size,
+                ParameterName.font_size: RandomOptimizedFluxComparisonConfig.common_legend_font_size + 2,
                 ParameterName.font_weight: FontWeight.bold
             },
             ParameterName.location_config_dict: {
@@ -206,7 +226,7 @@ class RandomOptimizedLossDistanceWithDiagramComparison(CompositeFigure):
             ParameterName.bottom_left: right_axis_bottom_left,
             ParameterName.size: right_axis_size,
             ParameterName.figure_data_parameter_dict: {
-                ParameterName.data_name: DataName.hct116_cultured_cell_line,
+                **figure_data_parameter_dict
             },
         }
         x_axis_line_config_dict = {

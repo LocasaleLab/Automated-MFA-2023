@@ -10,9 +10,9 @@ def mfa_data_obj_generation(experimental_mid_data_obj_dict):
     )
 
 
-def simulated_data_loader(index=None, with_noise=False, batched_data=False):
+def simulated_data_loader(index=None, with_noise=False, batched_data=False, with_glns_m=False):
     simulated_py_file_path, _, simulated_pickle_file_path = simulated_output_file_name_constructor(
-        index, with_noise, batched_data)
+        index, with_noise, batched_data, with_glns_m)
     if not batched_data:
         import importlib
         simulated_py_module_path = simulated_py_file_path[:-len('.py')].replace('/', '.')

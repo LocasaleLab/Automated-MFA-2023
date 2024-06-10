@@ -1,4 +1,5 @@
-from ...common.config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName
+from ...common.config import DataFigureConfig, ParameterName, Vector, FontWeight, CompositeFigure, DataName, \
+    default_parameter_extract
 from ...common.common_figure_materials import CommonFigureMaterials
 from ..data_figure.histogram_data_figure import TimeLossDistanceHistogramDataFigure
 
@@ -6,10 +7,9 @@ from ..data_figure.histogram_data_figure import TimeLossDistanceHistogramDataFig
 class TimeLossStack(CompositeFigure):
     height_to_width_ratio = 0.82
 
-    def __init__(
-            self, total_width=1,
-            # scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1,
-            **kwargs):
+    def __init__(self, figure_data_parameter_dict, **kwargs):
+        data_name = default_parameter_extract(figure_data_parameter_dict, ParameterName.data_name, None, force=True)
+        total_width = default_parameter_extract(figure_data_parameter_dict, ParameterName.total_width, 1)
         self.total_width = total_width
         bottom_line = 0 * total_width
         running_time_height = 0.24 * total_width
@@ -26,13 +26,18 @@ class TimeLossStack(CompositeFigure):
         total_height = running_time_top
         self.height_to_width_ratio = total_height / total_width
         common_color_dict = CommonFigureMaterials.histogram_color_dict
+        time_config_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.time_data_figure_parameter_dict, {}, pop=True)
+        loss_config_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.loss_data_figure_parameter_dict, {}, pop=True)
         running_time_config_dict = {
             ParameterName.bottom_left: (0, running_time_bottom),
             ParameterName.size: [total_width, running_time_height],
             ParameterName.figure_data_parameter_dict: {
                 ParameterName.figure_class: ParameterName.time_data,
-                ParameterName.data_name: DataName.hct116_cultured_cell_line,
+                ParameterName.data_name: data_name,
                 ParameterName.color_dict: common_color_dict,
+                **time_config_dict,
             },
         }
         legend_config_dict = {
@@ -49,10 +54,11 @@ class TimeLossStack(CompositeFigure):
             ParameterName.size: [total_width, loss_height],
             ParameterName.figure_data_parameter_dict: {
                 ParameterName.figure_class: ParameterName.loss_data,
-                ParameterName.data_name: DataName.hct116_cultured_cell_line,
+                ParameterName.data_name: data_name,
                 ParameterName.color_dict: common_color_dict,
                 ParameterName.legend: True,
-                ParameterName.legend_config_dict: legend_config_dict
+                ParameterName.legend_config_dict: legend_config_dict,
+                **loss_config_dict,
             },
         }
 

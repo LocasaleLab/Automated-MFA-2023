@@ -3,7 +3,9 @@ from scripts.src.core.model.model_class import UserDefinedModel
 from scripts.src.core.common.functions import reverse_reaction_name
 from scripts.src.common.built_in_packages import copy
 from scripts.model.base_model.pathway_adjust_function import pathway_adjust_function
+from scripts.model.model_loader import model_loader
 
+from .config import raw_model, raw_model_with_glns_m
 from .sensitivity_config import raw_config_first, ModelSetting, Keywords, consecutive_important_flux_replace_dict, \
     consecutive_important_flux_list, prune_branch_important_flux_replace_dict, prune_branch_important_flux_list, \
     normal_important_flux_list
@@ -87,9 +89,14 @@ def prune_branches(
     return final_modified_defined_model_dict, information_dict
 
 
-def model_processor(process_type, raw_user_defined_model, simulated_flux_value_dict):
+def model_processor(process_type, simulated_flux_value_dict):
+    if process_type == ModelSetting.raw_model_with_glns_m:
+        raw_user_defined_model = model_loader(raw_model_with_glns_m)
+        raw_information_dict = {ModelSetting.raw_model: Keywords.raw_type_with_glns_m}
+    else:
+        raw_user_defined_model = model_loader(raw_model)
+        raw_information_dict = {ModelSetting.raw_model: Keywords.raw_type}
     raw_modified_defined_model_dict = {ModelSetting.raw_model: raw_user_defined_model}
-    raw_information_dict = {ModelSetting.raw_model: Keywords.raw_type}
     if process_type == ModelSetting.merge_reversible_reaction:
         modified_defined_model_dict, information_dict = merge_reversible_reaction(
             raw_user_defined_model, simulated_flux_value_dict,
@@ -107,7 +114,7 @@ def model_processor(process_type, raw_user_defined_model, simulated_flux_value_d
             scripts.src.model_data_sensitivity.sensitivity_config.prune_branch_pathway_information_dict)
         important_flux_replace_dict = prune_branch_important_flux_replace_dict
         important_flux_list = prune_branch_important_flux_list
-    elif process_type == ModelSetting.raw_model:
+    elif process_type in {ModelSetting.raw_model, ModelSetting.raw_model_with_glns_m}:
         modified_defined_model_dict = {}
         information_dict = {}
         important_flux_replace_dict = consecutive_important_flux_replace_dict

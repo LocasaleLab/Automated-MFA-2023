@@ -85,27 +85,34 @@ class PatchLegend(CompositeFigure):
     def __init__(
             self, center: Vector, width: float, height: float, color_dict, name_dict,
             horiz_or_vertical=ParameterName.horizontal, shape=ParameterName.rectangle, config_dict=None,
-            # scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1,
-            **kwargs):
+            row_num=None, col_num=None, **kwargs):
         assert width > 0 and height > 0
         legend_num = len(color_dict)
         assert len(name_dict) == legend_num
         center = initialize_vector_input(center)
         size = Vector(width, height)
         bottom_left = center - size / 2
-        if horiz_or_vertical == ParameterName.horizontal:
-            if legend_num <= 3:
-                row_num = 1
-                col_num = legend_num
-            elif legend_num % 3 == 0:
-                col_num = 3
-                row_num = legend_num / col_num
+        if row_num is None and col_num is None:
+            if horiz_or_vertical == ParameterName.horizontal:
+                if legend_num <= 3:
+                    row_num = 1
+                    col_num = legend_num
+                elif legend_num % 3 == 0:
+                    col_num = 3
+                    row_num = legend_num / col_num
+                else:
+                    col_num = 2
+                    row_num = int(legend_num / col_num + 0.99999)
             else:
-                col_num = 2
-                row_num = int(legend_num / col_num + 0.99999)
+                col_num = 1
+                row_num = legend_num
+        elif row_num is not None:
+            if col_num is None:
+                col_num = int(legend_num / row_num + 0.99999)
+            else:
+                assert row_num * col_num == legend_num
         else:
-            col_num = 1
-            row_num = legend_num
+            row_num = int(legend_num / col_num + 0.99999)
         location_config_dict = default_parameter_extract(config_dict, ParameterName.location_config_dict, {})
         total_horiz_edge_ratio = default_parameter_extract(
             location_config_dict, ParameterName.total_horiz_edge_ratio, LegendConfig.legend_horiz_edge_ratio)
@@ -253,6 +260,7 @@ def common_legend_generator(legend_config_dict, color_dict):
         legend_config_dict, ParameterName.shape, ParameterName.rectangle)
     alpha = default_parameter_extract(
         legend_config_dict, ParameterName.alpha, ColorConfig.alpha_for_bar_plot)
+    row_num, col_num = default_parameter_extract(legend_config_dict, ParameterName.grid_shape, (None, None))
     (
         legend_area_center,
         legend_area_size,
@@ -292,7 +300,8 @@ def common_legend_generator(legend_config_dict, color_dict):
             effective_legend_config_dict[ParameterName.location_config_dict] = location_config_dict
         legend_obj = PatchLegend(
             legend_area_center, legend_width, legend_height, legend_color_dict, name_dict, shape=shape,
-            horiz_or_vertical=horiz_or_vertical, config_dict=effective_legend_config_dict)
+            horiz_or_vertical=horiz_or_vertical, config_dict=effective_legend_config_dict,
+            row_num=row_num, col_num=col_num)
     else:
         raise ValueError()
     return legend_obj

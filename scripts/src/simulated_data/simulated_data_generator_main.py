@@ -15,6 +15,10 @@ def arg_setting(computation_subparsers, simulation_enum):
         help='Add noise to generated MID data to mimic real case.'
     )
     simulation_parser.add_argument(
+        '--with_glns_m', action='store_true', default=False,
+        help='Add GLNS_m flux to final model.'
+    )
+    simulation_parser.add_argument(
         '-i', '--index', type=int, default=None,
         help='Index to distinguish different simulated data.'
     )
@@ -27,4 +31,4 @@ def arg_setting(computation_subparsers, simulation_enum):
 
 def main(simulation_parser, args):
     from .common_functions import simulated_mid_data_generator
-    simulated_mid_data_generator(args.new_flux, args.batch_num, args.index, args.with_noise)
+    simulated_mid_data_generator(args.new_flux, args.batch_num, args.index, args.with_noise, args.with_glns_m)

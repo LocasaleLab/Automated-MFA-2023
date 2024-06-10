@@ -25,26 +25,31 @@ The tool is built for Python 3.8 and requires the following packages:
 
 ## Model
 
-Models utilized in this software are in `scripts/model` folder.
+Models utilized in this software are in [`scripts/model`](scripts/model) folder.
 
-The basic model (`base_model`) contains the base model utilized in algorithm development, analysis to data availability
+The basic model ([`base_model_with_glns_m`](
+scripts/model/base_model/base_model_with_glns_m.py)) contains the base model utilized in algorithm development, analysis to data availability
 and experimental data analysis for cultured cells.
 
-The basic model with GLC and CIT buffers (`base_model_with_glc_tca_buffer`) contains the model for analysis of in vivo
-infusion data from patients, which is slightly different from base model in several reactions.
+The basic model with GLC and CIT buffers (
+[`base_model_with_glc_tca_buffer_glns_m`](scripts/model/base_model/base_model_with_glc_tca_buffer_glns_m.py)) 
+contains the model for analysis of in vivo infusion data from patients, 
+which is slightly different from base model in several reactions.
 
 ## Data
 
 All <sup>13</sup>C-isotope labeling data are in `scripts/data` folder.
 
 Infusion data from patients with renal, brain and lung cancer are from [Faubert *et
-al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) and [Courtney *et
-al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) (`renal_carcinoma/data.xlsx` and `lung_tumor/data.xlsx`) .
+al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) ([`renal_carcinoma/data.xlsx`](scripts/data/renal_carcinoma/data.xlsx) 
+and [Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) ([`lung_tumor/data.xlsx`](scripts/data/lung_tumor/data.xlsx))).
 
 Labeling data from cultured cell line HCT-116 are from [Reid *et
-al*, 2018](https://doi.org/10.1038/s41467-018-07868-6) (`colon_cancer_cell_line/data.xlsx`).
+al*, 2018](https://doi.org/10.1038/s41467-018-07868-6) ([`hct116_cultured_cell_line/13C-Glucose_tracing_Mike.xlsx`](
+scripts/data/hct116_cultured_cell_line/13C-Glucose_tracing_Mike.xlsx)).
 
-Data from other colon cancer cell lines are produced in this study (`colon_cancer_cell_line/data.xlsx`).
+Data from other colon cancer cell lines are produced in this study (
+[`colon_cancer_cell_line/data.xlsx`](scripts/data/colon_cancer_cell_line/data.xlsx)).
 
 These raw data are loaded and converted to standard form for MFA.
 

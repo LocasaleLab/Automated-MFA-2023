@@ -211,4 +211,3 @@ class RandomOptimizedDistanceDiagram(ProtocolDiagram):
         super().__init__(
             flux_dot_list, config_class=RandomOptimizedDistanceDiagramConfig, line_config_list=line_config_list,
             text_config_list=text_config_list, **kwargs)
-

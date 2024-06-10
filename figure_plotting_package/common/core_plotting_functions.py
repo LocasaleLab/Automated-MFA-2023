@@ -475,7 +475,6 @@ def core_scatter_plotting(
     if cutoff is not None:
         if cutoff_param_dict is None:
             cutoff_param_dict = {}
-        # ax.axhline(cutoff, **cutoff_param_dict)
         core_cutoff_plotting(ax, cutoff, **cutoff_param_dict)
 
 

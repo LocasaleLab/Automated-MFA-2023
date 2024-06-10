@@ -24,6 +24,8 @@ def arg_setting(computation_subparsers, sensitivity_enum):
         '-p', '--parallel_num', type=int, default=None,
         help='Number of parallel processes. If not provided, it will be selected according to CPU cores.'
     )
+    model_data_sensitivity_parser.add_argument(
+        '-s', '--suffix', default=None, help='Suffix of stored folders')
     running_mode_display = '{}'.format(',  '.join([running_mode.value for running_mode in RunningMode]))
     model_data_sensitivity_parser.add_argument(
         'running_mode', nargs='?', type=RunningMode, choices=list(RunningMode),
@@ -41,4 +43,4 @@ def main(model_data_sensitivity_parser, args):
     else:
         from .common_functions import model_data_sensitivity
         mp.set_start_method('spawn')
-        model_data_sensitivity(running_mode, args.experiment_name, args.test_mode, args.parallel_num)
+        model_data_sensitivity(running_mode, args.experiment_name, args.suffix, args.test_mode, args.parallel_num)

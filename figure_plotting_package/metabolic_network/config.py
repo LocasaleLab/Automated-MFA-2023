@@ -132,21 +132,13 @@ class MetaboliteConfig(object):
     input_metabolite_face_color = ColorConfig.input_metabolite_color
     c13_metabolite_face_color = ColorConfig.c13_metabolite_color
     mid_face_color = ColorConfig.mid_metabolite_color
+    invalid_face_color = ColorConfig.gray
     raw_model_raw_data_color = ColorConfig.mid_metabolite_color
     medium_data_color = ColorConfig.c13_metabolite_color
     few_data_color = ColorConfig.metabolite_few_data_set
     data_without_ppp_color = ColorConfig.metabolite_darker_blue
     data_without_tca_color = ColorConfig.c13_metabolite_color
     data_without_aa_color = ColorConfig.metabolite_few_data_set
-    # data_sensitivity_color_dict = {
-    #     DataName.raw_model_raw_data: ColorConfig.mid_metabolite_color,
-    #     DataName.medium_data: ColorConfig.c13_metabolite_color,
-    #     DataName.few_data: ColorConfig.metabolite_few_data_set,
-    #
-    #     DataName.data_without_ppp: ColorConfig.metabolite_darker_blue,
-    #     DataName.data_without_tca: ColorConfig.c13_metabolite_color,
-    #     DataName.data_without_aa: ColorConfig.metabolite_few_data_set,
-    # }
 
     interval_to_metabolite_ratio = {
         ParameterName.blunt: {
@@ -341,16 +333,21 @@ class TransparencyGenerator(SegmentedLinearMappers):
     }
 
     def __init__(
-            self, reaction_list_with_flux, absolute_value_output_value_dict=None, input_ratio_output_value_dict=None):
+            self, reaction_list_with_flux, min_max_net_flux_value_pair=None,
+            absolute_value_output_value_dict=None, input_ratio_output_value_dict=None,
+            min_max_output_value_pair=(0, 1)):
         if absolute_value_output_value_dict is not None:
             input_ratio_output_value_dict = None
         elif input_ratio_output_value_dict is None:
             input_ratio_output_value_dict = self.input_ratio_output_value_dict
-        min_max_net_flux_value_pair = collect_and_find_flux_value_range(reaction_list_with_flux)
+        if min_max_net_flux_value_pair is None:
+            min_max_net_flux_value_pair = collect_and_find_flux_value_range(reaction_list_with_flux)
         super().__init__(
             min_max_input_value_pair=min_max_net_flux_value_pair,
             absolute_value_output_dict=absolute_value_output_value_dict,
-            relative_ratio_output_value_dict=input_ratio_output_value_dict)
+            relative_ratio_output_value_dict=input_ratio_output_value_dict,
+            min_max_output_value_pair=min_max_output_value_pair
+        )
         # super().__init__(input_ratio_output_value_dict, reaction_list_with_flux)
 
     def __call__(self, net_flux_value):

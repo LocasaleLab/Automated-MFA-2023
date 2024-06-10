@@ -59,22 +59,24 @@ def data_loader(process_type_list):
             batched_simulated_data = True
         else:
             batched_simulated_data = False
+        if process_type in {DataSetting.raw_data_with_glns_m, DataSetting.all_data_with_glns_m}:
+            with_glns_m = True
+        else:
+            with_glns_m = False
         if process_type in {
-                DataSetting.raw_data, DataSetting.medium_data, DataSetting.medium_data_plus, DataSetting.few_data,
+                DataSetting.raw_data, DataSetting.medium_data,
+                DataSetting.medium_data_plus, DataSetting.few_data,
                 DataSetting.data_without_ppp, DataSetting.data_without_aa, DataSetting.data_without_tca,
-                DataSetting.raw_data_batch}:
-            # if with_noise:
-            #     simulated_experimental_mid_data_obj_dict = normal_simulated_experimental_mid_data_obj_dict_with_noise
-            # else:
-            #     simulated_experimental_mid_data_obj_dict = normal_simulated_experimental_mid_data_obj_dict
+                DataSetting.raw_data_batch, DataSetting.raw_data_with_glns_m,
+        }:
             simulated_flux_value_dict, simulated_experimental_mid_data_obj_dict, _ = simulated_data_loader(
-                with_noise=with_noise, batched_data=batched_simulated_data)
+                with_noise=with_noise, batched_data=batched_simulated_data, with_glns_m=with_glns_m)
             if batched_simulated_data:
                 common_or_dict_simulated_flux_value_dict = simulated_list_data_and_information_dict_generator(
                     process_type_label, simulated_flux_value_dict, simulated_experimental_mid_data_obj_dict,
                     modified_data_dict, information_dict)
             else:
-                if process_type == DataSetting.raw_data:
+                if process_type in {DataSetting.raw_data, DataSetting.raw_data_with_glns_m}:
                     modified_data_dict[process_type_label] = simulated_experimental_mid_data_obj_dict
                 else:
                     specific_data_keep_list = data_keep_dict[process_type]
@@ -85,20 +87,17 @@ def data_loader(process_type_list):
                 if common_or_dict_simulated_flux_value_dict is None:
                     common_or_dict_simulated_flux_value_dict = simulated_flux_value_dict
         elif process_type in {
-                DataSetting.medium_data_without_combination, DataSetting.all_data, DataSetting.all_data_batch}:
-            # if with_noise:
-            #     simulated_all_mid_data_obj_dict = \
-            #         all_metabolite_simulated_experimental_mid_data_obj_dict_with_noise
-            # else:
-            #     simulated_all_mid_data_obj_dict = all_metabolite_simulated_experimental_mid_data_obj_dict
+                DataSetting.medium_data_without_combination, DataSetting.all_data, DataSetting.all_data_batch,
+                DataSetting.all_data_with_glns_m,
+        }:
             simulated_flux_value_dict, _, simulated_all_mid_data_obj_dict = simulated_data_loader(
-                with_noise=with_noise, batched_data=batched_simulated_data)
+                with_noise=with_noise, batched_data=batched_simulated_data, with_glns_m=with_glns_m)
             if batched_simulated_data:
                 common_or_dict_simulated_flux_value_dict = simulated_list_data_and_information_dict_generator(
                     process_type_label, simulated_flux_value_dict, simulated_all_mid_data_obj_dict,
                     modified_data_dict, information_dict)
             else:
-                if process_type == DataSetting.all_data:
+                if process_type in {DataSetting.all_data, DataSetting.all_data_with_glns_m}:
                     modified_data_dict[process_type_label] = simulated_all_mid_data_obj_dict
                 else:
                     specific_data_keep_list = data_keep_dict[process_type]

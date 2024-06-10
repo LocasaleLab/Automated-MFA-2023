@@ -12,12 +12,13 @@ class ProtocolDiagramConfig(object):
         ParameterName.vertical: (0.5, 0.65),
         ParameterName.simulated: (1.1, 0.6),
         ParameterName.simulated_reoptimization: (1.1, 0.5),
+        ParameterName.simulated_without_reoptimization: (0.82, 0.5),
         ParameterName.sensitivity: (1.1, 0.5),
         ParameterName.experimental: (0.8, 0.54),
     }
     upper_text_common_config_dict = {
         ParameterName.font: TextConfig.main_text_font,
-        ParameterName.font_size: 12,
+        ParameterName.font_size: 12.5,
         ParameterName.width: 0.23,
         ParameterName.height: 0.1,
         ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
@@ -121,7 +122,7 @@ def protocol_diagram_generator(mode):
     common_title_text = ProtocolDiagramConfig.CommonTitleText
 
     loss_diagram_height_mode = ParameterName.normal
-    if mode == ParameterName.simulated_reoptimization:
+    if mode in {ParameterName.simulated_reoptimization, ParameterName.simulated_without_reoptimization}:
         upper_text_horizontal_axis = 0.46
         loss_diagram_axis = 0.29
         average_diagram_axis = loss_diagram_axis
@@ -216,7 +217,7 @@ def protocol_diagram_generator(mode):
     if mode in {ParameterName.sensitivity, ParameterName.experimental}:
         upper_text_4_string = common_title_text.average
         chevron_arrow_3_y_loc = average_diagram_axis
-    elif mode == ParameterName.simulated_reoptimization:
+    elif mode in {ParameterName.simulated_reoptimization, ParameterName.simulated_without_reoptimization}:
         upper_text_4_string = common_title_text.average
         chevron_arrow_3_y_loc = loss_diagram_axis
     elif mode == ParameterName.simulated:
@@ -348,29 +349,8 @@ def protocol_diagram_generator(mode):
             ParameterName.head: Vector(fit_text_center_x + 0.13, lower_main_axis),
         }
         chevron_arrow_obj_list.append(ChevronArrow(**chevron_arrow_6_config))
-    elif mode == ParameterName.simulated_reoptimization:
-        chevron_arrow_4_config = {
-            **ProtocolDiagramConfig.chevron_config,
-            ParameterName.tail_end_center: Vector(target_center_of_average_diagram.x + 0.13, loss_diagram_axis),
-            ParameterName.head: Vector(left_x_loc - 0.055, loss_diagram_axis),
-        }
-        chevron_arrow_obj_list.append(ChevronArrow(**chevron_arrow_4_config))
-
-        upper_text_5_config_dict = {
-            **ProtocolDiagramConfig.upper_text_common_config_dict,
-            ParameterName.string: common_title_text.re_optimization,
-            ParameterName.center: Vector(vertical_axis_5, upper_text_horizontal_axis)
-        }
-        text_obj_list.append(TextBox(**upper_text_5_config_dict))
-        center_of_opti_from_average_diagram = AverageDiagram.calculate_center(AverageDiagram, common_scale)
-        target_center_of_opti_from_average_diagram = Vector(vertical_axis_5, average_diagram_axis)
-        average_diagram = AverageDiagram(
-            ParameterName.optimization_from_average_solutions, scale=common_scale,
-            bottom_left_offset=target_center_of_opti_from_average_diagram - center_of_opti_from_average_diagram)
-        constructed_obj_list.append(average_diagram)
-
+    elif mode in {ParameterName.simulated_reoptimization, ParameterName.simulated_without_reoptimization}:
         arrow_x_value_list = [vertical_axis_3 + upper_text_x_shift, vertical_axis_4, vertical_axis_5]
-        # chevron_arrow_tail_y_value = loss_diagram_axis - 0.18
         chevron_arrow_tail_y_value = lower_main_axis + 0.09
         chevron_arrow_head_y_value = lower_main_axis + 0.035
         chevron_arrow_config_list = [{
@@ -382,14 +362,7 @@ def protocol_diagram_generator(mode):
                 **ProtocolDiagramConfig.chevron_config,
                 ParameterName.tail_end_center: Vector(arrow_x_value_list[1], chevron_arrow_tail_y_value),
                 ParameterName.head: Vector(arrow_x_value_list[1], chevron_arrow_head_y_value),
-            },
-            {
-                **ProtocolDiagramConfig.chevron_config,
-                ParameterName.tail_end_center: Vector(arrow_x_value_list[2], chevron_arrow_tail_y_value),
-                ParameterName.head: Vector(arrow_x_value_list[2], chevron_arrow_head_y_value),
-            }]
-        chevron_arrow_obj_list.extend(
-            [ChevronArrow(**chevron_arrow_config) for chevron_arrow_config in chevron_arrow_config_list])
+            },]
         bottom_text_common_config = {
             **ProtocolDiagramConfig.upper_text_common_config_dict,
             ParameterName.font_size: 15
@@ -406,13 +379,41 @@ def protocol_diagram_generator(mode):
                 ParameterName.string: CommonFigureString.averaged_solution_wrap,
                 ParameterName.center: Vector(arrow_x_value_list[1], lower_main_axis)
             },
-            {
+        ]
+        if mode == ParameterName.simulated_reoptimization:
+            chevron_arrow_4_config = {
+                **ProtocolDiagramConfig.chevron_config,
+                ParameterName.tail_end_center: Vector(target_center_of_average_diagram.x + 0.13, loss_diagram_axis),
+                ParameterName.head: Vector(left_x_loc - 0.055, loss_diagram_axis),
+            }
+            chevron_arrow_obj_list.append(ChevronArrow(**chevron_arrow_4_config))
+
+            upper_text_5_config_dict = {
+                **ProtocolDiagramConfig.upper_text_common_config_dict,
+                ParameterName.string: common_title_text.re_optimization,
+                ParameterName.center: Vector(vertical_axis_5, upper_text_horizontal_axis)
+            }
+            text_obj_list.append(TextBox(**upper_text_5_config_dict))
+            center_of_opti_from_average_diagram = AverageDiagram.calculate_center(AverageDiagram, common_scale)
+            target_center_of_opti_from_average_diagram = Vector(vertical_axis_5, average_diagram_axis)
+            average_diagram = AverageDiagram(
+                ParameterName.optimization_from_average_solutions, scale=common_scale,
+                bottom_left_offset=target_center_of_opti_from_average_diagram - center_of_opti_from_average_diagram)
+            constructed_obj_list.append(average_diagram)
+
+            chevron_arrow_config_list.append({
+                **ProtocolDiagramConfig.chevron_config,
+                ParameterName.tail_end_center: Vector(arrow_x_value_list[2], chevron_arrow_tail_y_value),
+                ParameterName.head: Vector(arrow_x_value_list[2], chevron_arrow_head_y_value),
+            })
+            bottom_text_config_dict_list.append({
                 **bottom_text_common_config,
                 ParameterName.font_color: ProtocolDiagramConfig.reoptimized_solution_text_color,
                 ParameterName.string: CommonFigureString.reoptimized_solution_wrap,
                 ParameterName.center: Vector(arrow_x_value_list[2], lower_main_axis)
-            },
-        ]
+            },)
+        chevron_arrow_obj_list.extend(
+            [ChevronArrow(**chevron_arrow_config) for chevron_arrow_config in chevron_arrow_config_list])
         text_obj_list.extend(
             [TextBox(**bottom_text_config_dict) for bottom_text_config_dict in bottom_text_config_dict_list])
     elif mode == ParameterName.sensitivity:

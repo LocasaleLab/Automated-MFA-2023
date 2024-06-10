@@ -125,7 +125,7 @@ class DataFigureConfig(object):
         label_height = 0.02
         tick_label_width = 0.05
         tick_label_height = 0.01
-        p_value_cap_width_ratio = 0.3
+        p_value_cap_width_ratio = 0.45
 
     # This labeling parameters are directly fed to .draw function. Therefore, they should be scaled first to
     # obtain correct location in final data figures.
@@ -361,6 +361,81 @@ x_tick_label_dict = {
     },
 }
 
+new_x_tick_label_dict = {
+    'glycolysis': {
+        'HEX_c': 'HEX_c',
+        'PGI_c__R_PGI_c': 'PGI_c Rnet',
+        'PFK_c': 'PFK_c',
+        'FBA_c_FBA_c__R': 'FBA_c net',
+        'TPI_c_TPI_c__R': 'TPI_c net',
+        'GAPD_c_GAPD_c__R': 'GAPD_c net',
+        'PGK_c_PGK_c__R': 'PGK_c net',
+        'PGM_c_PGM_c__R': 'PGM_c net',
+        'ENO_c_ENO_c__R': 'ENO_c net',
+        'PYK_c': 'PYK_c',
+        'LDH_c_LDH_c__R': 'LDH_c net',
+        'PEPCK_c': 'PEPCK_c',
+        'ACITL_c': 'ACITL_c',
+        'MDH_c__R_MDH_c': 'MDH_c Rnet',
+        'ME2_c': 'ME2_c',
+        'LIPID_c': 'LIPID_c',
+    },
+    'ser_gly': {
+        'PHGDH_PSAT_PSP_c': 'PHGDH_c',
+        'SHMT_c_SHMT_c__R': 'SHMT_c net',
+        'SER_input': 'SER_input',
+        'GLY_input': 'GLY_input',
+    },
+    'tca': {
+        'PDH_m': 'PDH_m',
+        'CS_m': 'CS_m',
+        'ACONT_m_ACONT_m__R': 'ACONT_m net',
+        'ICDH_m': 'ICDH_m',
+        'AKGD_m': 'AKGD_m',
+        'SUCOAS_m': 'SUCOAS_m',
+        'SUCD_m_SUCD_m__R': 'SUCD_m net',
+        'FUMH_m_FUMH_m__R': 'FUMH_m net',
+        'MDH_m_MDH_m__R': 'MDH_m net',
+        'PC_m': 'PC_m',
+    },
+    'aa': {
+        'GLUD_m_GLUD_m__R': 'GLUD_m net',
+        'GLND_m': 'GLND_m',
+        'GLNS_c': 'GLNS_c',
+        'GLNS_m': 'GLNS_m',
+        'ASPTA_m_ASPTA_m__R': 'ASPTA_m net',
+        'AS_c': 'AS_c',
+        'ASPTA_c_ASPTA_c__R': 'ASPTA_c net',
+    },
+    'ppp': {
+        'G6PDH2R_PGL_GND_c': 'G6PDH2R_c',
+        'RPI_c_RPI_c__R': 'RPI_c net',
+        'RPE_c_RPE_c__R': 'RPE_c net',
+        'TKT1_c_TKT1_c__R': 'TKT1_c net',
+        'TKT2_c_TKT2_c__R': 'TKT2_c net',
+        'TALA_c_TALA_c__R': 'TALA_c net',
+        'Salvage_c': 'Salvage',
+    },
+    'exchange': {
+        'PYR_trans_PYR_trans__R': 'PYR_trans net',
+        'ASPGLU_m__R_ASPGLU_m': 'ASPGLU_m Rnet',
+        'AKGMAL_m__R_AKGMAL_m': 'AKGMAL_m Rnet',
+        'CIT_trans__R_CIT_trans': 'CIT_trans Rnet',
+        'GLN_trans_GLN_trans__R': 'GLN_trans net',
+        'GLU_trans__R_GLU_trans': 'GLU_trans Rnet',
+        'GLC_input': 'GLC_input',
+        'GLN_input': 'GLN_input',
+        'ASP_input': 'ASP_input',
+        'LAC_output': 'LAC_output',
+        'ALA_input': 'ALA_input',
+        'GPT_c_GPT_c__R': 'GPT_c net',
+        'BIOMASS_REACTION': 'Biomass',
+    },
+}
+
+
+# 'PGI_c__R_PGI_c': 'PGI_c Rnet',
+
 group_id_name_dict = {
     'glycolysis': 'Glycolysis',
     'ser_gly': 'Ser-Gly',
@@ -450,7 +525,7 @@ def merge_complete_config_dict(complete_figure_config_dict, update_figure_config
     return modified_figure_config_dict
 
 
-def net_flux_x_axis_labels_generator(flux_id_list):
+def net_flux_x_axis_labels_generator(flux_id_list, with_glns_m=False):
     # group_id_name_dict = {
     #     'glycolysis': 'Glycolysis',
     #     'ser_gly': 'Ser-Gly',
@@ -459,7 +534,13 @@ def net_flux_x_axis_labels_generator(flux_id_list):
     #     'ppp': 'PPP',
     #     'exchange': 'Transfer and\nexchange fluxes',
     # }
-    group_id_list = list(x_tick_label_dict.keys())
+    if with_glns_m:
+        # real_x_tick_label_dict = {key: dict(each_dict) for key, each_dict in x_tick_label_dict.items()}
+        # real_x_tick_label_dict['aa']['GLNS_m'] = 'GLNS_m'
+        real_x_tick_label_dict = new_x_tick_label_dict
+    else:
+        real_x_tick_label_dict = x_tick_label_dict
+    group_id_list = list(real_x_tick_label_dict.keys())
     x_tick_label_list = []
     current_group_index = 0
     last_separator_location = 0
@@ -467,7 +548,7 @@ def net_flux_x_axis_labels_generator(flux_id_list):
     group_name_location_list = []
     group_name_list = []
     current_group_id = group_id_list[current_group_index]
-    current_group_label_dict = x_tick_label_dict[current_group_id]
+    current_group_label_dict = real_x_tick_label_dict[current_group_id]
     for flux_index, flux_id in enumerate(flux_id_list + [None]):
         if flux_id is None or flux_id not in current_group_label_dict:
             new_separator_location = flux_index
@@ -478,7 +559,7 @@ def net_flux_x_axis_labels_generator(flux_id_list):
             if flux_id is not None:
                 current_group_index += 1
                 new_group_id = group_id_list[current_group_index]
-                new_group_label_dict = x_tick_label_dict[new_group_id]
+                new_group_label_dict = real_x_tick_label_dict[new_group_id]
                 x_tick_label_list.append(new_group_label_dict[flux_id])
                 current_group_id = new_group_id
                 current_group_label_dict = new_group_label_dict

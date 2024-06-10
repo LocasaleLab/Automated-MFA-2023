@@ -188,14 +188,17 @@ class LossDistanceSinglePairFigure(LossDistanceGridFigure):
         ax_height = default_parameter_extract(figure_data_parameter_dict, ParameterName.ax_height, self.ax_height)
         self.total_width = total_width
         self.ax_height = ax_height
-        with_reoptimization = default_parameter_extract(
-            figure_data_parameter_dict, ParameterName.optimized, True, pop=True)
+        with_re_optimization = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.optimized, True)
+        with_traditional_method = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_traditional_method, False)
         different_simulated_data = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.different_simulated_distance, False)
         loss_name_dict, loss_color_dict = CommonFigureMaterials.select_average_solution_name_color_dict(
-            CommonFigureMaterials, with_reoptimization)
+            CommonFigureMaterials, with_re_optimization, with_traditional_method=with_traditional_method)
         net_distance_name_dict, net_distance_color_dict = CommonFigureMaterials.select_average_solution_name_color_dict(
-            CommonFigureMaterials, with_reoptimization, different_simulated_data)
+            CommonFigureMaterials, with_re_optimization, with_traditional_method=with_traditional_method,
+            different_simulated_data=different_simulated_data)
         if ParameterName.x_tick_labels_list not in figure_data_parameter_dict:
             if ParameterName.x_tick_labels_list not in figure_data_parameter_dict[
                     ParameterName.loss_data_figure_parameter_dict]:

@@ -3,7 +3,6 @@ from ...common.classes import OptionDict
 from ...common.config import CoreConstants, ParamName
 
 from ..slsqp_solver.solver_class import SLSQPSolver
-# from ...common.numba_packages import set_num_threads
 
 
 class SLSQPNumbaSolver(SLSQPSolver):
@@ -26,36 +25,6 @@ class SLSQPNumbaSolver(SLSQPSolver):
             from . import python_initializer_optimizer_functions
             self.optimizer_functions = python_initializer_optimizer_functions
         self.nopython = nopython
-
-    # def __init__(
-    #         self, flux_name_index_dict, complete_emu_dim_dict, complete_flux_constraint_matrix,
-    #         complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix=None,
-    #         emu_mid_equation_dict=None, input_emu_data_dict=None, experimental_mid_data_obj_dict=None,
-    #         nested_mix_equation_dict=None, mix_ratio_multiplier=None, all_target_metabolite_name_carbon_num_dict=None,
-    #         verbose=False, solver_option_dict=None):
-    #     if solver_option_dict is None:
-    #         solver_option_dict = OptionDict()
-    #     nopython = solver_option_dict.get_option(ParamName.numba_nopython, True)
-    #     if os is not None:
-    #         # os.environ['NUMBA_PARFOR_MAX_TUPLE_SIZE'] = '500'
-    #         os.environ['NUMBA_NUM_THREADS'] = '5'
-    #     super(SLSQPNumbaSolver, self).__init__(
-    #         flux_name_index_dict, complete_emu_dim_dict, complete_flux_constraint_matrix,
-    #         complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix,
-    #         emu_mid_equation_dict, input_emu_data_dict, experimental_mid_data_obj_dict,
-    #         nested_mix_equation_dict, mix_ratio_multiplier, all_target_metabolite_name_carbon_num_dict,
-    #         verbose, solver_option_dict)
-    #
-    #     self.all_target_emu_index_dict = None
-    #     self.all_target_emu_name_metabolite_name_dict = None
-    #     self.objective_function_args = None
-    #     if nopython:
-    #         from . import nopython_initializer_optimizer_functions
-    #         self.optimizer_functions = nopython_initializer_optimizer_functions
-    #     else:
-    #         from . import python_initializer_optimizer_functions
-    #         self.optimizer_functions = python_initializer_optimizer_functions
-    #     self.nopython = nopython
 
     def _construct_mid_obj_func(self):
         (

@@ -5,6 +5,7 @@ from ...common.config import np, Vector, ColorConfig, ZOrderConfig, TextBox, Com
     CommonElementConfig, numbered_even_sequence
 
 MetabolicNetworkWithLegend = GeneralElements.MetabolicNetworkWithLegend
+MetabolicNetworkLegend = GeneralElements.MetabolicNetworkLegend
 MetaboliteConfig = GeneralElements.MetaboliteConfig
 ReactionConfig = GeneralElements.ReactionConfig
 

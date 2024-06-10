@@ -35,6 +35,7 @@ from ..figure_elements.complex_figure import (
     ExperimentalOptimizationLossComparison,
 )
 from ..figure_elements.metabolic_network.sensitivity_diagram import SensitivityDiagram
+from ..figure_elements.metabolic_network.loss_of_averaged_solutions_diagram import LossOfAveragedSolutionsDiagram
 
 
 class Elements(GeneralElements):
@@ -71,3 +72,4 @@ class Elements(GeneralElements):
     ExperimentalOptimizationLossComparison = ExperimentalOptimizationLossComparison
 
     SensitivityDiagram = SensitivityDiagram
+    LossOfAveragedSolutionsDiagram = LossOfAveragedSolutionsDiagram

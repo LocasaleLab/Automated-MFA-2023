@@ -90,9 +90,12 @@ class SubfigureD(Subfigure):
         scale = 0.7
 
         running_time_and_loss_config_dict = {
-            ParameterName.total_width: 0.5463,
             ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: {
+                ParameterName.total_width: 0.5463,
+                ParameterName.data_name: DataName.hct116_cultured_cell_line,
+            }
         }
         running_time_and_loss_obj = Elements.TimeLossStack(**running_time_and_loss_config_dict)
 
@@ -174,9 +177,13 @@ class SubfigureG(Subfigure):
         scale = common_random_optimized_figure_scale
 
         running_time_and_loss_config_dict = {
-            ParameterName.total_width: 0.8,
+            # ParameterName.total_width: 0.8,
             ParameterName.bottom_left_offset: subfigure_bottom_left,
-            ParameterName.scale: scale
+            ParameterName.scale: scale,
+            ParameterName.figure_data_parameter_dict: {
+                ParameterName.total_width: 0.8,
+                ParameterName.data_name: DataName.hct116_cultured_cell_line
+            }
         }
         random_optimized_loss_distance_obj = Elements.RandomOptimizedLossDistanceWithDiagramComparison(
             **running_time_and_loss_config_dict)

@@ -81,7 +81,7 @@ def find_overlapped_emu(current_emu, reaction_obj):
 
 
 def emu_equation_analyzer(
-        metabolite_reaction_dict, target_emu_list, input_metabolite_name_set):
+        metabolite_reaction_dict, target_metabolite_name_list, input_metabolite_name_set, complete_metabolite_dim_dict):
     def add_new_emu_to_queue(current_emu: EMUElement):
         # Num that a EMU has been added to queue in this path.
         insert_count['count'] += 1
@@ -103,7 +103,9 @@ def emu_equation_analyzer(
     input_emu_dict = {}
     insert_count = {'count': 0}
     emu_need_to_add = PriorityQueue()
-    for target_emu in target_emu_list:
+    for target_metabolite_name in target_metabolite_name_list:
+        carbon_num = complete_metabolite_dim_dict[target_metabolite_name]
+        target_emu = EMUElement(target_metabolite_name, [1] * carbon_num)
         complete_emu_visiting_num_dict[target_emu.emu_name] += 1
         if target_emu.metabolite_name in input_metabolite_name_set:
             input_emu_dict[target_emu.emu_name] = target_emu
@@ -148,6 +150,88 @@ def emu_equation_analyzer(
     sorted_emu_equations_dict_carbon_num_list = sort_emu_equations_dict_by_carbon_num(
         emu_mid_equations_dict_carbon_num_list)
     return sorted_emu_equations_dict_carbon_num_list, input_emu_dict
+
+
+def emu_dependency_analyzer(metabolite_reaction_dict, input_metabolite_name_set, complete_metabolite_dim_dict):
+    emu_name_dependency_dict = {}
+    complete_emu_name_obj_index_dict = {}
+    input_emu_dict = {}
+    processed_emu_name_dict = {}
+    unprocessed_emu_obj_dict = {}
+
+    for metabolite_name in metabolite_reaction_dict.keys():
+        carbon_num = complete_metabolite_dim_dict[metabolite_name]
+        current_emu_obj = EMUElement(metabolite_name, [1] * carbon_num)
+        current_emu_name = current_emu_obj.full_name
+        if current_emu_name not in complete_emu_name_obj_index_dict:
+            complete_emu_name_obj_index_dict[current_emu_name] = (
+                current_emu_obj, len(complete_emu_name_obj_index_dict))
+        unprocessed_emu_obj_dict[current_emu_obj] = None
+
+    while len(unprocessed_emu_obj_dict) > 0:
+        current_emu_obj = unprocessed_emu_obj_dict.keys().__iter__().__next__()
+        current_emu_full_name = current_emu_obj.full_name
+        if current_emu_full_name not in emu_name_dependency_dict:
+            emu_name_dependency_dict[current_emu_full_name] = {}
+        for reaction in metabolite_reaction_dict[current_emu_obj.metabolite_name]:
+            reaction_id = reaction.reaction_id
+            if reaction_id == CoreConstants.biomass_flux_id:
+                continue
+            overlapped_emu_dict_combination_list = find_overlapped_emu(current_emu_obj, reaction)
+            """
+                Each item in overlapped_emu_dict_combination_list reflects appearance of one target metabolite 
+                in current reaction.
+                Usually len(overlapped_emu_dict_combination_list) == 1 since one metabolite usually appear once 
+                in a reaction. The number > 1 appears when a reaction include metabolite with stoichiometric number
+                > 1. In this case, if one EMU depends on same EMU more than once, their coefficients need to be summed.
+                If depends on different EMUs, all of them need to be recorded
+            """
+            for coefficient, emu_dict_combination in overlapped_emu_dict_combination_list:
+                dependent_emu_list = []
+                for overlapped_emu_dict in emu_dict_combination:
+                    metabolite_name = overlapped_emu_dict['metabolite_name']
+                    selected_carbon_list = overlapped_emu_dict['selected_carbon_list']
+                    # overlapped_emu_name = "{}{}{}".format(
+                    #     metabolite_name, CoreConstants.emu_carbon_list_str_sep, "".join(
+                    #         [str(num) for num in selected_carbon_list]))
+                    overlapped_emu_obj = EMUElement(metabolite_name, selected_carbon_list)
+                    overlapped_emu_name = overlapped_emu_obj.full_name
+                    if metabolite_name in input_metabolite_name_set:
+                        if overlapped_emu_name not in input_emu_dict:
+                            input_emu_dict[overlapped_emu_name] = overlapped_emu_obj
+                    elif overlapped_emu_name not in processed_emu_name_dict:
+                        unprocessed_emu_obj_dict[overlapped_emu_obj] = None
+                    if overlapped_emu_name not in complete_emu_name_obj_index_dict:
+                        complete_emu_name_obj_index_dict[overlapped_emu_name] = (
+                            overlapped_emu_obj, len(complete_emu_name_obj_index_dict))
+                    dependent_emu_list.append(overlapped_emu_obj)
+                if len(dependent_emu_list) > 1:
+                    sorted_dependent_emu_list = sorted(dependent_emu_list, key=lambda x: x.full_name)
+                    sorted_dependent_emu_name_list = [
+                        dependent_emu.full_name for dependent_emu in sorted_dependent_emu_list]
+                    convolution_emu_obj = current_emu_obj.copy_to_convolution(sorted_dependent_emu_list)
+                    convolution_emu_full_name = convolution_emu_obj.full_name
+                    if convolution_emu_full_name not in complete_emu_name_obj_index_dict:
+                        complete_emu_name_obj_index_dict[convolution_emu_full_name] = (
+                            convolution_emu_obj, len(complete_emu_name_obj_index_dict))
+                    if convolution_emu_full_name not in emu_name_dependency_dict:
+                        emu_name_dependency_dict[convolution_emu_full_name] = {
+                            convoluted_emu_name: [(CoreConstants.convolution_id, 1)]
+                            for convoluted_emu_name in sorted_dependent_emu_name_list}
+                    dependent_emu_name = convolution_emu_full_name
+                else:
+                    the_only_dependent_emu = dependent_emu_list[0]
+                    dependent_emu_name = the_only_dependent_emu.full_name
+                if current_emu_full_name not in emu_name_dependency_dict:
+                    emu_name_dependency_dict[current_emu_full_name] = {}
+                if dependent_emu_name not in emu_name_dependency_dict[current_emu_full_name]:
+                    emu_name_dependency_dict[current_emu_full_name][dependent_emu_name] = []
+                emu_name_dependency_dict[current_emu_full_name][dependent_emu_name].append((reaction_id, coefficient))
+
+        processed_emu_name_dict[current_emu_full_name] = None
+        del unprocessed_emu_obj_dict[current_emu_obj]
+
+    return emu_name_dependency_dict, complete_emu_name_obj_index_dict, input_emu_dict
 
 
 def emu_matrix_equation_generator(

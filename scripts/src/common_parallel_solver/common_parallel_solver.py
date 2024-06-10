@@ -1,5 +1,5 @@
 from .packages import np, mp, tqdm, threadpool_limits
-from .config import Keywords, random_seed, specific_solver_constructor, base_solver_constructor
+from .config import Keywords, random_seed, specific_solver_constructor, base_solver_constructor, parameter_extract
 
 from .feasible_solution_generator import universal_feasible_solution_generator, complicated_feasible_solution_generator
 
@@ -30,6 +30,91 @@ def slsqp_solving(slsqp_solver_obj, input_matrix, verbose=False, report_interval
     final_solution_array = np.array(final_solution_list)
     final_time_array = np.array(final_time_list)
     final_loss_array = np.array(final_loss_list)
+    return final_solution_array, final_time_array, final_loss_array, final_predicted_dict
+
+
+def batch_solving_func(
+        final_result_obj, result_label, result_information, slsqp_solver_obj, initial_flux_input,
+        this_case_optimization_num, pbar, parallel_parameter_dict, verbose=False):
+    def single_step_initial_input_generator(
+            initial_flux_input, this_case_optimization_num, max_initial_num_each_generation, batch_size):
+        if initial_flux_input is None:
+            total_optimization_num = this_case_optimization_num
+            rest_initial_num = 0
+            rest_initial_input = None
+        else:
+            total_optimization_num = initial_flux_input.shape[0]
+            rest_initial_input = initial_flux_input
+            rest_initial_num = total_optimization_num
+        for start_initial_index in range(0, total_optimization_num, batch_size):
+            current_step_num = min(total_optimization_num - start_initial_index, batch_size)
+            if initial_flux_input is None:
+                if rest_initial_num < current_step_num:
+                    initial_num_to_generate = min(
+                        total_optimization_num - start_initial_index, max_initial_num_each_generation)
+                    print(f'Generating {initial_num_to_generate} initial value of {result_label}...')
+                    new_initial_input = universal_feasible_solution_generator(
+                        slsqp_solver_obj, initial_num_to_generate)
+                    if new_initial_input is None:
+                        print(f'{result_label} failed to generate initial flux')
+                        exit(-1)
+                    else:
+                        print('Initial flux generated')
+                    diff = current_step_num - rest_initial_num
+                    if rest_initial_input is None:
+                        current_step_initial_input = new_initial_input[:diff]
+                    else:
+                        current_step_initial_input = np.vstack([rest_initial_input, new_initial_input[:diff]])
+                    rest_initial_input = new_initial_input[diff:]
+                else:
+                    current_step_initial_input = rest_initial_input[:current_step_num]
+                    rest_initial_input = rest_initial_input[current_step_num:]
+            else:
+                current_step_initial_input = initial_flux_input[
+                    start_initial_index:start_initial_index + current_step_num]
+            yield current_step_num, current_step_initial_input
+
+    batch_size = parallel_parameter_dict[Keywords.batch_solving]
+    max_initial_num_each_generation = parameter_extract(
+        parallel_parameter_dict, Keywords.max_optimization_each_generation, this_case_optimization_num)
+    maximal_save_point = parameter_extract(
+        parallel_parameter_dict, Keywords.maximal_save_point, max_initial_num_each_generation)
+    report_interval = 100
+    # if initial_flux_input is None:
+    #     initial_flux_input = universal_feasible_solution_generator(slsqp_solver_obj, this_case_optimization_num)
+    # if initial_flux_input is None:
+    #     print(f'{result_label} failed to generate initial flux')
+    # else:
+    #     print('Initial flux generated')
+    final_time_list = []
+    final_loss_list = []
+    final_solution_list = []
+    final_predicted_dict = {}
+    calculated_solution_num = 0
+    solution_num_since_last_save = 0
+    for current_step_num, current_step_initial_input in single_step_initial_input_generator(
+            initial_flux_input, this_case_optimization_num, max_initial_num_each_generation, batch_size):
+        if verbose:
+            print(f'Start solving solution # {calculated_solution_num} ~ {calculated_solution_num + current_step_num}')
+        final_solution, final_obj_value = slsqp_solver_obj.solve(current_step_initial_input)
+        time_array = np.ones(batch_size) * slsqp_solver_obj.recorder.running_time / batch_size
+        print(time_array)
+        exit()
+        result_list = (final_solution, time_array, final_obj_value, {})
+        calculated_solution_num += current_step_num
+        final_result_obj.add_and_save_result(
+            result_label, result_information, result_list, slsqp_solver_obj.flux_name_index_dict,
+            slsqp_solver_obj.target_experimental_mid_data_dict)
+        solution_num_since_last_save += current_step_num
+        pbar.update(current_step_num)
+        if verbose and solution_num_since_last_save >= report_interval:
+            print('{} finished'.format(calculated_solution_num))
+            solution_num_since_last_save = 0
+    final_solution_array = np.array(final_solution_list)
+    final_time_array = np.array(final_time_list)
+    final_loss_array = np.array(final_loss_list)
+
+    print(f'{result_label} ended')
     return final_solution_array, final_time_array, final_loss_array, final_predicted_dict
 
 
@@ -153,9 +238,10 @@ def common_parallel_solver(
             result_list, result_label, result_information, flux_name_index_dict,
             target_experimental_mid_data_dict, start_index, each_case_target_optimization_num)
 
+    """Add day to elapsed and remaining will be very troublesome for tqdm. Abort it."""
     pbar = tqdm.tqdm(
         total=total_optimization_num, smoothing=0, maxinterval=5,
-        desc="Computation progress of {}".format(final_result_obj.result_name))
+        desc='Computation progress of {}'.format(final_result_obj.result_name))
     if parallel_test:
         for parameter_list in parameter_list_iter:
             raw_result = common_parallel_single_solver(parameter_list)
@@ -182,6 +268,10 @@ def serial_solver_wrap(
     pbar = tqdm.tqdm(
         total=total_optimization_num, smoothing=0, maxinterval=5,
         desc="Computation progress of {}".format(final_result_obj.result_name))
+    batch_solving = False
+    if parallel_parameter_dict is not None:
+        if Keywords.batch_solving in parallel_parameter_dict:
+            batch_solving = True
     for (
             base_solver_obj, mfa_config, this_case_optimization_num, result_label, result_information,
             each_case_target_optimization_num) in result_list:
@@ -198,24 +288,29 @@ def serial_solver_wrap(
         else:
             raise ValueError()
         slsqp_obj = specific_solver_constructor(base_solver_obj, mfa_config)
-        if initial_flux_input is None:
-            initial_flux_input = universal_feasible_solution_generator(slsqp_obj, this_case_optimization_num)
-        if initial_flux_input is None:
-            print(f'{result_label} failed to generate initial flux')
+        if batch_solving:
+            batch_solving_func(
+                final_result_obj, result_label, result_information, slsqp_obj, initial_flux_input,
+                this_case_optimization_num, pbar, parallel_parameter_dict, verbose=not test_mode)
         else:
-            print('Initial flux generated')
-            result_list = slsqp_solving(
-                slsqp_obj, initial_flux_input, verbose=not test_mode, report_interval=report_interval)
-            pbar.update(this_case_optimization_num)
-            print(f'{result_label} ended')
-            final_result_obj.add_and_save_result(
-                result_label, result_information, result_list, slsqp_obj.flux_name_index_dict,
-                slsqp_obj.target_experimental_mid_data_dict)
+            if initial_flux_input is None:
+                initial_flux_input = universal_feasible_solution_generator(slsqp_obj, this_case_optimization_num)
+            if initial_flux_input is None:
+                print(f'{result_label} failed to generate initial flux')
+            else:
+                print('Initial flux generated')
+                result_list = slsqp_solving(
+                    slsqp_obj, initial_flux_input, verbose=not test_mode, report_interval=report_interval)
+                pbar.update(this_case_optimization_num)
+                print(f'{result_label} ended')
+                final_result_obj.add_and_save_result(
+                    result_label, result_information, result_list, slsqp_obj.flux_name_index_dict,
+                    slsqp_obj.target_experimental_mid_data_dict)
 
 
 def solver_and_solution_list_construct(
         parameter_label_content_dict, final_result_obj, test_mode, each_case_target_optimization_num, load_results,
-        parallel_parameters=None, predefined_initial_solution_matrix_loader=None):
+        parallel_parameters=None, predefined_initial_solution_matrix_loader=None, batch_solving=False):
     result_list = []
     total_optimization_num = 0
     if parallel_parameters is None:
@@ -227,42 +322,53 @@ def solver_and_solution_list_construct(
     for result_label, (
             label_tuple, (mfa_model, mfa_data, mfa_config),
             result_information, other_information_dict) in parameter_label_content_dict.items():
+        if Keywords.specific_target_optimization_num in mfa_config.miscellaneous_config:
+            this_case_target_optimization_num = mfa_config.miscellaneous_config[
+                Keywords.specific_target_optimization_num]
+            set_specific_target_optimization_num = True
+        else:
+            this_case_target_optimization_num = each_case_target_optimization_num
+            set_specific_target_optimization_num = False
         if Keywords.predefined_initial_solution_matrix in mfa_config.miscellaneous_config:
             optimization_from_predefined_initial_solution_parameter_dict = mfa_config.miscellaneous_config[
                 Keywords.predefined_initial_solution_matrix]
-            averaged_solution_flux_matrix = predefined_initial_solution_matrix_loader(
-                *label_tuple, optimization_from_predefined_initial_solution_parameter_dict)
-            each_case_target_optimization_num = len(averaged_solution_flux_matrix)
+            predefined_solution_flux_matrix = predefined_initial_solution_matrix_loader(
+                final_result_obj, *label_tuple, optimization_from_predefined_initial_solution_parameter_dict)
+            if set_specific_target_optimization_num:
+                assert this_case_target_optimization_num <= len(predefined_solution_flux_matrix)
+            else:
+                this_case_target_optimization_num = len(predefined_solution_flux_matrix)
         else:
-            averaged_solution_flux_matrix = None
+            predefined_solution_flux_matrix = None
         if load_results:
             new_optimization_num = load_previous_results(
-                result_label, final_result_obj, each_case_target_optimization_num)
+                result_label, final_result_obj, this_case_target_optimization_num)
         else:
-            new_optimization_num = each_case_target_optimization_num
+            new_optimization_num = this_case_target_optimization_num
         if new_optimization_num == 0:
             print(f'No solution of {result_label} need to be obtained. Abort')
             continue
         base_solver_obj = base_solver_constructor(mfa_model, mfa_data, mfa_config, verbose=test_mode)
         base_solver_obj.base_initialize_solver()
         if Keywords.unoptimized in mfa_config.miscellaneous_config:
+            print(f'Generating {new_optimization_num} number of unoptimized solutions...')
             generate_unoptimized_solutions(
                 mfa_config, new_optimization_num, final_result_obj, base_solver_obj, result_label,
-                result_information, each_case_target_optimization_num)
+                result_information, this_case_target_optimization_num)
             print(f'{new_optimization_num} number of unoptimized solutions have been saved.')
             continue
         elif Keywords.predefined_initial_solution_matrix in mfa_config.miscellaneous_config:
-            averaged_solution_flux_matrix = averaged_solution_flux_matrix[-new_optimization_num:]
+            predefined_solution_flux_matrix = predefined_solution_flux_matrix[-new_optimization_num:]
             if parallel_parameters is None:
-                each_case_iter = averaged_solution_flux_matrix
+                each_case_iter = predefined_solution_flux_matrix
             else:
                 print(f'{new_optimization_num} initial value of {result_label} loaded')
                 each_case_iter = each_case_optimization_distribution_iter_generator(
                     new_optimization_num, each_process_optimization_num, solver_obj=base_solver_obj,
-                    total_initial_flux_input=averaged_solution_flux_matrix,
+                    total_initial_flux_input=predefined_solution_flux_matrix,
                     result_label=result_label)
         else:
-            if parallel_parameters is None:
+            if parallel_parameters is None or batch_solving:
                 each_case_iter = new_optimization_num
             else:
                 print(f'{new_optimization_num} initial value of {result_label} needs to be generated')
@@ -273,7 +379,7 @@ def solver_and_solution_list_construct(
         total_optimization_num += new_optimization_num
         result_list.append((
             base_solver_obj, mfa_config, each_case_iter, result_label, result_information,
-            each_case_target_optimization_num))
+            this_case_target_optimization_num))
     return result_list, total_optimization_num
 
 
@@ -281,13 +387,17 @@ def common_solver(
         parameter_label_content_dict, test_mode, final_result_obj, each_case_target_optimization_num,
         report_interval, parallel_parameter_dict=None, load_results=False,
         predefined_initial_solution_matrix_loader=None):
+    batch_solving = False
     if parallel_parameter_dict is None:
         solver_wrap = serial_solver_wrap
+    elif Keywords.batch_solving in parallel_parameter_dict:
+        solver_wrap = serial_solver_wrap
+        batch_solving = True
     else:
         solver_wrap = parallel_solver_wrap
     result_list, total_optimization_num = solver_and_solution_list_construct(
         parameter_label_content_dict, final_result_obj, test_mode, each_case_target_optimization_num,
-        load_results, parallel_parameter_dict, predefined_initial_solution_matrix_loader)
+        load_results, parallel_parameter_dict, predefined_initial_solution_matrix_loader, batch_solving)
     solver_wrap(
         result_list, final_result_obj, total_optimization_num, test_mode, report_interval,
         parallel_parameter_dict)

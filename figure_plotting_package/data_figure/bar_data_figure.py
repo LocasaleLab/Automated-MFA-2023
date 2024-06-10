@@ -347,6 +347,7 @@ class BasicFluxErrorBarDataFigure(BasicBarDataFigure):
                 ParameterName.ax_bottom_left_list, ParameterName.ax_size_list,
                 ParameterName.data_nested_list, ParameterName.color_dict, ParameterName.flux_name_list],
             None, pop=True, repeat_default_value=True, force=True)
+        with_glns_m = default_parameter_extract(figure_data_parameter_dict, ParameterName.with_glns_m, False)
         (
             common_y_lim, y_ticks, y_label, y_tick_labels, broken_y_axis_ratio, cutoff_value_list
         ) = default_parameter_extract(
@@ -363,7 +364,7 @@ class BasicFluxErrorBarDataFigure(BasicBarDataFigure):
 
         (
             x_tick_labels, pathway_separator_location_array, pathway_name_location_array, pathway_name_list
-        ) = net_flux_x_axis_labels_generator(common_flux_name_list)
+        ) = net_flux_x_axis_labels_generator(common_flux_name_list, with_glns_m=with_glns_m)
         specific_tick_separator_dict = {
             ParameterName.x_tick_separator_locs: pathway_separator_location_array,
             ParameterName.x_tick_separator_labels: pathway_name_list,
@@ -402,9 +403,12 @@ class BasicFluxErrorBarDataFigure(BasicBarDataFigure):
             ParameterName.edge_style: LineStyle.thin_dash,
         }
 
-        subplot_name_text_format_dict = default_parameter_extract(
+        general_subplot_name_text_format_dict = DataFigureConfig.common_subplot_text_format_dict_generator()
+        specific_subplot_name_text_format_dict = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.subplot_name_text_format_dict,
-            DataFigureConfig.common_subplot_text_format_dict_generator())
+            {})
+        subplot_name_text_format_dict = merge_complete_config_dict(
+            general_subplot_name_text_format_dict, specific_subplot_name_text_format_dict)
 
         figure_config_dict = {
             ParameterName.column_width: 0.5,

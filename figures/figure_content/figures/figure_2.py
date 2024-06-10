@@ -8,10 +8,13 @@ Subfigure = Elements.Subfigure
 common_data_figure_scale = 0.45
 all_net_flux_comparison_scale = 0.4
 heatmap_fluxes = ('FBA_c - FBA_c__R', 'CS_m')
-figure_d_e_g_h_x_offset = 0
+figure_a_b_y_offset = -0.01
+figure_c_d_e_f_x_offset = 0.005
+figure_g_h_i_j_x_offset = -0.005
+figure_e_f_x_offset = 0.01
 figure_d_g_y_offset = 0
 figure_e_h_y_offset = 0.01
-metabolic_network_center_offset = Vector(0.01, 0)
+metabolic_network_center_offset = Vector(0.01, -0.005)
 network_text_y_offset = Vector(0, 0.6)
 network_legend_y_offset = Vector(0, 0)
 
@@ -28,7 +31,8 @@ class SubfigureA(Subfigure):
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
 
         data_acquisition_diagram = OptimizationDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset + Vector(0.03, 0),
+            ParameterName.bottom_left_offset: (
+                subfigure_bottom_left + center_bottom_offset + Vector(0.03, figure_a_b_y_offset)),
             ParameterName.scale: scale,
             ParameterName.mode: ParameterName.simulated,
         })
@@ -52,7 +56,8 @@ class SubfigureB(Subfigure):
         center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
 
         data_acquisition_diagram = ProtocolDiagram(**{
-            ParameterName.bottom_left_offset: subfigure_bottom_left + center_bottom_offset,
+            ParameterName.bottom_left_offset: (
+                subfigure_bottom_left + center_bottom_offset + Vector(0, figure_a_b_y_offset)),
             ParameterName.scale: scale,
             ParameterName.mode: ParameterName.simulated_reoptimization,
         })
@@ -83,7 +88,9 @@ class SubfigureC(Subfigure):
         bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
 
         subfigure_c_config_dict = {
-            ParameterName.bottom_left_offset: subfigure_bottom_left + bottom_offset + metabolic_network_center_offset,
+            ParameterName.bottom_left_offset: (
+                    subfigure_bottom_left + bottom_offset + metabolic_network_center_offset +
+                    Vector(figure_c_d_e_f_x_offset, 0)),
             ParameterName.scale: scale,
             ParameterName.legend: legend,
             ParameterName.figure_title: title,
@@ -140,7 +147,8 @@ class SubfigureD(Subfigure):
         })
 
         center = loss_distance_comparison_figure.calculate_center(loss_distance_comparison_figure, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        center_bottom_offset = (
+                calculate_center_bottom_offset(center, subfigure_size) + Vector(figure_c_d_e_f_x_offset, 0))
         loss_distance_comparison_figure.move_and_scale(bottom_left_offset=center_bottom_offset)
 
         subfigure_element_dict = {
@@ -169,7 +177,9 @@ class SubfigureE(Subfigure):
             ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
         center = raw_model_all_data_flux_error_bar_comparison_figure.calculate_center(scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) +
+            Vector(figure_c_d_e_f_x_offset + figure_e_f_x_offset, 0))
         raw_model_all_data_flux_error_bar_comparison_figure.move_and_scale(
             bottom_left_offset=center_bottom_offset)
 
@@ -199,8 +209,9 @@ class SubfigureF(Subfigure):
         combined_heatmap = Elements.DistanceVariationScatterFigure(**subfigure_d_config_dict)
 
         center = combined_heatmap.calculate_center(combined_heatmap, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(
-            figure_d_e_g_h_x_offset, figure_d_g_y_offset)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) +
+            Vector(figure_c_d_e_f_x_offset + figure_e_f_x_offset, figure_d_g_y_offset))
         combined_heatmap.move_and_scale(bottom_left_offset=center_bottom_offset)
         subfigure_element_dict = {combined_heatmap.name: combined_heatmap}
         super().__init__(
@@ -221,7 +232,8 @@ class SubfigureG(Subfigure):
         })
 
         center = mid_comparison_table.calculate_center(mid_comparison_table, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0.01, 0)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) + Vector(0.01 + figure_g_h_i_j_x_offset, 0))
         mid_comparison_table.move_and_scale(bottom_left_offset=center_bottom_offset)
 
         subfigure_element_dict = {
@@ -260,7 +272,8 @@ class SubfigureH(Subfigure):
         })
 
         center = loss_distance_comparison_figure.calculate_center(loss_distance_comparison_figure, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) + Vector(figure_g_h_i_j_x_offset, 0))
         loss_distance_comparison_figure.move_and_scale(bottom_left_offset=center_bottom_offset)
 
         subfigure_element_dict = {
@@ -289,7 +302,8 @@ class SubfigureI(Subfigure):
             ParameterName.figure_data_parameter_dict: figure_data_parameter_dict,
         })
         center = raw_model_all_data_flux_error_bar_comparison_figure.calculate_center(scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, -0.01)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) + Vector(figure_g_h_i_j_x_offset, -0.01))
         raw_model_all_data_flux_error_bar_comparison_figure.move_and_scale(
             bottom_left_offset=center_bottom_offset)
 
@@ -322,7 +336,8 @@ class SubfigureJ(Subfigure):
             ParameterName.figure_data_parameter_dict: figure_data_parameter_dict
         })
         center = flux_sloppiness_diagram.calculate_center(flux_sloppiness_diagram, scale)
-        center_bottom_offset = calculate_center_bottom_offset(center, subfigure_size) + Vector(0, 0)
+        center_bottom_offset = (
+            calculate_center_bottom_offset(center, subfigure_size) + Vector(figure_g_h_i_j_x_offset, 0))
         flux_sloppiness_diagram.move_and_scale(
             bottom_left_offset=center_bottom_offset)
 
@@ -357,24 +372,25 @@ class Figure2(Figure):
         # top_margin_ratio = FigureConfig.top_margin_ratio
         # side_margin_ratio = FigureConfig.side_margin_ratio
 
-        subfigure_a_b_height = 0.21
+        subfigure_a_b_height = 0.2
 
-        subfigure_c_width = 0.4
-        subfigure_d_width = 0.4
-        subfigure_c_height = 0.25
-        subfigure_d_height = 0.19
-        subfigure_e_width = 1 - subfigure_c_width
-        subfigure_f_width = 1 - subfigure_d_width
+        subfigure_c_width = 0.5
+        subfigure_d_width = 0.5
+        subfigure_e_width = 0.5
+        subfigure_f_width = 0.55
+        subfigure_g_width = subfigure_c_width
+        subfigure_h_width = subfigure_d_width
+        subfigure_i_width = subfigure_e_width
+        subfigure_j_width = 0.48
+
+        subfigure_c_height = 0.23
+        subfigure_d_height = 0.17
         subfigure_e_height = 0.25
         subfigure_f_height = 0.1
-        subfigure_g_height = 0.12
-        subfigure_g_width = subfigure_c_width
-        subfigure_h_height = subfigure_d_height
-        subfigure_h_width = subfigure_d_width
-        subfigure_i_height = subfigure_e_height
-        subfigure_i_width = subfigure_e_width
-        subfigure_j_height = 0.16
-        subfigure_j_width = subfigure_f_width
+        subfigure_g_height = 0.13
+        subfigure_h_height = 0.18
+        subfigure_i_height = 0.28
+        subfigure_j_height = 0.18
 
         figure_layout_list = [
             (subfigure_a_b_height, [
@@ -387,33 +403,52 @@ class Figure2(Figure):
             (subfigure_d_height, [
                 (subfigure_d_width, 'd'),
             ]),
-            (subfigure_g_height, [
-                (subfigure_g_width, 'g'),
+            (subfigure_e_height, [
+                (subfigure_e_width, 'e'),
             ]),
-            (subfigure_h_height, [
-                (subfigure_h_width, 'h'),
+            (subfigure_f_height, [
+                (subfigure_f_width, 'f'),
             ]),
+            # (subfigure_g_height, [
+            #     (subfigure_g_width, 'g'),
+            # ]),
+            # (subfigure_h_height, [
+            #     (subfigure_h_width, 'h'),
+            # ]),
         ]
 
-        # subfigure_obj_list = calculate_subfigure_layout(
-        #     figure_layout_list, subfigure_class_list, height_to_width_ratio, top_margin_ratio, side_margin_ratio)
+        # subfigure_e_center_x = subfigure_c_width + subfigure_e_width / 2
+        # subfigure_f_center_x = subfigure_d_width + subfigure_f_width / 2
+        # subfigure_e_center_y = subfigure_c_top + subfigure_e_height / 2
+        # subfigure_f_top = subfigure_c_top + subfigure_e_height
+        # subfigure_f_center_y = subfigure_f_top + subfigure_f_height / 2
+        # subfigure_f_bottom = subfigure_f_top + subfigure_f_height
+        # subfigure_e_center = Vector(subfigure_e_center_x, subfigure_e_center_y)
+        # subfigure_e_size = Vector(subfigure_e_width, subfigure_e_height)
+        # subfigure_f_center = Vector(subfigure_f_center_x, subfigure_f_center_y)
+        # subfigure_f_size = Vector(subfigure_f_width, subfigure_f_height)
 
-        subfigure_e_center_x = subfigure_c_width + subfigure_e_width / 2
-        subfigure_f_center_x = subfigure_d_width + subfigure_f_width / 2
+        # subfigure_i_center_x = subfigure_g_width + subfigure_i_width / 2
+        # subfigure_j_center_x = subfigure_h_width + subfigure_j_width / 2
+        # subfigure_i_center_y = subfigure_f_bottom + subfigure_i_height / 2
+        # subfigure_i_bottom = subfigure_f_bottom + subfigure_i_height
+
         subfigure_c_top = subfigure_a_b_height
-        subfigure_e_center_y = subfigure_c_top + subfigure_e_height / 2
-        subfigure_f_top = subfigure_c_top + subfigure_e_height
-        subfigure_f_center_y = subfigure_f_top + subfigure_f_height / 2
-        subfigure_f_bottom = subfigure_f_top + subfigure_f_height
-        subfigure_e_center = Vector(subfigure_e_center_x, subfigure_e_center_y)
-        subfigure_e_size = Vector(subfigure_e_width, subfigure_e_height)
-        subfigure_f_center = Vector(subfigure_f_center_x, subfigure_f_center_y)
-        subfigure_f_size = Vector(subfigure_f_width, subfigure_f_height)
+        subfigure_g_center_x = subfigure_c_width + subfigure_g_width / 2
+        subfigure_h_center_x = subfigure_d_width + subfigure_h_width / 2
+        subfigure_g_center_y = subfigure_c_top + subfigure_g_height / 2
+        subfigure_h_top = subfigure_c_top + subfigure_g_height
+        subfigure_h_center_y = subfigure_h_top + subfigure_h_height / 2
+        subfigure_h_bottom = subfigure_h_top + subfigure_h_height
+        subfigure_g_center = Vector(subfigure_g_center_x, subfigure_g_center_y)
+        subfigure_g_size = Vector(subfigure_g_width, subfigure_g_height)
+        subfigure_h_center = Vector(subfigure_h_center_x, subfigure_h_center_y)
+        subfigure_h_size = Vector(subfigure_h_width, subfigure_h_height)
 
-        subfigure_i_center_x = subfigure_g_width + subfigure_i_width / 2
-        subfigure_j_center_x = subfigure_h_width + subfigure_j_width / 2
-        subfigure_i_center_y = subfigure_f_bottom + subfigure_i_height / 2
-        subfigure_i_bottom = subfigure_f_bottom + subfigure_i_height
+        subfigure_i_center_x = subfigure_e_width + subfigure_i_width / 2
+        subfigure_j_center_x = subfigure_f_width + subfigure_j_width / 2 - 0.03
+        subfigure_i_center_y = subfigure_h_bottom + subfigure_i_height / 2
+        subfigure_i_bottom = subfigure_h_bottom + subfigure_i_height
         subfigure_j_center_y = subfigure_i_bottom + subfigure_j_height / 2
         subfigure_i_center = Vector(subfigure_i_center_x, subfigure_i_center_y)
         subfigure_i_size = Vector(subfigure_i_width, subfigure_i_height)
@@ -421,8 +456,10 @@ class Figure2(Figure):
         subfigure_j_size = Vector(subfigure_j_width, subfigure_j_height)
 
         single_subfigure_layout_dict = {
-            'e': (subfigure_e_center, subfigure_e_size),
-            'f': (subfigure_f_center, subfigure_f_size),
+            # 'e': (subfigure_e_center, subfigure_e_size),
+            # 'f': (subfigure_f_center, subfigure_f_size),
+            'g': (subfigure_g_center, subfigure_g_size),
+            'h': (subfigure_h_center, subfigure_h_size),
             'i': (subfigure_i_center, subfigure_i_size),
             'j': (subfigure_j_center, subfigure_j_size),
         }

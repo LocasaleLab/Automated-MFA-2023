@@ -21,11 +21,16 @@ class Direct(object):
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion_squared_loss
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion_traditional_method
+# data_model_name = DataModelType.renal_carcinoma_invivo_infusion_with_glns_m
+# data_model_name = DataModelType.renal_carcinoma_invivo_infusion_with_glns_m_traditional_method
 # data_model_name = DataModelType.lung_tumor_invivo_infusion
 # data_model_name = DataModelType.colon_cancer_cell_line
 # data_model_name = DataModelType.colon_cancer_cell_line_squared_loss
 # data_model_name = DataModelType.colon_cancer_cell_line_traditional_method
-data_model_name = DataModelType.hct116_cultured_cell_line
+# data_model_name = DataModelType.colon_cancer_cell_line_with_glns_m
+data_model_name = DataModelType.colon_cancer_cell_line_with_glns_m_traditional_method
+# data_model_name = DataModelType.hct116_cultured_cell_line
+# data_model_name = DataModelType.hct116_cultured_cell_line_with_glns_m
 load_previous_results = True
 
 
@@ -66,28 +71,16 @@ def running_settings(test_mode=False):
     if test_mode:
         each_case_optimization_num = 10
         parallel_parameter_dict = None
-        # parallel_parameter_dict = {
-        #     'max_optimization_each_generation': 20,
-        #     'each_process_optimization_num': 10,
-        #     'processes_num': 1
-        # }
-    elif data_model_name == DataModelType.hct116_cultured_cell_line:
-        each_case_optimization_num = 400
-        # parallel_parameter_dict = {
-        #     'max_optimization_each_generation': 10000,
-        #     'each_process_optimization_num': 10,
-        #     # 'processes_num': 4
-        #     'processes_num': 6
-        # }
-        parallel_parameter_dict[Keywords.each_process_optimization_num] = 10
+    elif data_model_name in {
+            DataModelType.hct116_cultured_cell_line, DataModelType.hct116_cultured_cell_line_with_glns_m}:
+        each_case_optimization_num = 2000
+        parallel_parameter_dict[Keywords.each_process_optimization_num] = 20
+    elif data_model_name in {
+            DataModelType.colon_cancer_cell_line_with_glns_m,
+            DataModelType.renal_carcinoma_invivo_infusion_with_glns_m}:
+        each_case_optimization_num = 100000
     else:
         each_case_optimization_num = 60000
-        # parallel_parameter_dict = {
-        #     'max_optimization_each_generation': 10000,
-        #     'each_process_optimization_num': 50,
-        #     # 'processes_num': 4
-        #     'processes_num': 6
-        # }
     return each_case_optimization_num, parallel_parameter_dict
 
 

@@ -3,9 +3,12 @@ from .packages import copy
 
 
 class DictList(object):
-    def __init__(self):
-        self.raw_list = []
-        self.key_index_dict = {}
+    def __init__(self, raw_list=None, key_index_dict=None):
+        if raw_list is None:
+            raw_list = []
+            key_index_dict = {}
+        self.raw_list = raw_list
+        self.key_index_dict = key_index_dict
 
     def __getitem__(self, item):
         if isinstance(item, int):
@@ -48,6 +51,15 @@ class DictList(object):
         for key, index in self.key_index_dict.items():
             new_list[index] = '{}: {}'.format(key, self.raw_list[index])
         return ", ".join(new_list)
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __copy__(self):
+        return DictList(list(self.raw_list), dict(self.key_index_dict))
+
+    def copy(self):
+        return self.__copy__()
 
 
 class CircularQueue(list):

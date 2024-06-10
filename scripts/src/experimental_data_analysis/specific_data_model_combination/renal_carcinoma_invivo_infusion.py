@@ -445,7 +445,8 @@ important_flux_list = [
     'GLC_input',
     'GLN_input',
     ('SHMT_c', 'SHMT_c__R'),
-    ('AKGMAL_m__R', 'AKGMAL_m')
+    ('AKGMAL_m__R', 'AKGMAL_m'),
+    'GLNS_c',
 ]
 
 

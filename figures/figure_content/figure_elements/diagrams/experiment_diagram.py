@@ -1,5 +1,5 @@
 from .config import np, Vector, ParameterName, ZOrderConfig, TextConfig, HorizontalAlignment, \
-    VerticalAlignment, FontStyle, ColorConfig, DataName
+    VerticalAlignment, FontStyle, ColorConfig, DataName, FontWeight
 from .config import BentChevronArrow, ChevronArrow, CompositeFigure, Rectangle, TextBox, RoundRectangle
 from .config import MIDDiagram, NetworkDiagram, CulturedCell, Mice, Human, CarbonBackbone, CommonElementConfig
 
@@ -379,7 +379,7 @@ def colon_cancer_experiment_diagram_generator():
 
     # width = 1, height = height_to_width_ratio, all absolute number are relative to width
     upper_horiz_axis = 0.3
-    upper_text_horiz_axis = upper_horiz_axis + 0.1
+    upper_text_horiz_axis = upper_horiz_axis + 0.08
     main_horiz_axis = 0.2
     main_text_horiz_axis = main_horiz_axis + 0.09
     bottom_horiz_axis = 0.1
@@ -413,8 +413,9 @@ def colon_cancer_experiment_diagram_generator():
         {
             ParameterName.string: 'Incubate for 24 h',
             ParameterName.center: Vector(middle_vert_axis, upper_text_horiz_axis),
+            ParameterName.font_weight: FontWeight.bold,
             **current_text_config,
-            ParameterName.font_size: ExperimentDiagramConfig.normal_document_size,
+            ParameterName.font_size: ExperimentDiagramConfig.normal_document_size + 2,
         },
         {
             ParameterName.string: 'Mass spectrometry',

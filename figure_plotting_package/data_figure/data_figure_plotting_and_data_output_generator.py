@@ -110,33 +110,69 @@ def cbar_plotting(
         opposite_axis=True)
 
 
+def each_group_scatter_plotting(
+        current_ax, this_group_data_dict, common_scatter_param_dict, common_error_bar_param_dict,
+        error_bar, x_lim=None, x_ticks=None, y_lim=None, y_ticks=None, cutoff_value=None, cutoff_param_dict=None,
+):
+    (
+        x_value_array, (y_mean_array, y_std_array), marker_size, marker_color, this_data_scatter_param_dict,
+        this_data_error_bar_param_dict
+    ) = [
+        this_group_data_dict[key] if key in this_group_data_dict else None
+        for key in [
+            ParameterName.x_value_array, ParameterName.y_value_array, ParameterName.marker_size,
+            ParameterName.marker_color, ParameterName.scatter_param_dict, ParameterName.error_bar_param_dict]
+    ]
+    if this_data_scatter_param_dict is None:
+        this_data_scatter_param_dict = {}
+    scatter_param_dict = {
+        **common_scatter_param_dict,
+        **this_data_scatter_param_dict,
+    }
+    if this_data_error_bar_param_dict is None:
+        this_data_error_bar_param_dict = {}
+    error_bar_param_dict = {
+        **common_error_bar_param_dict,
+        **this_data_error_bar_param_dict,
+    }
+    if marker_size is not None:
+        core_scatter_plotting(
+            current_ax, x_value_array, y_mean_array, marker_size, marker_color,
+            scatter_param_dict=scatter_param_dict, x_lim=x_lim, x_ticks=x_ticks, y_lim=y_lim, y_ticks=y_ticks,
+            cutoff=cutoff_value, cutoff_param_dict=cutoff_param_dict)
+    if error_bar and y_std_array is not None:
+        core_error_bar_plotting(
+            current_ax, x_value_array, y_mean_array, y_std_array, edge_color=marker_color, **error_bar_param_dict)
+
+
 def single_scatter_plotting(
         current_ax, current_transform, complete_data_dict, scatter_param_dict=None, x_lim=None, x_ticks=None,
         y_lim=None, y_ticks=None, cutoff_value=None, cutoff_param_dict=None, x_label=None,
         x_label_format_dict=None, x_tick_labels=None, x_tick_label_format_dict=None,
         y_label=None, y_label_format_dict=None, y_tick_labels=None, y_tick_label_format_dict=None,
         error_bar=False, error_bar_param_dict=None, scatter_line=None, line_param_dict=None, **kwargs):
-    x_value_array, (y_mean_array, y_std_array), marker_size, marker_color, this_data_scatter_param_dict = [
-        complete_data_dict[key] if key in complete_data_dict else None
-        for key in [
-            ParameterName.x_value_array, ParameterName.y_value_array, ParameterName.marker_size,
-            ParameterName.marker_color, ParameterName.scatter_param_dict]
-    ]
     if scatter_param_dict is None:
         scatter_param_dict = {}
-    if this_data_scatter_param_dict is None:
-        this_data_scatter_param_dict = {}
-    scatter_param_dict = {
-        **scatter_param_dict,
-        **this_data_scatter_param_dict,
-    }
-    core_scatter_plotting(
-        current_ax, x_value_array, y_mean_array, marker_size, marker_color, scatter_param_dict=scatter_param_dict,
-        x_lim=x_lim, x_ticks=x_ticks, y_lim=y_lim, y_ticks=y_ticks,
-        cutoff=cutoff_value, cutoff_param_dict=cutoff_param_dict)
-    if error_bar:
-        core_error_bar_plotting(
-            current_ax, x_value_array, y_mean_array, y_std_array, edge_color=marker_color, **error_bar_param_dict)
+    if error_bar_param_dict is None:
+        error_bar_param_dict = {}
+    if isinstance(complete_data_dict, list):
+        for index, each_complete_data_dict in enumerate(complete_data_dict):
+            if index == 0:
+                each_group_scatter_plotting(
+                    current_ax, each_complete_data_dict, scatter_param_dict, error_bar_param_dict, error_bar,
+                    x_lim=x_lim, x_ticks=x_ticks, y_lim=y_lim, y_ticks=y_ticks,
+                    cutoff_value=cutoff_value, cutoff_param_dict=cutoff_param_dict,)
+            else:
+                each_group_scatter_plotting(
+                    current_ax, each_complete_data_dict, scatter_param_dict, error_bar_param_dict, error_bar)
+    elif isinstance(complete_data_dict, dict):
+        each_group_scatter_plotting(
+            current_ax, complete_data_dict, scatter_param_dict, error_bar_param_dict,
+            error_bar, x_lim=x_lim, x_ticks=x_ticks, y_lim=y_lim, y_ticks=y_ticks,
+            cutoff_value=cutoff_value, cutoff_param_dict=cutoff_param_dict,)
+    else:
+        raise ValueError()
+
     if scatter_line is not None:
         if line_param_dict is None:
             line_param_dict = {}

@@ -1,8 +1,6 @@
 from scripts.src.core.model.model_constructor import common_model_constructor
 from scripts.src.core.solver.solver_construction_functions.solver_constructor import common_solver_constructor
 
-from scripts.model.model_loader import model_loader
-
 from ..common.result_output_functions import solver_output
 from ..common.config import net_flux_list
 
@@ -20,7 +18,7 @@ from ..common_parallel_solver.common_parallel_solver import common_solver
 
 
 def load_averaged_solutions(
-        model_label, data_label, config_label, optimization_from_averaged_solutions_parameter_dict):
+        result_obj, model_label, data_label, config_label, optimization_from_averaged_solutions_parameter_dict):
     optimized_size = optimization_from_averaged_solutions_parameter_dict[Keywords.optimized_size]
     selection_size = optimization_from_averaged_solutions_parameter_dict[Keywords.selection_size]
     if selection_size > optimized_size:
@@ -42,18 +40,17 @@ def load_averaged_solutions(
 
 
 def materials_preparation(
-        raw_model, model_process_type, data_process_list, mfa_data_obj_generation, mfa_config_type):
+        model_process_type, data_process_list, mfa_data_obj_generation, mfa_config_type):
     modified_data_dict, data_information_dict, common_or_dict_simulated_flux_value_dict = data_loader(data_process_list)
     # The common_or_dict_simulated_flux_value_dict will be nested dict only if the data type is batched_simulated_data.
     # In this case, the model and config will be the raw setting.
     mfa_data_dict = {}
     for data_label, current_experimental_mid_data_obj_dict in modified_data_dict.items():
         mfa_data_dict[data_label] = mfa_data_obj_generation(current_experimental_mid_data_obj_dict)
-    complete_defined_model = model_loader(raw_model)
     (
         modified_defined_model_dict, model_information_dict, important_flux_list,
         important_flux_replace_dict) = model_processor(
-        model_process_type, complete_defined_model, common_or_dict_simulated_flux_value_dict)
+        model_process_type, common_or_dict_simulated_flux_value_dict)
     mfa_model_dict = {}
     for model_label, current_defined_model in modified_defined_model_dict.items():
         mfa_model_dict[model_label] = common_model_constructor(current_defined_model)
@@ -134,6 +131,9 @@ def model_data_sensitivity_result_display(
             Keywords.raw_model_batched_simulated_data_averaged_optimization_result_process}:
         if result_process_name == Keywords.raw_model_result_process:
             result_process_func = raw_model_result_process
+            other_parameter_dict.update({
+                'extra_result_suffix': True,
+            })
         elif result_process_name == Keywords.raw_model_averaged_optimization_result_process:
             result_process_func = raw_model_optimization_from_averaged_solution_result_process
         elif result_process_name == Keywords.raw_model_batched_simulated_data_result_process:
@@ -156,19 +156,19 @@ def model_data_sensitivity_result_display(
 
 
 def model_data_sensitivity_common_dispatcher(
-        raw_model, model_process_type, data_process_list, mfa_config_type,
-        mfa_data_obj_generation, experiment_name, parallel_num, test_mode, running_mode):
+        model_process_type, data_process_list, mfa_config_type,
+        mfa_data_obj_generation, experiment_name, suffix, parallel_num, test_mode, running_mode):
     (
         each_case_target_optimization_num, parallel_parameter_dict, result_process_name,
-        loss_percentile) = config.running_settings(test_mode, experiment_name)
+        loss_percentile) = config.running_settings(test_mode, suffix, experiment_name)
     if parallel_parameter_dict is not None and parallel_num is not None:
         parallel_parameter_dict[Keywords.processes_num] = parallel_num
     final_result_obj = CurrentFinalResult(
-        Direct.output_direct, Direct.common_data_direct, experiment_name)
+        Direct.output_direct, Direct.common_data_direct, experiment_name, suffix)
     (
         parameter_label_content_dict, important_flux_list, important_flux_replace_dict,
         common_or_dict_simulated_flux_value_dict) = materials_preparation(
-        raw_model, model_process_type, data_process_list, mfa_data_obj_generation, mfa_config_type)
+        model_process_type, data_process_list, mfa_data_obj_generation, mfa_config_type)
     if running_mode == RunningMode.flux_analysis:
         common_solver(
             parameter_label_content_dict, test_mode, final_result_obj, each_case_target_optimization_num,
@@ -193,7 +193,7 @@ def model_data_sensitivity_common_dispatcher(
             raise ValueError()
 
 
-def model_data_sensitivity(running_mode, experiment_name, test_mode, parallel_num):
+def model_data_sensitivity(running_mode, experiment_name, suffix, test_mode, parallel_num):
     if experiment_name is None:
         experiment_name = config.current_experiment_name
     target_model_data_config = model_data_config_dict[experiment_name]
@@ -203,8 +203,7 @@ def model_data_sensitivity(running_mode, experiment_name, test_mode, parallel_nu
         mfa_config_type = Keywords.raw_type
     else:
         mfa_config_type = target_model_data_config[Keywords.config]
-    raw_model = config.raw_model
     model_data_sensitivity_common_dispatcher(
-        raw_model, model_process_type, data_process_list, mfa_config_type, config.mfa_data_obj_generation,
-        experiment_name, parallel_num, test_mode, running_mode)
+        model_process_type, data_process_list, mfa_config_type, config.mfa_data_obj_generation,
+        experiment_name, suffix, parallel_num, test_mode, running_mode)
 

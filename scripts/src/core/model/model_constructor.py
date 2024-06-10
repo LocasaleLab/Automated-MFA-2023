@@ -5,19 +5,18 @@ from ..common.classes import TransformDict
 from .model_class import EMUMIDDimDict, MFAModel, UserDefinedModel
 from .common_model_process_functions import model_preprocess, compart_all_metabolites, \
     flux_balance_equation_generator, metabolite_carbon_number_verification
-from .emu_analyzer_functions import emu_equation_analyzer, emu_matrix_equation_generator
+from .emu_analyzer_functions import emu_equation_analyzer, emu_matrix_equation_generator, emu_dependency_analyzer
 
 
-def common_model_constructor(user_defined_model: UserDefinedModel):
+def common_model_constructor(user_defined_model: UserDefinedModel, new_format=False):
     (
         metabolite_reaction_dict, product_reaction_dict_for_emu, composite_reaction_dict,
         flux_name_index_dict, input_metabolite_name_set, complete_metabolite_dim_dict,
-        target_emu_list) = model_preprocess(
+        target_metabolite_name_list) = model_preprocess(
         user_defined_model.reaction_list, user_defined_model.symmetrical_metabolite_set,
         user_defined_model.added_input_metabolite_set, user_defined_model.emu_excluded_metabolite_set,
         user_defined_model.balance_excluded_metabolite_set, user_defined_model.target_metabolite_list,
         user_defined_model.composite_reaction_list)
-    # print(input_metabolite_name_set - complete_metabolite_dim_dict.keys())
 
     all_target_metabolite_name_set = list(complete_metabolite_dim_dict.keys() - input_metabolite_name_set)
     # all_target_metabolite_name_set = {
@@ -28,16 +27,22 @@ def common_model_constructor(user_defined_model: UserDefinedModel):
         complete_metabolite_dim_dict, metabolite_bare_metabolite_name_dict)
     flux_balance_matrix, flux_balance_right_side_vector = flux_balance_equation_generator(
         metabolite_reaction_dict, composite_reaction_dict, flux_name_index_dict)
+
     emu_mid_equation_dict, input_emu_dict = emu_equation_analyzer(
-        product_reaction_dict_for_emu, target_emu_list, input_metabolite_name_set)
+        product_reaction_dict_for_emu, target_metabolite_name_list, input_metabolite_name_set,
+        complete_metabolite_dim_dict)
     output_emu_mid_equation_dict = emu_matrix_equation_generator(emu_mid_equation_dict, input_emu_dict)
+    emu_name_dependency_dict, complete_emu_obj_index_dict, new_input_emu_dict = emu_dependency_analyzer(
+        product_reaction_dict_for_emu, input_metabolite_name_set, complete_metabolite_dim_dict)
+    assert input_emu_dict.keys() == new_input_emu_dict.keys()
     complete_emu_dim_dict = EMUMIDDimDict()
     mfa_model = MFAModel(
-        input_emu_dict, target_emu_list, output_emu_mid_equation_dict, composite_reaction_dict,
-        complete_emu_dim_dict, flux_name_index_dict, flux_balance_matrix, flux_balance_right_side_vector,
-        bare_metabolite_dim_dict, metabolite_bare_metabolite_name_dict, complete_tissue_metabolite_compartment_dict,
-        all_target_metabolite_name_set, user_defined_model.model_metabolite_to_standard_name_dict,
-        user_defined_model)
+        input_emu_dict, target_metabolite_name_list, output_emu_mid_equation_dict, emu_name_dependency_dict,
+        composite_reaction_dict, complete_emu_dim_dict, complete_emu_obj_index_dict, flux_name_index_dict,
+        flux_balance_matrix, flux_balance_right_side_vector, bare_metabolite_dim_dict,
+        metabolite_bare_metabolite_name_dict, complete_tissue_metabolite_compartment_dict,
+        input_metabolite_name_set, all_target_metabolite_name_set,
+        user_defined_model.model_metabolite_to_standard_name_dict, user_defined_model)
     return mfa_model
 
 

@@ -445,7 +445,7 @@ class Figure(CompositeFigure):
             self.figure_output_direct = figure_output_direct
         super().__init__(figure_element_dict, bottom_left, size, name=figure_name)
 
-    def draw(self, fig=None, parent_ax=None, parent_transformation=None):
+    def draw(self, fig=None, parent_ax=None, parent_transformation=None, output_svg=False):
         fig = plt.figure(figsize=self.figure_size, dpi=self.dpi)
         height_width_distortion = Vector(1, 1 / self.height_to_width_ratio)
         axis_bottom_left = self.bottom_left * height_width_distortion
@@ -458,8 +458,12 @@ class Figure(CompositeFigure):
         super().draw(fig, complete_axis, complete_transformation)
         if self.figure_output_direct is None:
             raise ValueError('No figure output direct')
+        elif output_svg:
+            save_path = '{}/{}.svg'.format(self.figure_output_direct, self.figure_name)
+            parameter_dict = {'transparent': True}
         else:
             save_path = '{}/{}.pdf'.format(self.figure_output_direct, self.figure_name)
-        fig.savefig(save_path, dpi=fig.dpi)
+            parameter_dict = {}
+        fig.savefig(save_path, dpi=fig.dpi, **parameter_dict)
 
 

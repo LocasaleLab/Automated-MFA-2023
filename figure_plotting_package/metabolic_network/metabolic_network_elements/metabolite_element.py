@@ -9,7 +9,7 @@ class MetaboliteElement(Region):
             self, center: Vector, metabolite_name: str, display_metabolite_name: str,
             as_input_metabolite=False, as_c13_labeling_metabolite=False,
             with_mid_data=False, with_mixed_mid_data=False, with_biomass_flux=False,
-            other_color_state=None,
+            invalid_state=False, other_color_state=None,
             scale=1, bottom_left_offset=None, **kwargs):
         self.metabolite_name = metabolite_name
         self.display_metabolite_name = display_metabolite_name
@@ -31,6 +31,8 @@ class MetaboliteElement(Region):
                 capsule_face_color = MetaboliteConfig.input_metabolite_face_color
         elif with_mid_data:
             capsule_face_color = MetaboliteConfig.mid_face_color
+        elif invalid_state:
+            capsule_face_color = MetaboliteConfig.invalid_face_color
         else:
             capsule_face_color = MetaboliteConfig.normal_face_color
         capsule_param_dict = {

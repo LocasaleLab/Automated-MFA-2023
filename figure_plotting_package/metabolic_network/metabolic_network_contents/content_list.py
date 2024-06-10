@@ -98,7 +98,7 @@ class ReactionList(object):
             ['RPE_c', 'TKT1_c', 'TKT2_c', 'TALA_c'],
             lambda rpe_c_value_obj, tkt1_c_value_obj, tkt2_c_value_obj, tala_c_value_obj: tala_c_value_obj),
         'GLN_to_GLU_c': (
-            'GLNS_c',
+            'AS_c - GLNS_c',
             ['AS_c', 'GLNS_c'],
             lambda as_c_value_obj, glns_c_value_obj: (as_c_value_obj, glns_c_value_obj)),
         'AKG_to_GLU_c': (
@@ -108,9 +108,13 @@ class ReactionList(object):
                 aspta_c_value_obj[0] + gpt_c_value_obj[1],
                 aspta_c_value_obj[1] + gpt_c_value_obj[0]
             )),
+        'GLN_to_GLU_m': (
+            'GLND_m - GLNS_m',
+            ['GLND_m', 'GLNS_m'],
+            lambda glnd_m_value_obj, glns_m_value_obj: (glnd_m_value_obj, glns_m_value_obj)),
     }
 
-    def __init__(self, infusion=False):
+    def __init__(self, infusion=False, with_glns_m=False):
         # Glycolysis
         self.obj_hex_c = Reaction('HEX_c')
         # self.obj_pgi_c = Reaction('PGI_c', True)
@@ -163,7 +167,12 @@ class ReactionList(object):
 
         # GLU
         self.obj_glud_m = Reaction('GLUD_m', True)
-        self.obj_glnd_m = Reaction('GLND_m')
+        if with_glns_m:
+            glnd_m_reversible = True
+        else:
+            glnd_m_reversible = False
+        # self.obj_glnd_m = Reaction('GLND_m', glnd_m_reversible)
+        self.obj_glnd_m = Reaction('GLN_to_GLU_m', glnd_m_reversible)
         self.obj_as_c = Reaction('GLN_to_GLU_c', True)
         self.obj_aspta_m = Reaction('ASPTA_m', True)
         self.obj_aspta_circle_m = Reaction('ASPTA_m', True)
@@ -193,12 +202,12 @@ class ReactionList(object):
         # self.obj_asp_input = Reaction('ASP_input')
         # self.obj_lac_output = Reaction('LAC_output')
         # self.obj_pyr_input = Reaction('PYR_input')
-        self.obj_glc_input = Reaction('GLC_input', True)
+        self.obj_glc_input = Reaction('GLC_input')
         self.obj_glc_unlabelled_input = Reaction('GLC_unlabelled_input', True)
-        self.obj_gln_input = Reaction('GLN_input', True)
-        self.obj_asp_input = Reaction('ASP_input', True)
-        self.obj_lac_output = Reaction('LAC_output', True)
-        self.obj_pyr_input = Reaction('PYR_input', True)
+        self.obj_gln_input = Reaction('GLN_input')
+        self.obj_asp_input = Reaction('ASP_input')
+        self.obj_lac_output = Reaction('LAC_output')
+        self.obj_pyr_input = Reaction('PYR_input')
         self.obj_biomass = Reaction('BIOMASS_REACTION')
 
         self.content_list_pair = [

@@ -483,7 +483,12 @@ class MultipleFluxSloppinessDiagram(CompositeFigure):
             SmallFluxSloppinessDiagram, figure_title_list)
         subfigure_scale = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.scale, 1, pop=True)
-        total_subfigure_num = 3
+        with_re_optimization = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_re_optimization, True, pop=True)
+        if with_re_optimization:
+            total_subfigure_num = 3
+        else:
+            total_subfigure_num = 2
         if horiz_or_vertical == ParameterName.vertical:
             diagram_y_interval = default_parameter_extract(
                 figure_data_parameter_dict, ParameterName.ax_interval, 0, pop=True)
@@ -528,7 +533,7 @@ class MultipleFluxSloppinessDiagram(CompositeFigure):
 
         figure_dict = {}
 
-        for index in range(3):
+        for index in range(total_subfigure_num):
             cell_bottom_left = cell_bottom_left_list[index]
             current_mode = mode_list[index]
             if figure_title_list is not None:

@@ -22,6 +22,7 @@ from figure_plotting_package.diagrams.config import ParameterName as DiagramPara
 
 CompositeFigure = GeneralElements.CompositeFigure
 TextBox = GeneralElements.TextBox
+random_seed = np.random.default_rng(4536251)
 
 
 class Keywords(object):
@@ -66,6 +67,8 @@ class Figure(GeneralElements.Figure):
 class DataName(object):
     raw_model_raw_data = 'raw_model_raw_data'
     raw_model_all_data = 'raw_model_all_data'
+    raw_model_with_glns_m_raw_data = 'raw_model_with_glns_m_raw_data'
+    raw_model_with_glns_m_all_data = 'raw_model_with_glns_m_all_data'
     raw_model_raw_data_with_squared_loss = 'raw_model_raw_data_with_squared_loss'
     raw_model_all_data_with_squared_loss = 'raw_model_all_data_with_squared_loss'
     optimization_from_solutions_raw_data = 'optimization_from_raw_data_average_solutions'
@@ -117,13 +120,19 @@ class DataName(object):
     different_constant_flux_with_noise_all_data = 'different_constant_flux_with_noise_all_data'
 
     colon_cancer_cell_line = 'colon_cancer_cell_line'
+    colon_cancer_cell_line_with_glns_m = 'colon_cancer_cell_line_with_glns_m'
     colon_cancer_cell_line_squared_loss = 'colon_cancer_cell_line_squared_loss'
     colon_cancer_cell_line_traditional_method = 'colon_cancer_cell_line_traditional_method'
+    colon_cancer_cell_line_with_glns_m_traditional_method = 'colon_cancer_cell_line_with_glns_m_traditional_method'
     renal_carcinoma_invivo_infusion = 'renal_carcinoma_invivo_infusion'
+    renal_carcinoma_invivo_infusion_with_glns_m = 'renal_carcinoma_invivo_infusion_with_glns_m'
     renal_carcinoma_invivo_infusion_squared_loss = 'renal_carcinoma_invivo_infusion_squared_loss'
     renal_carcinoma_invivo_infusion_traditional_method = 'renal_carcinoma_invivo_infusion_traditional_method'
+    renal_carcinoma_invivo_infusion_with_glns_m_traditional_method = \
+        'renal_carcinoma_invivo_infusion_with_glns_m_traditional_method'
     lung_tumor_invivo_infusion = 'lung_tumor_invivo_infusion'
     hct116_cultured_cell_line = 'hct116_cultured_cell_line'
+    hct116_cultured_cell_line_with_glns_m = 'hct116_cultured_cell_line_with_glns_m'
     hct116_cultured_cell_line_squared_loss = 'hct116_cultured_cell_line_squared_loss'
     multiple_tumor = 'multiple_tumor'
 

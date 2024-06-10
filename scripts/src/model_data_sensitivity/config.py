@@ -23,6 +23,8 @@ load_previous_results = True
 
 # current_experiment_name = ExperimentName.raw_model_raw_data
 # current_experiment_name = ExperimentName.raw_model_all_data
+current_experiment_name = ExperimentName.raw_model_with_glns_m_raw_data
+# current_experiment_name = ExperimentName.raw_model_with_glns_m_all_data
 # current_experiment_name = ExperimentName.prune_branches_all_data
 # current_experiment_name = ExperimentName.merge_reversible_reaction_all_data
 # current_experiment_name = ExperimentName.different_constant_flux
@@ -33,7 +35,7 @@ load_previous_results = True
 # current_experiment_name = ExperimentName.different_flux_range
 # current_experiment_name = ExperimentName.different_flux_range_all_data
 # current_experiment_name = ExperimentName.different_constant_flux_all_data
-current_experiment_name = ExperimentName.optimization_from_raw_data_average_solutions
+# current_experiment_name = ExperimentName.optimization_from_raw_data_average_solutions
 # current_experiment_name = ExperimentName.optimization_from_all_data_average_solutions
 # current_experiment_name = ExperimentName.optimization_from_batched_simulated_raw_data
 # current_experiment_name = ExperimentName.optimization_from_batched_simulated_all_data
@@ -78,7 +80,7 @@ data_sensitivity_simulated_analyzed_set_size_list = [50000, 20000]
 data_sensitivity_repeat_time_each_analyzed_set = 5
 
 
-def running_settings(test_mode, experiment_name):
+def running_settings(test_mode, suffix, experiment_name):
     if test_mode:
         each_case_target_optimization_num = 30
         result_process_name = Keywords.normal_result_process
@@ -101,6 +103,22 @@ def running_settings(test_mode, experiment_name):
         if experiment_name in {
                 ExperimentName.raw_model_all_data, ExperimentName.raw_model_raw_data}:
             each_case_target_optimization_num = 1100000
+            result_process_name = Keywords.raw_model_result_process
+            loss_percentile = 0.01
+        elif experiment_name in {
+                ExperimentName.raw_model_with_glns_m_all_data, ExperimentName.raw_model_with_glns_m_raw_data}:
+            if experiment_name == ExperimentName.raw_model_with_glns_m_all_data:
+                if suffix is None:
+                    each_case_target_optimization_num = 390000
+                else:
+                    each_case_target_optimization_num = 210000
+            elif experiment_name == ExperimentName.raw_model_with_glns_m_raw_data:
+                if suffix is None:
+                    each_case_target_optimization_num = 360000
+                else:
+                    each_case_target_optimization_num = 240000
+            else:
+                raise ValueError()
             result_process_name = Keywords.raw_model_result_process
             loss_percentile = 0.01
         elif experiment_name in {
@@ -142,6 +160,7 @@ def running_settings(test_mode, experiment_name):
 
 
 raw_model = ModelList.base_model
+raw_model_with_glns_m = ModelList.base_model_with_glns_m
 
 simulated_flux_value_dict = simulated_flux_vector_and_mid_data.simulated_flux_value_dict
 

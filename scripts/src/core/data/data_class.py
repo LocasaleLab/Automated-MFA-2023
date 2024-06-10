@@ -119,7 +119,7 @@ class MIDData(object):
         self.name = metabolite_name
         self.to_standard_name_dict = to_standard_name_dict
         self.ms_total_sum_threshold = ms_total_sum_threshold
-        if len(compartment_list) > 1:
+        if len(compartment_list) > 1 or compartment_list[0] is None:
             compartment_list = None
         self.full_name = compartmental_mid_name_constructor(
             tissue_specific_name_constructor(metabolite_name, tissue_list),

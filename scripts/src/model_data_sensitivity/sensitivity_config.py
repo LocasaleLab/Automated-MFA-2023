@@ -14,6 +14,8 @@ class RunningMode(ValueEnum):
 class ExperimentName(ValueEnum):
     raw_model_raw_data = 'raw_model_raw_data'
     raw_model_all_data = 'raw_model_all_data'
+    raw_model_with_glns_m_raw_data = 'raw_model_with_glns_m_raw_data'
+    raw_model_with_glns_m_all_data = 'raw_model_with_glns_m_all_data'
     merge_reversible_reaction = 'merge_reversible_reaction'
     merge_reversible_reaction_all_data = 'merge_reversible_reaction_all_data'
     combine_consecutive_reactions = 'combine_consecutive_reactions'
@@ -50,6 +52,7 @@ class ExperimentName(ValueEnum):
 
 class ModelSetting(ValueEnum):
     raw_model = 'raw_model'
+    raw_model_with_glns_m = 'raw_model_with_glns_m'
     merge_reversible_reaction = 'merge_reversible_reaction'
     combine_consecutive_reactions = 'combine_consecutive_reactions'
     prune_branches = 'prune_branches'
@@ -58,6 +61,8 @@ class ModelSetting(ValueEnum):
 class DataSetting(ValueEnum):
     raw_data = 'raw_data'
     all_data = 'all_data'
+    raw_data_with_glns_m = 'raw_data_with_glns_m'
+    all_data_with_glns_m = 'all_data_with_glns_m'
     raw_data_squared_loss = 'raw_data_squared_loss'
     all_data_squared_loss = 'all_data_squared_loss'
     medium_data_plus = 'medium_data_plus'
@@ -94,6 +99,7 @@ class ConfigSetting(ValueEnum):
 
 class Keywords(GeneralKeywords):
     raw_type = 'raw'
+    raw_type_with_glns_m = 'raw_with_glns_m'
 
     normal_result_process = 'normal_result_process'
     raw_model_result_process = 'raw_model_result_process'
@@ -111,6 +117,8 @@ class Keywords(GeneralKeywords):
     selection_size = 'selection_size'
     optimized_size = 'optimized_size'
 
+    extra_result_suffix_tuple = (None, 0, 1, 2, 3)
+
 
 model_data_config_dict = {
     ExperimentName.raw_model_raw_data:
@@ -124,6 +132,18 @@ model_data_config_dict = {
             Keywords.model: ModelSetting.raw_model,
             Keywords.data: DataSetting.all_data,
             Keywords.comment: 'Raw model, all available MID data and normal config',
+        },
+    ExperimentName.raw_model_with_glns_m_raw_data:
+        {
+            Keywords.model: ModelSetting.raw_model_with_glns_m,
+            Keywords.data: DataSetting.raw_data_with_glns_m,
+            Keywords.comment: 'Raw model with GLNS_m, raw experimentally available MID data and normal config',
+        },
+    ExperimentName.raw_model_with_glns_m_all_data:
+        {
+            Keywords.model: ModelSetting.raw_model_with_glns_m,
+            Keywords.data: DataSetting.all_data_with_glns_m,
+            Keywords.comment: 'Raw model with GLNS_m, all available MID data and normal config',
         },
     ExperimentName.merge_reversible_reaction:
         {
@@ -723,6 +743,10 @@ def return_analyzed_set_and_selected_min_loss_set(test_raw_model_analysis=False,
         else:
             analyzed_set_size_list = (20000,)
             selected_min_loss_size_list = (100,)
+    elif current_experiment_name in {
+            ExperimentName.raw_model_with_glns_m_all_data, ExperimentName.raw_model_with_glns_m_raw_data}:
+        analyzed_set_size_list = (400, 20000)
+        selected_min_loss_size_list = (1, 100)
     else:
         analyzed_set_size_list = complete_analyzed_set_size_list
         selected_min_loss_size_list = complete_selected_min_loss_size_list

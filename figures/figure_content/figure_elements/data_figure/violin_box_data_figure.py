@@ -515,6 +515,15 @@ class LossDistanceGridBoxDataFigure(ViolinBoxDataFigure):
         (
             value_dict_list, max_value, complete_analyzed_set_size_list,
             complete_selected_min_loss_size_list) = figure_data_tuple
+        with_re_optimization = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.optimized, True, pop=True)
+        if not with_re_optimization and len(value_dict_list) == 3:
+            value_dict_list = value_dict_list[:2]
+        with_traditional_method = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_traditional_method, False, pop=True)
+        traditional_selected_size = 1
+        traditional_optimized_size = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.traditional_optimized_size, None)
         target_analyzed_set_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.optimized_size, complete_analyzed_set_size_list, pop=True)
         if isinstance(target_analyzed_set_list, (int, np.int32)):
@@ -526,6 +535,9 @@ class LossDistanceGridBoxDataFigure(ViolinBoxDataFigure):
         color_dict = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.color_dict, None, pop=True)
         data_set_num = len(value_dict_list)
+        if with_traditional_method:
+            data_set_num += 1
+            assert traditional_optimized_size is not None
         common_x_tick_label_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.x_tick_labels_list, None, pop=True)
         if common_x_tick_label_list is not None:
@@ -575,8 +587,14 @@ class LossDistanceGridBoxDataFigure(ViolinBoxDataFigure):
         for row_index, selected_size in enumerate(target_selected_min_loss_size_list):
             for col_index, analyzed_set_size in enumerate(target_analyzed_set_list):
                 try:
-                    current_value_list = [
-                        value_dict[selected_size][analyzed_set_size] for value_dict in value_dict_list]
+                    if with_traditional_method:
+                        current_value_list = [
+                            value_dict_list[0][traditional_selected_size][traditional_optimized_size]
+                        ]
+                    else:
+                        current_value_list = []
+                    current_value_list.extend([
+                        value_dict[selected_size][analyzed_set_size] for value_dict in value_dict_list])
                 except KeyError:
                     raw_value_list = [[] for _ in value_dict_list]
                 else:

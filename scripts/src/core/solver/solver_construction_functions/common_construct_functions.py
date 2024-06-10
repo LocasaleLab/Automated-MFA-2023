@@ -401,3 +401,104 @@ def constraint_loss_operation_constructor(
 
     return constraint_loss_operation_list
 
+
+def constraint_matrix_verification_and_simplification(constraint_matrix, right_side_array, computation_eps):
+    raw_constraint_num, variable_num = constraint_matrix.shape
+    _, flux_constraint_matrix_r = np.linalg.qr(constraint_matrix.T)
+    flux_constraint_matrix_l = flux_constraint_matrix_r.T
+    redundant_row_list = []
+    for row_index, row_array in enumerate(flux_constraint_matrix_l):
+        if np.abs(row_array[row_index]) < computation_eps:
+            redundant_row_list.append(row_index)
+    redundant_row_num = len(redundant_row_list)
+    real_constraint_num = raw_constraint_num - redundant_row_num
+    if real_constraint_num >= variable_num:
+        raise ValueError(f'Constraint number {real_constraint_num} is larger than variable number {variable_num}')
+    if redundant_row_num > 0:
+        valid_constraint_list = []
+        valid_right_side_list = []
+        last_valid_constraint = 0
+        for redundant_row_index in redundant_row_list:
+            valid_constraint_list.extend(constraint_matrix[last_valid_constraint:redundant_row_index])
+            valid_right_side_list.extend(right_side_array[last_valid_constraint:redundant_row_index])
+            """
+            Construct a linear system P = [A', b'] including all previous valid constraints and 
+            current redundant row index. If P is not full-rank, than the redundant row is incompatible. 
+            Otherwise, this row is redundant and can be deleted.
+            """
+            valid_constraint_num = len(valid_constraint_list)
+            updated_right_side_array = np.array(
+                [*valid_right_side_list, right_side_array[redundant_row_index]]).reshape(-1, 1)
+            new_linear_system_matrix = np.hstack([
+                [*valid_constraint_list, constraint_matrix[redundant_row_index]],
+                updated_right_side_array])
+            rank = np.linalg.matrix_rank(new_linear_system_matrix, tol=computation_eps)
+            if rank < valid_constraint_num - 1:
+                raise ValueError('Some redundant rows already exist!')
+            elif rank == valid_constraint_num:
+                raise ValueError('Current redundant row is incompatible!')
+        valid_constraint_num = len(valid_constraint_list)
+        valid_constraint_matrix = np.array(valid_constraint_list)
+        valid_right_side_array = np.array(valid_right_side_list)
+    else:
+        valid_constraint_num = raw_constraint_num
+        valid_constraint_matrix = constraint_matrix
+        valid_right_side_array = right_side_array
+    return valid_constraint_matrix, valid_right_side_array, valid_constraint_num
+
+
+def inequality_bound_matrix_simplification(
+        raw_flux_coefficient_matrix, transform_matrix, valid_constraint_num,
+        min_flux_vector, max_flux_vector, computation_eps):
+    """
+    Each row of flux_coefficient_matrix corresponds to constrains of one flux.
+    If two rows have the same coefficient, the corresponding two fluxes will be identical all the time.
+    One of them can be removed, and the exact bound could be the larger one in min bound, and smaller one in max bound
+    """
+    def indexing_key_generator(current_array):
+        round_decimal_num = 10
+        decimal_format_string = f'{{:.{round_decimal_num}e}}'
+        indexing_str = ';'.join([
+            '0' if abs(current_num) < computation_eps else decimal_format_string.format(current_num)
+            for current_num in current_array
+        ])
+        return indexing_str
+
+    def check_if_exist_and_update_min_max_bound(coefficient_array, new_min_value, new_max_value):
+        indexing_str = indexing_key_generator(coefficient_array)
+        if indexing_str not in existing_coefficient_dict:
+            existing_coefficient_dict[indexing_str] = (new_min_value, new_max_value)
+            existence = False
+        else:
+            current_min_value, current_max_value = existing_coefficient_dict[indexing_str]
+            existing_coefficient_dict[indexing_str] = (
+                max(current_min_value, new_min_value),
+                min(current_max_value, new_max_value)
+            )
+            existence = True
+        return existence, indexing_str
+
+    eps = 1e-12
+    transformed_flux_coefficient_matrix = (raw_flux_coefficient_matrix @ transform_matrix)[:, valid_constraint_num:]
+    final_row_list = []
+    final_indexing_str_list = []
+    final_min_bound_list = []
+    final_max_bound_list = []
+    existing_coefficient_dict = {}
+    for row_index, each_row_array in enumerate(transformed_flux_coefficient_matrix):
+        if sum(abs(each_row_array)) < eps:
+            continue
+        existence, indexing_str = check_if_exist_and_update_min_max_bound(
+            each_row_array, min_flux_vector[row_index], max_flux_vector[row_index])
+        if not existence:
+            final_row_list.append(row_index)
+            final_indexing_str_list.append(indexing_str)
+    for indexing_str in final_indexing_str_list:
+        min_value, max_value = existing_coefficient_dict[indexing_str]
+        final_min_bound_list.append(min_value)
+        final_max_bound_list.append(max_value)
+    valid_bound_coefficient_matrix = raw_flux_coefficient_matrix[final_row_list, :]
+    valid_min_bound_vector = np.array(final_min_bound_list)
+    valid_max_bound_vector = np.array(final_max_bound_list)
+    assert np.linalg.matrix_rank(valid_bound_coefficient_matrix, eps) == valid_bound_coefficient_matrix.shape[0]
+    return valid_bound_coefficient_matrix, valid_min_bound_vector, valid_max_bound_vector

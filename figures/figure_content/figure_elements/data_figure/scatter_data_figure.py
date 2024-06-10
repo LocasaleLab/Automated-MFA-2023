@@ -2,7 +2,7 @@ from .figure_data_loader import raw_model_data, flux_comparison_data, embedded_f
 from .config import it, np, Vector, DataFigureParameterName as ParameterName, ProtocolSearchingMaterials, \
     ColorConfig, Keywords, default_parameter_extract, DataFigureConfig, merge_axis_format_dict, \
     CommonFigureString, DataName, ScatterDataFigure, \
-    VerticalAlignment, LineStyle, t_test_of_two_groups
+    VerticalAlignment, LineStyle, t_test_of_two_groups, random_seed
 
 
 GroupDataFigure = DataFigureConfig.GroupDataFigure
@@ -127,8 +127,8 @@ def general_flux_layout_generator(
         ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict, flux_name_location_list,
         common_x_label, common_y_label, preset_y_lim_list, preset_y_ticks_list, preset_x_lim_list, display_name_dict,
         column_width, class_width, marker_size, color_dict, scatter_param_dict, compare_one_by_one=False,
-        with_scatter_line=False, scatter_line_param_dict=None, complete_p_value_y_value_list=None,
-        p_value_cap_param_dict=None):
+        show_raw_data_points=False, with_scatter_line=False, scatter_line_param_dict=None,
+        complete_p_value_y_value_list=None, p_value_cap_param_dict=None):
     row_num = len(flux_name_location_list)
     ax_row_size = (ax_total_size.y - (row_num - 1) * ax_interval.y) / row_num
     flux_name_list = []
@@ -165,9 +165,12 @@ def general_flux_layout_generator(
             minimal_value = 0
             total_group_num = len(current_flux_data_dict)
             current_x_value_list = []
+            current_all_x_value_list = []
+            current_raw_y_value_list = []
             current_mean_y_value_list = []
             current_std_y_value_list = []
             current_market_color_list = []
+            current_all_point_market_color_list = []
             current_x_ticks_list = []
             added_x_ticks_set = set()
             this_col_len = None
@@ -204,10 +207,16 @@ def general_flux_layout_generator(
                         if group_name not in added_x_ticks_set:
                             current_x_ticks_list.append(current_group_center_value)
                             added_x_ticks_set.add(group_name)
+                        random_x_offset = (
+                            random_seed.random(len(current_class_value_list)) - 0.5) * 0.5 * each_class_column_width
+                        current_all_x_value_list.extend(current_x_value + random_x_offset)
+                        current_raw_y_value_list.extend(current_class_value_list)
                         current_x_value_list.append(current_x_value)
                         current_mean_y_value_list.append(current_mean)
                         current_std_y_value_list.append(current_std)
                         current_market_color_list.append(color_dict[class_name])
+                        current_all_point_market_color_list.extend(
+                            [color_dict[class_name]] * len(current_class_value_list))
                     if with_scatter_line:
                         raw_scatter_line_xy_list.append(this_group_scatter_line_xy_list)
                     if current_p_value_y_value is not None:
@@ -246,14 +255,28 @@ def general_flux_layout_generator(
                         current_std_y_value_list.append(current_std)
                         current_market_color_list.append(current_color)
                     current_x_ticks_list.append(current_class_center_x_value)
-            current_tissue_data_dict = {
-                ParameterName.x_value_array: np.array(current_x_value_list),
-                ParameterName.y_value_array: (np.array(current_mean_y_value_list), np.array(current_std_y_value_list)),
-                ParameterName.marker_size: marker_size,
-                ParameterName.marker_color: current_market_color_list,
-                ParameterName.scatter_param_dict: scatter_param_dict,
-            }
-            complete_plotting_data_dict_list.append(current_tissue_data_dict)
+            if show_raw_data_points:
+                complete_plotting_data_dict_list.append([{
+                    ParameterName.x_value_array: np.array(current_all_x_value_list),
+                    ParameterName.y_value_array: (np.array(current_raw_y_value_list), None),
+                    ParameterName.marker_size: marker_size,
+                    ParameterName.marker_color: current_all_point_market_color_list,
+                    ParameterName.scatter_param_dict: scatter_param_dict,
+                }, {
+                    ParameterName.x_value_array: np.array(current_x_value_list),
+                    ParameterName.y_value_array: (
+                        np.array(current_mean_y_value_list), np.array(current_std_y_value_list)),
+                    ParameterName.marker_color: current_market_color_list,
+                    ParameterName.error_bar_param_dict: {ParameterName.data_location_cap: True},
+                }])
+            else:
+                complete_plotting_data_dict_list.append({
+                    ParameterName.x_value_array: np.array(current_x_value_list),
+                    ParameterName.y_value_array: (np.array(current_mean_y_value_list), np.array(current_std_y_value_list)),
+                    ParameterName.marker_size: marker_size,
+                    ParameterName.marker_color: current_market_color_list,
+                    ParameterName.scatter_param_dict: scatter_param_dict,
+                })
             x_ticks_list.append(current_x_ticks_list)
             if preset_x_lim_list is not None:
                 x_lim = preset_x_lim_list[row_index][col_index]
@@ -302,7 +325,7 @@ def general_flux_layout_generator(
             if with_scatter_line:
                 reshaped_scatter_line_list = []
                 for scatter_line_pair in raw_scatter_line_xy_list:
-                    reshaped_scatter_line_list.append([*np.array(scatter_line_pair).T, scatter_line_param_dict])
+                    reshaped_scatter_line_list.append([*np.array(scatter_line_pair).T, dict(scatter_line_param_dict)])
                 current_scatter_line_list.extend(reshaped_scatter_line_list)
             if current_p_value_y_value is not None:
                 (
@@ -318,7 +341,7 @@ def general_flux_layout_generator(
             complete_scatter_line_list.append(current_scatter_line_list)
         unit_array_len_size = (ax_total_size.x - (this_row_axis_num - 1) * ax_interval.x) / total_array_len_this_row
         this_row_bottom_left = ax_total_bottom_left + \
-                               Vector(0, (ax_row_size + ax_interval.y) * (row_num - row_index - 1))
+            Vector(0, (ax_row_size + ax_interval.y) * (row_num - row_index - 1))
         for current_array_len in this_row_array_len_list:
             this_ax_col_len = current_array_len * unit_array_len_size
             ax_size_list.append(Vector(this_ax_col_len, ax_row_size))
@@ -552,7 +575,7 @@ def p_value_parameter_list_generator(
             [cap_horiz_left_x_value, cap_horiz_left_x_value, cap_horiz_right_x_value, cap_horiz_right_x_value],
             [cap_vertical_y_value, cap_horiz_y_value, cap_horiz_y_value, cap_vertical_y_value]
         ]
-        p_value_cap_start_end_list.append([*cap_start_end_x_y_pair, p_value_cap_param_dict])
+        p_value_cap_start_end_list.append([*cap_start_end_x_y_pair, dict(p_value_cap_param_dict)])
         p_value_text_loc_list.append(Vector(text_x_value, text_y_value))
     p_value_text_list = []
     for p_value in p_value_list:
@@ -589,6 +612,8 @@ class FluxComparisonScatterDataFigure(ScatterDataFigure):
             figure_data_parameter_dict, ParameterName.display_group_name_dict, {}, pop=True)
         compare_one_by_one = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.compare_one_by_one, False, pop=True)
+        show_raw_data_points = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.show_raw_data_points, False, pop=True)
         column_width = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.column_width, 0.5, pop=True)
         class_width = default_parameter_extract(
@@ -674,8 +699,8 @@ class FluxComparisonScatterDataFigure(ScatterDataFigure):
             ax_total_bottom_left, ax_total_size, ax_interval, final_flux_comparison_data_dict, flux_name_location_list,
             common_x_label, common_y_label, preset_y_lim_list, preset_y_ticks_list, preset_x_lim_list,
             display_group_name_dict, column_width, class_width, marker_size, color_dict, scatter_param_dict,
-            compare_one_by_one=compare_one_by_one, with_scatter_line=with_scatter_line,
-            scatter_line_param_dict=scatter_line_param_dict,
+            compare_one_by_one=compare_one_by_one, show_raw_data_points=show_raw_data_points,
+            with_scatter_line=with_scatter_line, scatter_line_param_dict=scatter_line_param_dict,
             complete_p_value_y_value_list=complete_p_value_y_value_list,
             p_value_cap_param_dict=p_value_cap_param_dict)
         subplot_name_list = [

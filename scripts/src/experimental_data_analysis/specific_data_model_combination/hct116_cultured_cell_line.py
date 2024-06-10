@@ -39,15 +39,17 @@ complete_data_param_raw_list = [
                 '': [
                     {
                         keyword.index: 1,
+                        Keywords.unoptimized: True,
+                        Keywords.specific_target_optimization_num: 2000,
                     },
                     {
                         keyword.index: 1,
-                        obj_threshold_key: Keywords.unoptimized
+                        Keywords.predefined_initial_solution_matrix: True,
                     },
-                    {
-                        keyword.index: 1,
-                        Keywords.loss: Keywords.squared_loss
-                    },
+                    # {
+                    #     keyword.index: 1,
+                    #     Keywords.loss: Keywords.squared_loss
+                    # },
                 ]
             },
         ]
@@ -81,20 +83,20 @@ data_param_raw_list = complete_data_param_raw_list
 short_keyword_list = [keyword.experiments, keyword.condition, keyword.index]
 total_param_list = data_param_list_generator_func_template(
     short_keyword_list, extra_key_default_value_dict={
-        obj_threshold_key: None, Keywords.loss: None})(data_param_raw_list)
+        Keywords.unoptimized: False, Keywords.loss: None})(data_param_raw_list)
 
 
 def project_name_generator(
-        tissue_name, tissue_index, repeat_index, unoptimized_key=None, loss_key=None):
+        tissue_name, tissue_index, repeat_index, unoptimized=False, loss_key=None, **kwargs):
     base_name = data_wrap_obj.project_name_generator(tissue_name, tissue_index, repeat_index)
-    if unoptimized_key is not None and unoptimized_key == Keywords.unoptimized:
+    if unoptimized:
         base_name = special_result_label_converter(base_name, Keywords.unoptimized)
     if loss_key is not None and loss_key == Keywords.squared_loss:
         base_name = special_result_label_converter(base_name, Keywords.squared_loss)
     return base_name
 
 
-keyword_list = [*short_keyword_list, obj_threshold_key, Keywords.loss]
+keyword_list = [*short_keyword_list, Keywords.unoptimized, Keywords.loss]
 
 
 collect_results = collect_results_func_template(

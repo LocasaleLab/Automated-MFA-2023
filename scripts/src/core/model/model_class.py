@@ -17,6 +17,14 @@ class EMUMIDDimDict(object):
             self.metabolite_dim_dict[item] = carbon_num + 1
             return carbon_num + 1
 
+    def __copy__(self):
+        new_item = EMUMIDDimDict()
+        new_item.metabolite_dim_dict = dict(self.metabolite_dim_dict)
+        return new_item
+
+    def copy(self):
+        return self.__copy__()
+
 
 # node = ('OAC', 'abcd', 2)
 class Node(object):
@@ -134,10 +142,14 @@ class CompositeReaction(object):
 
 
 class EMUElement(object):
-    # EMU name format: NAME__CODE. eg: PYR__011
-    # select_carbon_list: [1, 0, 1]
-    # metabolite_name="", selected_carbon_list=(), emu_name=""
-    def __init__(self, metabolite_name, selected_carbon_list, repeat_num=1, previous_visited_emu_name_set=None):
+    """
+        EMU name format: NAME__CODE. eg: PYR__011
+        select_carbon_list: [1, 0, 1]
+        metabolite_name="", selected_carbon_list=(), emu_name=""
+    """
+    def __init__(
+            self, metabolite_name, selected_carbon_list, repeat_num=1, previous_visited_emu_name_set=None,
+            convoluted_emu_list=None, append_carbon_to_name=True):
         def analyze_name(_metabolite_name):
             compartment = ""
             tissue = ""
@@ -154,18 +166,35 @@ class EMUElement(object):
         self.emu_carbon_num = sum(selected_carbon_list)
         self.selected_carbon_list = list(selected_carbon_list)
         carbon_string_list = [str(num) for num in selected_carbon_list]
-        emu_name = "{}__{}".format(metabolite_name, "".join(carbon_string_list))
-        self.emu_name = emu_name
+
+        if convoluted_emu_list is not None:
+            if append_carbon_to_name:
+                self_emu_name = '{}__{}'.format(metabolite_name, "".join(carbon_string_list))
+            else:
+                self_emu_name = metabolite_name
+            convoluted_emu_full_name_list = ', '.join([emu_obj.full_name for emu_obj in convoluted_emu_list])
+            emu_name = f'{CoreConstants.convolution_id}_{self_emu_name}({convoluted_emu_full_name_list})'
+            convoluted_emu = True
+        else:
+            if append_carbon_to_name:
+                emu_name = '{}__{}'.format(metabolite_name, "".join(carbon_string_list))
+            else:
+                emu_name = metabolite_name
+            convoluted_emu = False
+
         if repeat_num > 1:
             full_name = "{}__{}".format(emu_name, repeat_num)
         else:
             full_name = emu_name
+        self.emu_name = emu_name
+        self.full_name = full_name
         if previous_visited_emu_name_set is None:
             previous_visited_emu_name_set = set()
         self.visited_emu_name_set = previous_visited_emu_name_set | {self.emu_name}
-        self.full_name = full_name
         self.repeat_num = repeat_num
         self.equivalent_emu_list = []
+        self.convoluted_emu = convoluted_emu
+        self.convoluted_emu_list = convoluted_emu_list
 
     def more_repeat_num_emu(self):
         return EMUElement(self.metabolite_name, self.selected_carbon_list, self.repeat_num + 1)
@@ -186,6 +215,11 @@ class EMUElement(object):
 
     def __lt__(self, other):
         return self.full_name < other.full_name
+
+    def copy_to_convolution(self, convoluted_emu_list):
+        return EMUElement(
+            self.metabolite_name, self.selected_carbon_list, self.repeat_num,
+            convoluted_emu_list=convoluted_emu_list)
 
 
 class UserDefinedModel(object):
@@ -242,21 +276,26 @@ class UserDefinedModel(object):
 
 class MFAModel(object):
     def __init__(
-            self, input_emu_dict, target_emu_list, emu_mid_equation_dict, composite_reaction_dict,
-            complete_emu_dim_dict, flux_name_index_dict, flux_balance_matrix, flux_balance_right_side_vector,
-            bare_metabolite_dim_dict, metabolite_bare_metabolite_name_dict, complete_tissue_compartment_metabolite_dict,
-            all_target_metabolite_name_set, model_metabolite_to_standard_name_dict, user_defined_model):
+            self, input_emu_dict, target_emu_list, emu_mid_equation_dict, emu_name_dependency_dict,
+            composite_reaction_dict, complete_emu_dim_dict, complete_emu_obj_index_dict,
+            flux_name_index_dict, flux_balance_matrix,
+            flux_balance_right_side_vector, bare_metabolite_dim_dict, metabolite_bare_metabolite_name_dict,
+            complete_tissue_compartment_metabolite_dict, input_metabolite_name_set, all_target_metabolite_name_set,
+            model_metabolite_to_standard_name_dict, user_defined_model):
         self.input_emu_dict = input_emu_dict
         self.target_emu_list = target_emu_list
+        self.emu_name_dependency_dict = emu_name_dependency_dict
         self.emu_mid_equation_dict = emu_mid_equation_dict
         self.composite_reaction_dict = composite_reaction_dict
         self.complete_emu_dim_dict = complete_emu_dim_dict
+        self.complete_emu_obj_index_dict = complete_emu_obj_index_dict
         self.flux_name_index_dict = flux_name_index_dict
         self.flux_balance_matrix = flux_balance_matrix
         self.flux_balance_right_side_vector = flux_balance_right_side_vector
         self.bare_metabolite_dim_dict = bare_metabolite_dim_dict
         self.metabolite_bare_metabolite_name_dict = metabolite_bare_metabolite_name_dict
         self.complete_tissue_compartment_metabolite_dict = complete_tissue_compartment_metabolite_dict
+        self.input_metabolite_name_set = input_metabolite_name_set
         self.all_target_metabolite_name_set = all_target_metabolite_name_set
         self.model_metabolite_to_standard_name_dict = model_metabolite_to_standard_name_dict
         self.user_defined_model = user_defined_model

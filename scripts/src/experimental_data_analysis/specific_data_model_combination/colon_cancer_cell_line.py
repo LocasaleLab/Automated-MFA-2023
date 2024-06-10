@@ -508,27 +508,27 @@ average_data_param_raw_list = [
             },
         ]
     },
-    {
-        keyword.cell_line: 'NCI-H5087',
-        '': [
-            {
-                keyword.glucose_level: keyword.high_glucose_level,
-                '': [
-                    {
-                        keyword.index: Keywords.average,
-                    },
-                    ]
-            },
-            {
-                keyword.glucose_level: keyword.low_glucose_level,
-                '': [
-                    {
-                        keyword.index: Keywords.average,
-                    },
-                    ]
-            },
-        ]
-    },
+    # {
+    #     keyword.cell_line: 'NCI-H5087',
+    #     '': [
+    #         {
+    #             keyword.glucose_level: keyword.high_glucose_level,
+    #             '': [
+    #                 {
+    #                     keyword.index: Keywords.average,
+    #                 },
+    #                 ]
+    #         },
+    #         {
+    #             keyword.glucose_level: keyword.low_glucose_level,
+    #             '': [
+    #                 {
+    #                     keyword.index: Keywords.average,
+    #                 },
+    #                 ]
+    #         },
+    #     ]
+    # },
 ]
 
 

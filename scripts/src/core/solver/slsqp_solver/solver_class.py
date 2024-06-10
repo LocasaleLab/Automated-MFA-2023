@@ -79,34 +79,6 @@ class SLSQPSolver(BaseSolver):
         self.loss_type = loss_type
         self.embedding_obj = embedding_obj
 
-    # def __init__(
-    #         self, flux_name_index_dict, complete_emu_dim_dict, complete_flux_constraint_matrix,
-    #         complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix=None,
-    #         emu_mid_equation_dict=None, input_emu_data_dict=None, experimental_mid_data_obj_dict=None,
-    #         nested_mix_equation_dict=None, mix_ratio_multiplier=None, all_target_metabolite_name_carbon_num_dict=None,
-    #         verbose=False, solver_option_dict=None):
-    #     if solver_option_dict is None:
-    #         solver_option_dict = OptionDict()
-    #     super(SLSQPSolver, self).__init__(
-    #         flux_name_index_dict, complete_emu_dim_dict, complete_flux_constraint_matrix,
-    #         complete_right_side_list, min_bound_vector, max_bound_vector, projection_matrix,
-    #         emu_mid_equation_dict, input_emu_data_dict, experimental_mid_data_obj_dict,
-    #         nested_mix_equation_dict, mix_ratio_multiplier, all_target_metabolite_name_carbon_num_dict,
-    #         verbose, solver_option_dict)
-    #     loss_type, embedding_obj, tolerance, max_iter = default_optimizer_options(solver_option_dict)
-    #
-    #     self.recorder = BaseRecorder(solver_option_dict)
-    #     self.cross_entropy_jacobi_func = None
-    #     self.constraint_list = []
-    #     self.bounds = []
-    #     self.dynamic_default_value = 0
-    #
-    #     self.tolerance = tolerance
-    #     self.max_iter = max_iter
-    #
-    #     self.loss_type = loss_type
-    #     self.embedding_obj = embedding_obj
-
     def _construct_bounds(self):
         self.bounds = optimize.Bounds(self.min_bound_vector, self.max_bound_vector)
 

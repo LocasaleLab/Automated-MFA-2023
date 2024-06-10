@@ -1,6 +1,7 @@
 from scripts.src.common.built_in_packages import abc
 from scripts.src.common.third_party_packages import np
-from scripts.src.common.config import Color, Direct, Keywords as CommonKeywords, random_seed, FigureData
+from scripts.src.common.config import Color, Direct, Keywords as CommonKeywords, random_seed, FigureData, \
+    traditional_method_optimize_size
 from scripts.src.common.classes import FinalResult
 from scripts.src.common.plotting_functions import group_violin_box_distribution_plot, \
     multi_row_col_scatter_plot_for_result_selection, heat_map_plotting, HeatmapValueFormat
@@ -45,9 +46,9 @@ def result_information_generator(model_information, data_information, config_inf
 
 class CurrentFinalResult(FinalResult):
     def __init__(
-            self, project_output_direct, common_data_output_direct, result_name):
+            self, project_output_direct, common_data_output_direct, result_name, suffix=None):
         super(CurrentFinalResult, self).__init__(
-            project_output_direct, common_data_output_direct, result_name)
+            project_output_direct, common_data_output_direct, result_name, suffix=suffix)
 
     def _generate_path(self, current_result_label):
         if current_result_label in raw_model_data_result_label_dict:
@@ -70,16 +71,21 @@ class CurrentFinalResult(FinalResult):
 
     def final_process(
             self, solver_dict, final_information_dict, result_process_name, result_process_func,
-            each_case_target_optimization_num, *args, **kwargs):
+            each_case_target_optimization_num, *args, extra_result_suffix=False, **kwargs):
         self.final_information_dict = final_information_dict
         if each_case_target_optimization_num is None:
             raw_data_analyzing_num = 0
         else:
             raw_data_analyzing_num = each_case_target_optimization_num
         for current_result_label in solver_dict.keys():
+            if extra_result_suffix:
+                extra_result_suffix_tuple = Keywords.extra_result_suffix_tuple
+            else:
+                extra_result_suffix_tuple = ()
             (
                 loss_data_array, solution_data_array, flux_name_index_dict, _,
-                predicted_data_dict, target_experimental_mid_data_dict, _) = self.iteration(current_result_label)
+                predicted_data_dict, target_experimental_mid_data_dict, _) = self.iteration(
+                current_result_label, result_label_suffix_tuple=extra_result_suffix_tuple)
             if current_result_label in raw_model_data_result_label_dict:
                 total_data_size = len(loss_data_array)
                 if result_process_name != Keywords.raw_model_result_process and \
@@ -120,6 +126,7 @@ def data_sensitivity_result_process(
     final_predicted_data_dict = final_result_obj.final_predicted_data_dict
     final_flux_name_index_dict = final_result_obj.final_flux_name_index_dict
     final_target_experimental_mid_data_dict = final_result_obj.final_target_experimental_mid_data_dict
+    processed_mid_name_dict = final_result_obj.processed_mid_name_dict
     flux_range = base_flux_range
 
     analyzed_set_size_list = config.data_sensitivity_simulated_analyzed_set_size_list
@@ -152,8 +159,9 @@ def data_sensitivity_result_process(
     #     common_simulated_flux_value_dict, net_flux_list, important_flux_replace_dict, subset_index_dict)
     data_sensitivity_result_processing(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, final_flux_name_index_dict, common_simulated_flux_value_dict,
-        analyzed_set_size_list, selected_min_loss_size_list, repeat_time_each_analyzed_set,
+        final_predicted_data_dict, processed_mid_name_dict, final_flux_name_index_dict,
+        common_simulated_flux_value_dict, analyzed_set_size_list,
+        selected_min_loss_size_list, repeat_time_each_analyzed_set,
         net_flux_list, important_flux_replace_dict, flux_range, flux_result_output_xlsx_path,
         mid_prediction_result_output_xlsx_path)
 
@@ -185,11 +193,13 @@ def raw_model_result_process(
     information_dict = final_result_obj.final_information_dict[result_label]
     predicted_data_dict = final_result_obj.final_predicted_data_dict[result_label]
     target_experimental_mid_data_dict = final_result_obj.final_target_experimental_mid_data_dict[result_label]
+    processed_mid_name_dict = final_result_obj.processed_mid_name_dict
 
     raw_model_result_processing_func(
         result_name, raw_model_solver, loss_data_array, solution_data_array, flux_name_index_dict, information_dict,
-        predicted_data_dict, target_experimental_mid_data_dict, common_simulated_flux_value_dict,
-        important_flux_list, important_flux_replace_dict, analyzed_set_size_list, selected_min_loss_size_list,
+        predicted_data_dict, processed_mid_name_dict, target_experimental_mid_data_dict,
+        common_simulated_flux_value_dict, important_flux_list, important_flux_replace_dict,
+        analyzed_set_size_list, selected_min_loss_size_list,
         repeat_time_each_analyzed_set, flux_range, this_result_output_direct, flux_result_output_xlsx_path,
         mid_prediction_result_output_xlsx_path, net_flux_list, test_mode=test_mode)
 
@@ -205,13 +215,14 @@ def raw_model_optimization_from_averaged_solution_result_process(
     final_solution_data_dict = final_result_obj.final_solution_data_dict
     final_predicted_data_dict = final_result_obj.final_predicted_data_dict
     common_flux_name_index_dict = final_result_obj.final_flux_name_index_dict.values().__iter__().__next__()
+    processed_mid_name_dict = final_result_obj.processed_mid_name_dict
 
     analyzed_set_size_list = config.analyzed_set_size_list
     selected_min_loss_size_list = config.selected_min_loss_size_list
 
     optimization_from_averaged_solution_result_processing_func(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, common_flux_name_index_dict, common_simulated_flux_value_dict,
+        final_predicted_data_dict, processed_mid_name_dict, common_flux_name_index_dict, common_simulated_flux_value_dict,
         net_flux_list, important_flux_replace_dict, analyzed_set_size_list, selected_min_loss_size_list, flux_range
     )
 
@@ -227,6 +238,7 @@ def raw_model_batched_simulated_data_result_process(
     final_solution_data_dict = final_result_obj.final_solution_data_dict
     final_predicted_data_dict = final_result_obj.final_predicted_data_dict
     common_flux_name_index_dict = final_result_obj.final_flux_name_index_dict.values().__iter__().__next__()
+    processed_mid_name_dict = final_result_obj.processed_mid_name_dict
 
     flux_result_output_xlsx_path = final_result_obj.flux_result_output_xlsx_path
     mid_prediction_result_output_xlsx_path = final_result_obj.mid_prediction_result_output_xlsx_path
@@ -237,8 +249,9 @@ def raw_model_batched_simulated_data_result_process(
 
     multiple_simulated_data_result_processing_func(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, common_flux_name_index_dict, nested_simulated_flux_value_dict_dict,
-        analyzed_set_size_list, selected_min_loss_size_list, repeat_time_each_analyzed_set,
+        final_predicted_data_dict, processed_mid_name_dict, common_flux_name_index_dict,
+        nested_simulated_flux_value_dict_dict, analyzed_set_size_list,
+        selected_min_loss_size_list, repeat_time_each_analyzed_set,
         net_flux_list, important_flux_replace_dict, flux_range, flux_result_output_xlsx_path,
         mid_prediction_result_output_xlsx_path,
         optimization_from_averaged_solutions=optimization_from_averaged_solutions)
@@ -554,7 +567,9 @@ def each_cycle_analyzer(
         net_selected_averaged_relative_error_dict,
         raw_selected_loss_value_dict,
         loss_of_mean_solution_dict,
+        processed_mid_name_dict,
         raw_selected_predicted_data_dict,
+        selected_averaged_predicted_data_dict,
         max_loss_value,
         select_mode=True,
         sorted_index_array=None,
@@ -573,7 +588,23 @@ def each_cycle_analyzer(
             ordered_selected_solution_data_array)
         return ordered_selected_index_array, ordered_selected_solution_data_array
 
-    def calculate_loss_each_cycle(
+    def filter_each_mid_dict(
+            input_predicted_data_dict, analyzed_set_size, selected_min_loss_size, current_ordered_selected_index_array,
+            target_predicted_data_dict, append=False):
+        for mid_name, mid_value_list in input_predicted_data_dict.items():
+            current_output_predicted_mid_value_list = add_empty_obj(
+                target_predicted_data_dict, list, selected_min_loss_size, analyzed_set_size, mid_name)
+            if current_ordered_selected_index_array is not None:
+                selected_mid_value_list = [
+                    mid_value_list[selected_index] for selected_index in current_ordered_selected_index_array]
+            else:
+                selected_mid_value_list = mid_value_list
+            if append:
+                current_output_predicted_mid_value_list.append(selected_mid_value_list)
+            else:
+                current_output_predicted_mid_value_list.extend(selected_mid_value_list)
+
+    def calculate_loss_and_mid_each_cycle(
             analyzed_set_size, selected_min_loss_size, current_ordered_selected_index_array,
             current_solution_data_array):
         if current_ordered_selected_index_array is not None:
@@ -584,6 +615,9 @@ def each_cycle_analyzer(
             raw_selected_loss_value_dict, list, selected_min_loss_size, analyzed_set_size).append(
             current_loss_array)
         new_max_loss_value = max(max_loss_value, np.max(current_loss_array))
+        filter_each_mid_dict(
+            predicted_data_dict, analyzed_set_size, selected_min_loss_size, current_ordered_selected_index_array,
+            raw_selected_predicted_data_dict, append=False)
         if selected_averaged_flux_value_dict is not None and loss_of_mean_solution_dict is not None:
             mean_solution = np.mean(current_solution_data_array, axis=0)
             add_empty_obj(
@@ -593,6 +627,16 @@ def each_cycle_analyzer(
             add_empty_obj(
                 loss_of_mean_solution_dict, list, selected_min_loss_size, analyzed_set_size).append(loss_of_mean_solution)
             new_max_loss_value = max(new_max_loss_value, loss_of_mean_solution)
+            if selected_averaged_predicted_data_dict is not None:
+                raw_mid_dict_of_selected_averaged_solution = solver_obj.predict(mean_solution)
+                mid_dict_of_selected_averaged_solution = {
+                    processed_mid_name_dict[mid_name]: mid_value_list
+                    for mid_name, mid_value_list in raw_mid_dict_of_selected_averaged_solution.items()
+                    if mid_name in processed_mid_name_dict
+                }
+                filter_each_mid_dict(
+                    mid_dict_of_selected_averaged_solution, analyzed_set_size, selected_min_loss_size,
+                    None, selected_averaged_predicted_data_dict, append=True)
         return new_max_loss_value
 
     def calculate_distance_each_cycle(current_solution_data_array):
@@ -642,17 +686,6 @@ def each_cycle_analyzer(
                 net_selected_averaged_relative_error_dict, list, selected_min_loss_size, analyzed_set_size).append(
                 net_mean_relative_ratio)
         return new_max_raw_euclidian_distance, new_max_net_euclidian_distance
-
-    def filter_mid_each_cycle(analyzed_set_size, selected_min_loss_size, current_ordered_selected_index_array):
-        for mid_name, mid_value_list in predicted_data_dict.items():
-            if current_ordered_selected_index_array is not None:
-                selected_mid_value_list = [
-                    mid_value_list[selected_index] for selected_index in current_ordered_selected_index_array]
-            else:
-                selected_mid_value_list = mid_value_list
-            add_empty_obj(
-                raw_selected_predicted_data_dict, list, selected_min_loss_size, analyzed_set_size, mid_name).extend(
-                selected_mid_value_list)
 
     def calculate_flux_each_cycle(
             analyzed_set_size, selected_min_loss_size, empty=False, current_solution_data_array=None, reduced=True):
@@ -730,13 +763,11 @@ def each_cycle_analyzer(
             ordered_selected_solution_data_array_list = [solution_data_array]
         for ordered_selected_index_array, ordered_selected_solution_data_array in zip(
                 ordered_selected_index_array_list, ordered_selected_solution_data_array_list):
-            max_loss_value = calculate_loss_each_cycle(
+            max_loss_value = calculate_loss_and_mid_each_cycle(
                 analyzed_set_size, selected_min_loss_size,
                 ordered_selected_index_array, ordered_selected_solution_data_array)
             max_raw_euclidian_distance, max_net_euclidian_distance = calculate_distance_each_cycle(
                 ordered_selected_solution_data_array)
-            filter_mid_each_cycle(
-                analyzed_set_size, selected_min_loss_size, ordered_selected_index_array)
             calculate_flux_each_cycle(
                 analyzed_set_size, selected_min_loss_size,
                 current_solution_data_array=ordered_selected_solution_data_array, reduced=select_mode)
@@ -754,11 +785,47 @@ def generate_y_lim_dict(maximal_distance_dict):
     return y_lim_dict
 
 
+def construct_output_dict(
+        result_label, analyzed_set_size, selected_min_loss_size,
+        current_raw_loss_array_list, current_raw_solution_array_list, current_raw_predicted_data_dict,
+        target_experimental_mid_data_dict, flux_name_index_dict, raw_information_dict,
+        index_column_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+        final_target_experimental_mid_data_dict, final_flux_name_index_dict, final_information_dict,
+        solution_state, single_item=False
+):
+    current_repeat_index_list = []
+    current_each_repeat_index_list = []
+    for repeat_index, raw_loss_array in enumerate(current_raw_loss_array_list):
+        if single_item:
+            current_size = 1
+        else:
+            current_size = len(raw_loss_array)
+        current_repeat_index_list.extend([repeat_index + 1] * current_size)
+        current_each_repeat_index_list.extend(range(1, current_size + 1))
+    index_column_dict[result_label] = {
+        'repeat_index': current_repeat_index_list,
+        'index_in_each_repeat': current_each_repeat_index_list,
+    }
+    final_solution_data_dict[result_label] = np.vstack(current_raw_solution_array_list)
+    final_loss_data_dict[result_label] = np.hstack(current_raw_loss_array_list)
+    final_predicted_data_dict[result_label] = current_raw_predicted_data_dict
+    final_target_experimental_mid_data_dict[result_label] = target_experimental_mid_data_dict
+    final_flux_name_index_dict[result_label] = flux_name_index_dict
+    final_information_dict[result_label] = {
+        **raw_information_dict,
+        'total_analyzed_set_size': analyzed_set_size,
+        'num_of_min_loss_be_selected': selected_min_loss_size,
+        'solution_type': solution_state,
+    }
+
+
 def output_analyzed_raw_flux_and_predicted_mid_data(
         analyzed_set_size_list, selected_min_loss_size_list,
-        raw_selected_flux_value_dict, raw_selected_loss_value_dict, raw_selected_predicted_data_dict,
-        target_experimental_mid_data_dict, flux_name_index_dict, raw_information_dict,
-        flux_result_output_xlsx_path, mid_prediction_result_output_xlsx_path):
+        raw_selected_flux_value_dict, selected_averaged_flux_value_dict,
+        raw_selected_loss_value_dict, selected_averaged_loss_dict,
+        raw_selected_predicted_data_dict, selected_averaged_predicted_data_dict,
+        target_experimental_mid_data_dict, flux_name_index_dict,
+        raw_information_dict, flux_result_output_xlsx_path, mid_prediction_result_output_xlsx_path):
     final_loss_data_dict = {}
     final_solution_data_dict = {}
     final_flux_name_index_dict = {}
@@ -779,26 +846,37 @@ def output_analyzed_raw_flux_and_predicted_mid_data(
             except KeyError:
                 continue
             else:
-                current_repeat_index_list = []
-                current_each_repeat_index_list = []
-                for repeat_index, raw_loss_array in enumerate(current_raw_loss_array_list):
-                    current_size = len(raw_loss_array)
-                    current_repeat_index_list.extend([repeat_index + 1] * current_size)
-                    current_each_repeat_index_list.extend(range(1, current_size + 1))
-                index_column_dict[result_label] = {
-                    'repeat_index': current_repeat_index_list,
-                    'index_in_each_repeat': current_each_repeat_index_list
-                }
-                final_solution_data_dict[result_label] = np.vstack(current_raw_solution_array_list)
-                final_loss_data_dict[result_label] = np.hstack(current_raw_loss_array_list)
-                final_predicted_data_dict[result_label] = current_raw_predicted_data_dict
-                final_target_experimental_mid_data_dict[result_label] = target_experimental_mid_data_dict
-                final_flux_name_index_dict[result_label] = flux_name_index_dict
-                final_information_dict[result_label] = {
-                    **raw_information_dict,
-                    'total_analyzed_set_size': analyzed_set_size,
-                    'num_of_min_loss_be_selected': selected_min_loss_size
-                }
+                if analyzed_set_size == traditional_method_optimize_size and selected_min_loss_size == 1:
+                    selected_state = Keywords.traditional_method_solutions
+                    current_result_label = f'{result_label}_traditional'
+                else:
+                    selected_state = Keywords.selected_solutions
+                    current_result_label = result_label
+                averaged_result_label = f'{result_label}_averaged'
+                construct_output_dict(
+                    current_result_label, analyzed_set_size, selected_min_loss_size,
+                    current_raw_loss_array_list, current_raw_solution_array_list, current_raw_predicted_data_dict,
+                    target_experimental_mid_data_dict, flux_name_index_dict, raw_information_dict,
+                    index_column_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+                    final_target_experimental_mid_data_dict, final_flux_name_index_dict, final_information_dict,
+                    selected_state, single_item=False,
+                )
+                if selected_min_loss_size != 1:
+                    current_selected_averaged_solution_array_list = selected_averaged_flux_value_dict[
+                        analyzed_set_size][selected_min_loss_size]
+                    current_selected_averaged_loss_array_list = selected_averaged_loss_dict[
+                        selected_min_loss_size][analyzed_set_size]
+                    current_selected_averaged_predicted_data_dict = selected_averaged_predicted_data_dict[
+                        selected_min_loss_size][analyzed_set_size]
+                    construct_output_dict(
+                        averaged_result_label, analyzed_set_size, selected_min_loss_size,
+                        current_selected_averaged_loss_array_list, current_selected_averaged_solution_array_list,
+                        current_selected_averaged_predicted_data_dict,
+                        target_experimental_mid_data_dict, flux_name_index_dict, raw_information_dict,
+                        index_column_dict, final_solution_data_dict, final_loss_data_dict, final_predicted_data_dict,
+                        final_target_experimental_mid_data_dict, final_flux_name_index_dict, final_information_dict,
+                        Keywords.averaged_solutions, single_item=True,
+                    )
     output_raw_flux_data(
         flux_result_output_xlsx_path, final_loss_data_dict, final_solution_data_dict, final_flux_name_index_dict,
         final_information_dict, subset_index_dict=None, other_label_column_dict=index_column_dict)
@@ -810,7 +888,7 @@ def output_analyzed_raw_flux_and_predicted_mid_data(
 
 def raw_model_result_processing_func(
         result_name, solver_obj, loss_data_array, solution_data_array, flux_name_index_dict, raw_information_dict,
-        predicted_data_dict, target_experimental_mid_data_dict, simulated_flux_value_dict,
+        predicted_data_dict, processed_mid_name_dict, target_experimental_mid_data_dict, simulated_flux_value_dict,
         important_flux_list, replace_flux_dict, analyzed_set_size_list,
         selected_min_loss_size_list, repeat_time_each_analyzed_set,
         flux_range, this_result_output_direct, flux_result_output_xlsx_path,
@@ -876,15 +954,13 @@ def raw_model_result_processing_func(
     raw_selected_loss_value_dict = {}
     loss_of_mean_solution_dict = {}
     raw_selected_predicted_data_dict = {}
+    selected_averaged_predicted_data_dict = {}
     max_loss_value = 0
 
     (
         common_flux_name_simulated_value_dict, simulated_flux_vector, simulated_net_flux_vector,
         common_flux_name_list, net_flux_matrix, normal_core_flux_index_array) = analyze_simulated_flux_value_dict(
         simulated_flux_value_dict, net_flux_list, flux_name_index_dict)
-    # (
-    #     common_flux_name_simulated_value_dict, net_flux_matrix, simulated_flux_vector, formal_flux_name_list
-    # ) = analyze_simulated_flux_value_dict(simulated_flux_value_dict, net_flux_list, flux_name_index_dict)
 
     for analyzed_set_size in analyzed_set_size_list:
         for selected_min_loss_size in selected_min_loss_size_list:
@@ -913,7 +989,9 @@ def raw_model_result_processing_func(
                 net_selected_averaged_relative_error_dict,
                 raw_selected_loss_value_dict,
                 loss_of_mean_solution_dict,
+                processed_mid_name_dict,
                 raw_selected_predicted_data_dict,
+                selected_averaged_predicted_data_dict,
                 max_loss_value,
                 select_mode=True,
                 sorted_index_array=sorted_index_array,
@@ -960,16 +1038,17 @@ def raw_model_result_processing_func(
     if not test_mode:
         output_analyzed_raw_flux_and_predicted_mid_data(
             analyzed_set_size_list, selected_min_loss_size_list,
-            raw_selected_flux_value_dict, raw_selected_loss_value_dict, raw_selected_predicted_data_dict,
-            target_experimental_mid_data_dict, flux_name_index_dict, raw_information_dict,
-            flux_result_output_xlsx_path, mid_prediction_result_output_xlsx_path)
+            raw_selected_flux_value_dict, selected_averaged_flux_value_dict,
+            raw_selected_loss_value_dict, loss_of_mean_solution_dict,
+            raw_selected_predicted_data_dict, selected_averaged_predicted_data_dict,
+            target_experimental_mid_data_dict, flux_name_index_dict,
+            raw_information_dict, flux_result_output_xlsx_path, mid_prediction_result_output_xlsx_path)
     figure_raw_data = FigureData(FigureDataKeywords.raw_model_distance, result_name)
     figure_raw_data.save_data(
         raw_selected_flux_value_dict=raw_selected_flux_value_dict,
         selected_averaged_flux_value_dict=selected_averaged_flux_value_dict,
         raw_selected_diff_vector_dict=raw_selected_diff_vector_dict,
         selected_averaged_diff_vector_dict=selected_averaged_diff_vector_dict,
-        # common_flux_name_list=list(common_flux_name_simulated_value_dict.keys()),
         common_flux_name_list=common_flux_name_list,
         final_flux_absolute_distance_dict=final_flux_absolute_distance_dict,
         final_flux_relative_distance_dict=final_flux_relative_distance_dict,
@@ -988,7 +1067,9 @@ def raw_model_result_processing_func(
         max_loss_value=max_loss_value,
         x_label_index_dict=x_label_index_dict, y_label_index_dict=y_label_index_dict,
         analyzed_set_size_list=analyzed_set_size_list, selected_min_loss_size_list=selected_min_loss_size_list,
-        raw_selected_predicted_data_dict=raw_selected_predicted_data_dict
+        raw_selected_predicted_data_dict=raw_selected_predicted_data_dict,
+        selected_averaged_predicted_data_dict=selected_averaged_predicted_data_dict,
+        target_experimental_mid_data_dict=target_experimental_mid_data_dict,
     )
 
 
@@ -1005,7 +1086,7 @@ def flatten_2d_data_dict(data_dict):
 
 def optimization_from_averaged_solution_result_processing_func(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, common_flux_name_index_dict, simulated_flux_value_dict,
+        final_predicted_data_dict, processed_mid_name_dict, common_flux_name_index_dict, simulated_flux_value_dict,
         net_flux_list, replace_flux_dict, analyzed_set_size_list, selected_min_loss_size_list, flux_range
 ):
     def distance_between_average_and_reoptimized_solution(
@@ -1055,6 +1136,7 @@ def optimization_from_averaged_solution_result_processing_func(
     raw_selected_loss_value_dict = {}
     loss_of_mean_solution_dict = None
     raw_selected_predicted_data_dict = {}
+    selected_averaged_predicted_data_dict = {}
     diff_vector_between_averaged_and_reoptimized_dict = {}
     net_distance_between_averaged_and_reoptimized_dict = {}
     max_loss_value = 0
@@ -1119,7 +1201,9 @@ def optimization_from_averaged_solution_result_processing_func(
                 net_selected_averaged_relative_error_dict,
                 raw_selected_loss_value_dict,
                 loss_of_mean_solution_dict,
+                processed_mid_name_dict,
                 raw_selected_predicted_data_dict,
+                selected_averaged_predicted_data_dict,
                 max_loss_value,
                 select_mode=False,
             )
@@ -1198,9 +1282,9 @@ def optimization_from_averaged_solution_result_processing_func(
 
 def multiple_simulated_data_result_processing_func(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, common_flux_name_index_dict, nested_simulated_flux_value_dict_dict,
-        analyzed_set_size_list, selected_min_loss_size_list, repeat_time_each_analyzed_set,
-        net_flux_list, replace_flux_dict, flux_range, flux_result_output_xlsx_path,
+        final_predicted_data_dict, processed_mid_name_dict, common_flux_name_index_dict,
+        nested_simulated_flux_value_dict_dict, analyzed_set_size_list, selected_min_loss_size_list,
+        repeat_time_each_analyzed_set, net_flux_list, replace_flux_dict, flux_range, flux_result_output_xlsx_path,
         mid_prediction_result_output_xlsx_path, optimization_from_averaged_solutions=False,
 ):
     print(f'Start result analysis for {result_name}...')
@@ -1225,6 +1309,7 @@ def multiple_simulated_data_result_processing_func(
     raw_selected_loss_value_dict = {}
     loss_of_mean_solution_dict = {}
     raw_selected_predicted_data_dict = {}
+    selected_averaged_predicted_data_dict = {}
     each_simulated_absolute_y_lim_dict = {}
     each_simulated_relative_y_lim_dict = {}
     max_loss_value = 0
@@ -1298,7 +1383,9 @@ def multiple_simulated_data_result_processing_func(
                     net_selected_averaged_relative_error_dict,
                     raw_selected_loss_value_dict,
                     loss_of_mean_solution_dict,
+                    processed_mid_name_dict,
                     raw_selected_predicted_data_dict,
+                    selected_averaged_predicted_data_dict,
                     max_loss_value,
                     select_mode=True,
                     sorted_index_array=sorted_index_array,
@@ -1437,9 +1524,9 @@ def multiple_simulated_data_result_processing_func(
 
 def data_sensitivity_result_processing(
         result_name, solver_dict, final_information_dict, final_loss_data_dict, final_solution_data_dict,
-        final_predicted_data_dict, final_flux_name_index_dict, common_simulated_flux_value_dict,
-        analyzed_set_size_list, selected_min_loss_size_list, repeat_time_each_analyzed_set,
-        net_flux_list, replace_flux_dict, flux_range, flux_result_output_xlsx_path,
+        final_predicted_data_dict, processed_mid_name_dict, final_flux_name_index_dict,
+        common_simulated_flux_value_dict, analyzed_set_size_list, selected_min_loss_size_list,
+        repeat_time_each_analyzed_set, net_flux_list, replace_flux_dict, flux_range, flux_result_output_xlsx_path,
         mid_prediction_result_output_xlsx_path,
 ):
     print(f'Start result analysis for {result_name}...')
@@ -1463,6 +1550,7 @@ def data_sensitivity_result_processing(
     raw_selected_loss_value_dict = DefaultDict({})
     loss_of_mean_solution_dict = DefaultDict({})
     raw_selected_predicted_data_dict = DefaultDict({})
+    selected_averaged_predicted_data_dict = DefaultDict({})
     each_flux_absolute_y_lim_dict = DefaultDict({})
     each_flux_relative_y_lim_dict = DefaultDict({})
     max_loss_value = 0
@@ -1515,7 +1603,9 @@ def data_sensitivity_result_processing(
                     net_selected_averaged_relative_error_dict[data_label],
                     raw_selected_loss_value_dict[data_label],
                     loss_of_mean_solution_dict[data_label],
+                    processed_mid_name_dict,
                     raw_selected_predicted_data_dict[data_label],
+                    selected_averaged_predicted_data_dict[data_label],
                     max_loss_value,
                     select_mode=True,
                     sorted_index_array=sorted_index_array,

@@ -55,14 +55,6 @@ class FluxComparisonScatterWithTitle(CompositeFigure):
             pass
         else:
             self.height_to_width_ratio = height_to_width_ratio
-        # try:
-        #     figure_title = figure_data_parameter_dict.pop(ParameterName.figure_title)
-        # except KeyError:
-        #     figure_title = None
-        # try:
-        #     legend = figure_data_parameter_dict[ParameterName.legend]
-        # except KeyError:
-        #     legend = False
         figure_title = default_parameter_extract(figure_data_parameter_dict, ParameterName.figure_title, None, pop=True)
         legend = default_parameter_extract(figure_data_parameter_dict, ParameterName.legend, False)
         flux_name_list = figure_data_parameter_dict[ParameterName.flux_name_list]
@@ -78,7 +70,6 @@ class FluxComparisonScatterWithTitle(CompositeFigure):
         text_left_offset = self.text_left_offset
         upper_distance = self.upper_distance
         row_num = self.get_row_num(flux_name_list)
-        # total_height = total_width * self.height_to_width_ratio
         scatter_height = self.calculate_scatter_height(self, row_num)
         scatter_width = total_width - left_tick_label_width - right_edge_width
         scatter_bottom_left = Vector(left_tick_label_width, bottom_tick_label_height)
@@ -87,25 +78,9 @@ class FluxComparisonScatterWithTitle(CompositeFigure):
         scatter_interval = Vector(scatter_interval_x, scatter_interval_y)
 
         total_height = self.calculate_total_height(self, scatter_height, legend, figure_title)
-        # bottom_line = 0.01 * total_width
-        # top_line = 0.01 * total_width
-        # side_edge = 0.02 * total_width
-        # axis_width = total_width - 2 * side_edge
-        # text_left_offset = 0.05 * total_width
-        # figure_left_edge = side_edge
-        # figure_title_height = 0.08 * total_width
-        # figure_title_distance = 0.04 * total_width
-        # if figure_title is None:
-        #     axis_legend_height = total_height - bottom_line - top_line
-        # else:
-        #     # axis_height = 0.87 * total_height
-        #     axis_legend_height = total_height - bottom_line - top_line - figure_title_height - figure_title_distance
 
         current_top_y_value = bottom_tick_label_height + scatter_height + upper_distance
         if legend:
-            # legend_height = 0.06 * total_width
-            # legend_axis_gap_height = 0.05 * total_width
-            # axis_height = axis_legend_height - legend_height - legend_axis_gap_height
             legend_y_center = current_top_y_value + legend_area_height / 2
             current_top_y_value += legend_area_height
             legend_config_dict = {
@@ -118,7 +93,6 @@ class FluxComparisonScatterWithTitle(CompositeFigure):
                 }
             }
         else:
-            # axis_height = axis_legend_height
             legend_config_dict = None
         common_text_config_dict = {
             **DataFigureConfig.common_title_config_dict,

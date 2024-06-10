@@ -79,23 +79,9 @@ class Reaction(object):
         if self.reaction_name == NetworkGeneralConfig.biomass_str:
             display_text = f'Biomass reaction:\n{display_text}'
         self.update_display_text_config_item({ParameterName.string: display_text}, config_key)
-        # if config_key is not None:
-        #     self.display_config_nested_dict[config_key][ParameterName.string] = display_text
-        # else:
-        #     for display_config_dict in self.display_config_nested_dict.values():
-        #         display_config_dict[ParameterName.string] = display_text
         return self
 
     def set_value(self, flux_value):
-        # if self.reversible:
-        #     assert isinstance(flux_value, (tuple, list)) and len(flux_value) == 2
-        #     forward, backward = flux_value
-        #     self.net_value = abs(forward - backward)
-        # else:
-        #     assert isinstance(flux_value, (float, int))
-        #     forward = flux_value
-        #     backward = None
-        #     self.net_value = forward
         if isinstance(flux_value, (tuple, list)) and len(flux_value) == 2:
             forward, backward = flux_value
             self.net_value = abs(forward - backward)

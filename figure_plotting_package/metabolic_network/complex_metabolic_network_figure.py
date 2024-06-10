@@ -168,8 +168,9 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
     top_edge_width = 0.01
     bottom_edge_width = 0.01
     legend_height = 0.08
-    legend_offset = Vector(0.14, 0.01)
+    legend_offset = Vector(0.05, 0.01)
     total_height = 1
+    title_height = 0.04
     height_to_width_ratio = total_height / total_width
 
     @staticmethod
@@ -180,7 +181,7 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
             bottom_edge_height = self.bottom_edge_width
         network_top = bottom_edge_height + network_normal_height * self.metabolic_network_common_scale
         if figure_title:
-            total_height = network_top + title_height
+            total_height = network_top + self.title_height
         else:
             total_height = network_top
         return bottom_edge_height, network_top, total_height * scale
@@ -203,8 +204,6 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
         exchange_network_height = NetworkGeneralConfig.exchange_network_smaller_height * exchange_network_scale
         normal_network_height = network_normal_height * normal_network_scale
         normal_network_width = network_normal_width * normal_network_scale
-        # normal_network_center_x = self.normal_network_center_x
-        # exchange_network_center_x = self.exchange_network_center_x
         normal_network_center_x, exchange_network_center_x = self.calculate_title_center_x(self, 1)
         bottom_edge_height, network_top, total_height = self.calculate_height(self, 1, legend, figure_title)
 
@@ -229,8 +228,22 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
         network_title_config_dict = {
             **common_title_config_dict,
             ParameterName.font_size: 15,
-            ParameterName.height: 0.05,
+            ParameterName.height: self.title_height,
             ParameterName.text_box: False,
+        }
+        if ParameterName.reaction_text_config_dict not in normal_network_config_dict:
+            normal_network_config_dict[ParameterName.reaction_text_config_dict] = {}
+        normal_network_config_dict[ParameterName.reaction_text_config_dict] = {
+            **normal_network_config_dict[ParameterName.reaction_text_config_dict],
+            ParameterName.z_order: 10000,
+            ParameterName.font_size: 13
+        }
+        if ParameterName.reaction_text_config_dict not in exchange_network_config_dict:
+            exchange_network_config_dict[ParameterName.reaction_text_config_dict] = {}
+        exchange_network_config_dict[ParameterName.reaction_text_config_dict] = {
+            **exchange_network_config_dict[ParameterName.reaction_text_config_dict],
+            ParameterName.z_order: 10000,
+            ParameterName.font_size: 12
         }
 
         normal_network_obj = MetabolicNetworkWithLegend(**{
@@ -253,7 +266,7 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
         }
 
         if figure_title:
-            title_center_y = network_top + title_height / 2
+            title_center_y = network_top + self.title_height / 2
             normal_network_text_loc = Vector(normal_network_center_x, title_center_y)
             exchange_network_text_loc = Vector(exchange_network_center_x, title_center_y)
             normal_network_title_obj = TextBox(**{
@@ -277,13 +290,17 @@ class NormalAndExchangeTwinNetwork(CompositeFigure):
             subfigure_element_dict[ParameterName.zoom_in_box] = zoom_in_obj_dict
 
         if legend:
+            legend_network_scale = normal_network_scale + 0.1
             if metabolic_network_legend_config_dict is None:
                 metabolic_network_legend_config_dict = {}
             effective_metabolic_network_legend_config_dict = {
                 ParameterName.bottom_left_offset: self.legend_offset,
-                ParameterName.scale: normal_network_scale,
+                ParameterName.scale: legend_network_scale,
                 ParameterName.mode: ParameterName.horizontal,
-                **metabolic_network_legend_config_dict,
+                ParameterName.extra_parameter_dict: {
+                    ParameterName.font_size: 12,
+                    **metabolic_network_legend_config_dict,
+                }
             }
             metabolic_legend_obj = MetabolicNetworkLegend(**effective_metabolic_network_legend_config_dict)
             subfigure_element_dict['metabolic_network_legend'] = {'metabolic_network_legend': metabolic_legend_obj}

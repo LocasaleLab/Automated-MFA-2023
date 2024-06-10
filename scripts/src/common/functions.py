@@ -338,6 +338,11 @@ def data_param_list_generator_func_template(keyword_list, extra_key_default_valu
                     for extra_key, default_value in extra_key_default_value_dict.items():
                         new_complete_param_dict[extra_key] = default_parameter_extract(
                             current_simplified_param_dict, extra_key, default_value)
+                new_complete_param_dict[Keywords.miscellaneous] = {}
+                for other_key, value in current_simplified_param_dict.items():
+                    if (other_key not in new_complete_param_dict) or (
+                            extra_key_default_value_dict is not None and other_key in extra_key_default_value_dict):
+                        new_complete_param_dict[Keywords.miscellaneous][other_key] = value
                 # if obj_threshold:
                 #     new_complete_param_dict[obj_threshold_key] = default_parameter_extract(
                 #         current_simplified_param_dict, obj_threshold_key, None)
@@ -375,12 +380,14 @@ def collect_results_func_template(
     return collect_results
 
 
-def simulated_output_file_name_constructor(index: int = None, with_noise=False, batched_data=False):
+def simulated_output_file_name_constructor(index: int = None, with_noise=False, batched_data=False, with_glns_m=False):
     output_py_direct = Direct.simulated_output_py_file_direct
     output_xlsx_direct = Direct.simulated_output_xlsx_file_direct
     output_pickle_direct = Direct.simulated_output_pickle_direct
     if batched_data:
         base_name = Keywords.batched_simulated_base_name
+    elif with_glns_m:
+        base_name = Keywords.normal_simulated_base_name_with_glns_m
     else:
         base_name = Keywords.normal_simulated_base_name
     if index is not None:

@@ -9,12 +9,71 @@ GroupDataFigure = DataFigureConfig.GroupDataFigure
 common_data_label = ''
 
 
+def process_predicted_data_dict(
+        raw_selected_predicted_data_dict, selected_averaged_predicted_data_dict,
+        target_experimental_mid_data_dict, figure_data_parameter_dict
+):
+    def add_current_mid_dict(current_mid_dict, data_label, current_mean_data_dict, current_std_data_dict=None):
+        for emu_name, emu_value_array in current_mid_dict.items():
+            if emu_name not in current_mean_data_dict:
+                current_mean_data_dict[emu_name] = {}
+                if current_std_data_dict is not None:
+                    current_std_data_dict[emu_name] = {}
+            if current_std_data_dict is None:
+                mean_value_array = emu_value_array
+            else:
+                mean_value_array = np.mean(emu_value_array, axis=0)
+            current_mean_data_dict[emu_name][data_label] = mean_value_array
+            if current_std_data_dict is not None:
+                current_std_data_dict[emu_name][data_label] = np.std(emu_value_array, axis=0)
+
+    optimized_size = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.optimized_size, None, force=True)
+    selected_size = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.selection_size, None, force=True)
+    traditional_optimized_size = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.traditional_optimized_size, None, force=True)
+    traditional_selected_size = 1
+    traditional_method_mid_dict = raw_selected_predicted_data_dict[
+        traditional_selected_size][traditional_optimized_size]
+    selected_solution_mid_dict = raw_selected_predicted_data_dict[
+        selected_size][optimized_size]
+    averaged_solution_mid_dict = selected_averaged_predicted_data_dict[
+        selected_size][optimized_size]
+    experimental_mid_data_dict = target_experimental_mid_data_dict
+
+    mean_data_dict = {}
+    error_bar_data_dict = {}
+    add_current_mid_dict(
+        traditional_method_mid_dict, ParameterName.traditional, mean_data_dict, error_bar_data_dict)
+    add_current_mid_dict(
+        selected_solution_mid_dict, ParameterName.selected, mean_data_dict, error_bar_data_dict)
+    add_current_mid_dict(
+        averaged_solution_mid_dict, ParameterName.averaged, mean_data_dict, error_bar_data_dict)
+    add_current_mid_dict(
+        experimental_mid_data_dict, ParameterName.simulated, mean_data_dict)
+
+    return mean_data_dict, error_bar_data_dict
+
+
 class MIDComparisonGridBarDataFigure(BasicMIDComparisonGridBarDataFigure):
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
         size = initialize_vector_input(size)
         common_y_label = CommonFigureString.relative_ratio
-        mean_data_dict, error_bar_data_dict = mid_comparison_data.return_data(**figure_data_parameter_dict)
+        data_name = default_parameter_extract(figure_data_parameter_dict, ParameterName.data_name, None, force=True)
+        if data_name in {
+                DataName.raw_model_raw_data, DataName.raw_model_with_glns_m_raw_data,
+                DataName.raw_model_all_data, DataName.raw_model_with_glns_m_all_data}:
+            (
+                raw_selected_predicted_data_dict, selected_averaged_predicted_data_dict,
+                target_experimental_mid_data_dict), *_ = raw_model_data.return_mid_data(**figure_data_parameter_dict)
+            mean_data_dict, error_bar_data_dict = process_predicted_data_dict(
+                raw_selected_predicted_data_dict, selected_averaged_predicted_data_dict,
+                target_experimental_mid_data_dict, figure_data_parameter_dict
+            )
+        else:
+            mean_data_dict, error_bar_data_dict = mid_comparison_data.return_data(**figure_data_parameter_dict)
         figure_data_pair = (mean_data_dict, error_bar_data_dict)
         color_dict = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.color_dict, CommonFigureMaterials.mid_comparison_color_dict)
@@ -300,8 +359,16 @@ class CommonDifferenceFluxErrorBarDataFigure(BasicFluxErrorBarDataFigure):
         text_axis_loc_pair = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.text_axis_loc_pair, Vector(0.5, 0.9), pop=True)
 
+        specific_subplot_name_text_format_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.subplot_name_text_format_dict, {}, pop=True)
+        subplot_name_text_format_dict = {
+            ParameterName.font_size: 12,
+            **specific_subplot_name_text_format_dict,
+        }
+
         _, select_average_reoptimize_color_dict = CommonFigureMaterials.select_average_solution_name_color_dict(
-            CommonFigureMaterials, with_reoptimization=True, different_simulated_data=True)
+            CommonFigureMaterials, with_reoptimization=True, with_traditional_method=True,
+            different_simulated_data=True)
         color_dict = {
             common_data_label: CommonFigureMaterials.default_flux_error_bar_color,
             **select_average_reoptimize_color_dict,
@@ -381,6 +448,7 @@ class CommonDifferenceFluxErrorBarDataFigure(BasicFluxErrorBarDataFigure):
             ParameterName.default_y_tick_label_list: y_tick_labels,
 
             ParameterName.subplot_name_list: subplot_name_list,
+            ParameterName.subplot_name_text_format_dict: subplot_name_text_format_dict,
             ParameterName.text_axis_loc_pair: text_axis_loc_pair,
             **figure_data_parameter_dict
         }
@@ -421,6 +489,8 @@ class HCT116OptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarDataFigu
             figure_data_parameter_dict, ParameterName.with_collected_optimized_set, True)
         self.with_unoptimized_set = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.with_unoptimized_set, True)
+        with_glns_m = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_glns_m, False)
 
         separated_optimized_solution_num = self.separated_optimized_solution_num
         collected_optimized_solution_num_list = self.collected_optimized_solution_num_list
@@ -444,18 +514,38 @@ class HCT116OptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarDataFigu
             net_optimized_diff_vector_list.append(net_target_unoptimized_diff_vector)
             subplot_name_list.append(CommonFigureString.random_fluxes)
 
-        y_abs_lim = 350.0001
-        y_tick_interval = 100
+        # y_abs_lim = 350.0001
+        # y_tick_interval = 100
+        if with_glns_m:
+            middle_y_lim, middle_y_ticks = symmetrical_lim_tick_generator_with_zero(
+                280, 280, 100)
+            top_y_lim = [290, 650]
+            y_lim = [middle_y_lim, top_y_lim]
+            y_ticks = [middle_y_ticks, [350, 550]]
+            y_label = [CommonFigureString.relative_error, None]
+            broken_y_axis_ratio = [(0, 0.79), (0.84, 1)]
+
+            extra_figure_data_parameter_dict = {
+                ParameterName.broken_y_axis: broken_y_axis_ratio,
+                ParameterName.common_y_lim: y_lim,
+                ParameterName.common_y_label: y_label,
+                ParameterName.y_ticks_list: y_ticks,
+                ParameterName.y_label_format_dict: {ParameterName.axis_label_location: 0.7, },
+                ParameterName.text_axis_loc_pair: Vector(0.4, 0.9),
+            }
+        else:
+            extra_figure_data_parameter_dict = {
+                ParameterName.y_abs_lim: 350.0001,
+                ParameterName.y_tick_interval: 100,
+            }
 
         figure_data_parameter_dict = {
             ParameterName.net_optimized_diff_vector_list: net_optimized_diff_vector_list,
             ParameterName.ax_interval: bar_interval,
             ParameterName.flux_name_list: flux_name_list,
 
-            ParameterName.y_abs_lim: y_abs_lim,
-            ParameterName.y_tick_interval: y_tick_interval,
-
             ParameterName.subplot_name_list: subplot_name_list,
+            **extra_figure_data_parameter_dict,
             **figure_data_parameter_dict
         }
 
@@ -464,9 +554,17 @@ class HCT116OptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarDataFigu
 
 
 class SimulatedDataOptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarDataFigure):
+    raw_data_name_set = {
+        DataName.raw_model_all_data, DataName.raw_model_with_glns_m_all_data,
+        DataName.raw_model_raw_data, DataName.raw_model_with_glns_m_raw_data,
+    }
+
     @staticmethod
-    def calculate_row_num(self, **kwargs):
-        return 3
+    def calculate_row_num(self, with_re_optimization=False, with_traditional_method=False, **kwargs):
+        if with_re_optimization or with_traditional_method:
+            return 3
+        else:
+            return 2
 
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
@@ -480,30 +578,69 @@ class SimulatedDataOptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarD
             figure_data_parameter_dict, ParameterName.optimized_size, None, force=True, pop=True)
         target_selection_size = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.selection_size, None, force=True, pop=True)
-        subplot_name_list = [
-            CommonFigureString.selected_solution, CommonFigureString.averaged_solution,
-            CommonFigureString.reoptimized_solution]
-        data_label_list = [
-            ParameterName.selected, ParameterName.averaged, ParameterName.optimized]
+        with_re_optimization = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_re_optimization, True, pop=True)
+        with_traditional_method = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.with_traditional_method, False, pop=True)
+        traditional_optimized_size = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.traditional_optimized_size, None, pop=True)
+        traditional_selected_size = 1
+        if with_re_optimization:
+            subplot_name_list = [
+                CommonFigureString.selected_solution, CommonFigureString.averaged_solution,
+                CommonFigureString.reoptimized_solution]
+            data_label_list = [
+                ParameterName.selected, ParameterName.averaged, ParameterName.optimized]
+        elif with_traditional_method:
+            subplot_name_list = [
+                CommonFigureString.traditional_method,
+                CommonFigureString.selected_solution, CommonFigureString.averaged_solution,]
+            data_label_list = [
+                ParameterName.traditional,
+                ParameterName.selected, ParameterName.averaged]
+            assert traditional_optimized_size is not None
+        else:
+            subplot_name_list = [
+                CommonFigureString.selected_solution, CommonFigureString.averaged_solution]
+            data_label_list = [
+                ParameterName.selected, ParameterName.averaged]
         if relative_error:
-            (
-                (initial_raw_selected_relative_error_dict, initial_averaged_relative_error_dict,
-                 raw_selected_relative_error_dict), flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
-            ) = raw_model_data.return_all_flux_data(**figure_data_parameter_dict)
-            net_optimized_diff_vector_list = [
-                initial_raw_selected_relative_error_dict[target_selection_size][target_optimized_size],
-                initial_averaged_relative_error_dict[target_selection_size][target_optimized_size],
-                raw_selected_relative_error_dict[target_selection_size][target_optimized_size],]
-            if data_name in {DataName.raw_model_all_data, DataName.optimization_from_solutions_all_data}:
+            if data_name in self.raw_data_name_set:
+                (
+                    (raw_selected_relative_error_dict, selected_averaged_relative_error_dict),
+                    flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
+                ) = raw_model_data.return_all_flux_data(**figure_data_parameter_dict)
+                net_optimized_diff_vector_list = [
+                    np.concatenate(
+                        raw_selected_relative_error_dict[traditional_selected_size][traditional_optimized_size]),
+                    np.concatenate(
+                        raw_selected_relative_error_dict[target_selection_size][target_optimized_size]),
+                    np.concatenate(
+                        selected_averaged_relative_error_dict[target_selection_size][target_optimized_size]),]
+            else:
+                (
+                    (initial_raw_selected_relative_error_dict, initial_averaged_relative_error_dict,
+                     raw_selected_relative_error_dict), flux_name_list, analyzed_set_size_list,
+                    selected_min_loss_size_list
+                ) = raw_model_data.return_all_flux_data(**figure_data_parameter_dict)
+                net_optimized_diff_vector_list = [
+                    initial_raw_selected_relative_error_dict[target_selection_size][target_optimized_size],
+                    initial_averaged_relative_error_dict[target_selection_size][target_optimized_size],
+                    raw_selected_relative_error_dict[target_selection_size][target_optimized_size],]
+            if data_name in {
+                    DataName.raw_model_all_data, DataName.raw_model_with_glns_m_all_data,
+                    DataName.optimization_from_solutions_all_data}:
                 cutoff_value_list = [-0.1, 0.1]
-            elif data_name in {DataName.raw_model_raw_data, DataName.optimization_from_solutions_raw_data}:
+            elif data_name in {
+                    DataName.raw_model_raw_data, DataName.raw_model_with_glns_m_raw_data,
+                    DataName.optimization_from_solutions_raw_data}:
                 cutoff_value_list = [-0.2, 0.2]
             else:
                 raise ValueError()
-            bottom_y_lim = [-1.0, -0.34]
+            bottom_y_lim = [-1.1, -0.34]
             middle_y_lim, middle_y_ticks = symmetrical_lim_tick_generator_with_zero(
                 0.32, 0.32, 0.1)
-            top_y_lim = [0.34, 1.1]
+            top_y_lim = [0.34, 1.2]
             y_lim = [bottom_y_lim, middle_y_lim, top_y_lim]
             y_ticks = [[-1.0, -0.5], middle_y_ticks, [0.5, 1.0]]
             y_label = [None, CommonFigureString.relative_error, None]
@@ -515,18 +652,33 @@ class SimulatedDataOptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarD
                 ParameterName.common_y_label: y_label,
                 ParameterName.y_ticks_list: y_ticks,
                 ParameterName.cutoff: cutoff_value_list,
-                ParameterName.y_label_format_dict: {ParameterName.axis_label_location: 0.65,},
+                ParameterName.y_label_format_dict: {ParameterName.axis_label_location: 0.65, },
             }
         else:
-            (
-                (initial_raw_selected_diff_vector_dict, initial_averaged_diff_vector_dict,
-                    raw_selected_diff_vector_dict), flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
-            ) = raw_model_data.return_diff_vector_data(**figure_data_parameter_dict)
-            net_optimized_diff_vector_list = [
-                initial_raw_selected_diff_vector_dict[target_selection_size][target_optimized_size],
-                initial_averaged_diff_vector_dict[target_selection_size][target_optimized_size],
-                raw_selected_diff_vector_dict[target_selection_size][target_optimized_size],]
-            y_abs_lim = 100.0001
+            if data_name in self.raw_data_name_set:
+                (
+                    (raw_selected_diff_vector_dict, selected_averaged_diff_vector_dict),
+                    flux_name_list, analyzed_set_size_list, selected_min_loss_size_list
+                ) = raw_model_data.return_diff_vector_data(**figure_data_parameter_dict)
+                net_optimized_diff_vector_list = [
+                    np.concatenate(
+                        raw_selected_diff_vector_dict[traditional_selected_size][traditional_optimized_size]),
+                    np.concatenate(
+                        raw_selected_diff_vector_dict[target_selection_size][target_optimized_size]),
+                    np.concatenate(
+                        selected_averaged_diff_vector_dict[target_selection_size][target_optimized_size]),]
+                y_abs_lim = 120.0001
+            else:
+                (
+                    (initial_raw_selected_diff_vector_dict, initial_averaged_diff_vector_dict,
+                        raw_selected_diff_vector_dict), flux_name_list, analyzed_set_size_list,
+                    selected_min_loss_size_list
+                ) = raw_model_data.return_diff_vector_data(**figure_data_parameter_dict)
+                net_optimized_diff_vector_list = [
+                    initial_raw_selected_diff_vector_dict[target_selection_size][target_optimized_size],
+                    initial_averaged_diff_vector_dict[target_selection_size][target_optimized_size],
+                    raw_selected_diff_vector_dict[target_selection_size][target_optimized_size],]
+                y_abs_lim = 100.0001
             y_tick_interval = 50
             extra_figure_data_parameter_dict = {
                 ParameterName.y_abs_lim: y_abs_lim,

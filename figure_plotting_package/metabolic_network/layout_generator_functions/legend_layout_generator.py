@@ -7,7 +7,7 @@ from ..metabolic_network_contents.reaction import Reaction
 metabolite_width = MetaboliteConfig.width
 
 
-class NormalLegendConfig(object):
+class NormalLegendConfig(LegendConfig):
     metabolite_content_dict = {
         'G6P': Metabolite('G6P'),
         'LAC': Metabolite('LAC').set_mid_data_state(True),
@@ -32,7 +32,7 @@ class NormalLegendConfig(object):
     }
 
 
-class SmallerSizeLegendConfig(object):
+class SmallerSizeLegendConfig(LegendConfig):
     metabolite_content_dict = {
         'GLN': Metabolite('GLN').set_input_state(True),
         'OAC': Metabolite('OAC'),
@@ -53,7 +53,7 @@ class SmallerSizeLegendConfig(object):
     }
 
 
-class RemovePathwayLegendConfig(object):
+class RemovePathwayLegendConfig(LegendConfig):
     metabolite_content_dict = {
         'LAC': Metabolite('LAC').set_mid_data_state(True),
         # 'R5P': Metabolite('R5P').set_data_sensitivity_state(DataName.data_without_ppp),
@@ -74,7 +74,7 @@ class RemovePathwayLegendConfig(object):
     }
 
 
-class ConstantFluxLegendConfig(object):
+class ConstantFluxLegendConfig(LegendConfig):
     metabolite_content_dict = {}
     reaction_content_dict = {
         'fluxes': (Reaction('unidirectional'), Reaction('bidirectional', reversible=True)),
@@ -86,8 +86,10 @@ class ConstantFluxLegendConfig(object):
     }
 
 
-def legend_layout_generator(mode=ParameterName.normal):
-    if mode == ParameterName.normal or mode == ParameterName.horizontal:
+def legend_layout_generator(mode=ParameterName.normal, preset_legend_config=None):
+    if preset_legend_config is not None:
+        legend_config = preset_legend_config
+    elif mode == ParameterName.normal or mode == ParameterName.horizontal:
         legend_config = NormalLegendConfig
     elif mode == ModeName.smaller_data_size:
         legend_config = SmallerSizeLegendConfig
@@ -109,15 +111,15 @@ def legend_layout_generator(mode=ParameterName.normal):
         total_item_list.append((ParameterName.reaction, reaction_key, reaction_content, text_content))
 
     total_item_num = len(total_item_list)
-    each_row_height = LegendConfig.legend_each_row_height
+    each_row_height = legend_config.legend_each_row_height
     if mode == ParameterName.horizontal:
         total_row_num = 2
         total_col_num = np.ceil(total_item_num / 2)
-        total_width = LegendConfig.legend_horizontal_width
+        total_width = legend_config.legend_horizontal_width
     else:
         total_row_num = total_item_num
         total_col_num = 1
-        total_width = LegendConfig.legend_width
+        total_width = legend_config.legend_width
     layout_index_list = [
         (item_index % total_row_num, item_index // total_row_num) for item_index in range(total_item_num)]
     total_height = total_row_num * each_row_height

@@ -4,7 +4,7 @@ from ..common.packages import it, np
 from ..common.classes import DefaultDict
 from ..common.config import CoreConstants
 
-from .model_class import Reaction, CompositeReaction, EMUElement
+from .model_class import Reaction, CompositeReaction
 
 
 # metabolite_reaction_dict = {
@@ -12,7 +12,7 @@ from .model_class import Reaction, CompositeReaction, EMUElement
 # }
 def model_preprocess(
         reaction_list, symmetrical_metabolite_set, added_input_metabolite_set,
-        emu_excluded_metabolite_set=None, balance_excluded_metabolite_set=None, target_metabolite_list=None,
+        emu_excluded_metabolite_set=None, balance_excluded_metabolite_set=None, target_metabolite_name_list=None,
         composite_reaction_list=None):
     """
     balance_excluded_metabolite_set will be added to final input metabolite dict.
@@ -136,17 +136,17 @@ def model_preprocess(
             input_metabolite_name_set.add(emu_excluded_metabolite)
 
     # If target metabolite is not set, all non-excluded metabolites will be considered as target metabolites.
-    if target_metabolite_list is None:
-        target_metabolite_list = list(product_reaction_dict_for_emu.keys())
+    if target_metabolite_name_list is None:
+        target_metabolite_name_list = list(product_reaction_dict_for_emu.keys())
 
-    # Parse target EMU
-    target_emu_list = []
-    for target_metabolite in target_metabolite_list:
-        carbon_num = complete_metabolite_dim_dict[target_metabolite]
-        target_emu_list.append(EMUElement(target_metabolite, [1] * carbon_num))
+    # # Parse target EMU
+    # target_emu_list = []
+    # for target_metabolite in target_metabolite_list:
+    #     carbon_num = complete_metabolite_dim_dict[target_metabolite]
+    #     target_emu_list.append(EMUElement(target_metabolite, [1] * carbon_num))
 
     return metabolite_reaction_dict, product_reaction_dict_for_emu, composite_reaction_dict, flux_name_index_dict, \
-        input_metabolite_name_set, complete_metabolite_dim_dict, target_emu_list
+        input_metabolite_name_set, complete_metabolite_dim_dict, target_metabolite_name_list
 
 
 def compart_all_metabolites(all_metabolite_name_list, model_compartment_set):

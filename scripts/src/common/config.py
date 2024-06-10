@@ -5,6 +5,7 @@ from figure_plotting_package.common.figure_data_format import BasicFigureData as
     FigureData as RawFigureData
 
 random_seed = np.random.default_rng(4536251)
+traditional_method_optimize_size = 400
 
 
 class Keywords(object):
@@ -19,19 +20,25 @@ class Keywords(object):
     each_process_optimization_num = 'each_process_optimization_num'
     max_optimization_each_generation = 'max_optimization_each_generation'
     thread_num_constraint = 'thread_num_constraint'
+    specific_target_optimization_num = 'specific_target_optimization_num'
     processes_num = 'processes_num'
     parallel_test = 'parallel_test'
+    miscellaneous = 'miscellaneous'
 
     predefined_initial_solution_matrix = 'predefined_initial_solution_matrix'
     unoptimized = 'unoptimized'
     squared_loss = 'squared_loss'
     traditional_method = 'traditional_method'
+    traditional_method_solutions = 'traditional_method_solutions'
     loss = 'loss'
     test = 'test'
     optimized = 'optimized'
     experimental = 'experimental'
+    top_100 = 'top_100'
     obj_threshold_key = 'obj_threshold'
     metabolite_name_col = 'Name'
+    selected_solutions = 'selected_solutions'
+    averaged_solutions = 'averaged_solutions'
     average = 'average'
 
     tca_index = 'tca_index'
@@ -47,6 +54,7 @@ class Keywords(object):
     experiments = 'experiments'
 
     normal_simulated_base_name = 'simulated_flux_vector_and_mid_data'
+    normal_simulated_base_name_with_glns_m = 'simulated_flux_vector_and_mid_data_with_glns_m'
     batched_simulated_base_name = 'simulated_batched_flux_vector_and_mid_data'
     simulated_noise_str = '_with_noise'
     simulated_flux_name_index_dict = 'flux_name_index_dict'
