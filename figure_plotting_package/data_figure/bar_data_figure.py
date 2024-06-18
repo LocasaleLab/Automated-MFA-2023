@@ -45,7 +45,7 @@ class BasicBarDataFigure(DataFigure):
                 key: new_figure_config_dict[key] for key in [
                     ParameterName.column_width, ParameterName.edge, ParameterName.cutoff_param_dict,
                     ParameterName.bar_param_dict, ParameterName.error_bar_param_dict,
-                    ParameterName.subplot_name_text_format_dict,
+                    ParameterName.scatter_param_dict, ParameterName.subplot_name_text_format_dict,
                     ParameterName.x_tick_separator_format_dict, ParameterName.x_tick_separator_label_format_dict,
                     ParameterName.y_tick_separator_format_dict, ParameterName.y_tick_separator_label_format_dict,
                 ] if key in new_figure_config_dict
@@ -123,19 +123,24 @@ class BasicBarDataFigure(DataFigure):
     def draw(self, fig=None, parent_ax=None, parent_transformation=None):
         ax_and_transform_list = super().draw(fig, parent_ax, parent_transformation)
         for (
-                (current_mid_array_data_dict, current_mid_error_bar_data_dict),
+                (current_mid_array_data_dict, current_mid_error_bar_data_dict, *current_raw_scatter_data_dict_list),
                 (current_ax, current_transform), array_len, cutoff_value,
                 y_label, y_lim, x_label, x_tick_label_list, y_ticks, y_tick_label_list, tick_separator_dict) in zip(
                 self.complete_data_dict_list, ax_and_transform_list, self.array_len_list,
                 self.cutoff_value_list, self.y_label_list, self.y_lim_list,
                 self.x_label_list, self.x_tick_labels_list, self.y_ticks_list, self.y_tick_labels_list,
                 self.tick_separator_dict_list):
+            if len(current_raw_scatter_data_dict_list) > 0:
+                current_raw_scatter_data_dict = current_raw_scatter_data_dict_list[0]
+            else:
+                current_raw_scatter_data_dict = None
             single_bar_plotting(
                 current_ax, current_transform, current_mid_array_data_dict, current_mid_error_bar_data_dict,
                 array_len, self.figure_config_dict, y_lim=y_lim, y_ticks=y_ticks, cutoff_value=cutoff_value,
                 color_dict=self.color_dict, x_label=x_label, x_tick_labels=x_tick_label_list, y_label=y_label,
                 y_tick_labels=y_tick_label_list, twin_x_axis=self.twin_x_axis, broken_y_axis=self.broken_y_axis,
-                max_bar_num_each_group=self.max_bar_num_each_group, **tick_separator_dict)
+                max_bar_num_each_group=self.max_bar_num_each_group,
+                current_raw_scatter_data_dict=current_raw_scatter_data_dict, **tick_separator_dict)
         if self.subplot_name_list is not None:
             # for subplot_name, (current_ax, current_transform) in zip(self.subplot_name_list, ax_and_transform_list):
             for subplot_name, (current_ax, current_transform) in zip(
@@ -162,7 +167,6 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
         absolute_total_size = size
         ax_interval = self.ax_interval / absolute_total_size
         ax_row_size = self.each_row_figure_height / absolute_total_size.y
-        # ax_total_bottom_left = self.ax_total_bottom_left / absolute_total_size
         ax_total_bottom_left = Vector(0, 0)
         ax_total_size = self.ax_total_size / absolute_total_size
         ax_total_width = 1
@@ -199,6 +203,8 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
             {},
             figure_data_parameter_dict, ParameterName.error_bar_param_dict, pop=True
         )
+        raw_data_scatter_param_dict = {
+            ParameterName.marker_size: 0.2, }
         text_axis_loc_pair = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.text_axis_loc_pair, Vector(0.5, 0.9), pop=True)
         subplot_name_text_format_dict = merge_axis_format_dict(
@@ -215,6 +221,7 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
             ParameterName.y_tick_label_format_dict: y_tick_label_format_dict,
             ParameterName.bar_param_dict: bar_param_dict,
             ParameterName.error_bar_param_dict: error_bar_param_dict,
+            ParameterName.scatter_param_dict: raw_data_scatter_param_dict,
             ParameterName.subplot_name_text_format_dict: subplot_name_text_format_dict,
         }
         complete_figure_config_dict = merge_complete_config_dict(
@@ -226,8 +233,12 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
 
         mid_name_location_array_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.mid_name_list, None, force=True, pop=True)
-        mean_data_dict, error_bar_data_dict = default_parameter_extract(
+        mean_data_dict, error_bar_data_dict, *all_data_point_dict_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.figure_data, None, force=True, pop=True)
+        if len(all_data_point_dict_list) > 0:
+            all_data_point_dict = all_data_point_dict_list[0]
+        else:
+            all_data_point_dict = None
         subplot_name_dict = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.subplot_name_dict, {}, pop=True)
         array_len_list = []
@@ -246,26 +257,30 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
             this_row_axis_num = len(row_list)
             for col_index, mid_name in enumerate(row_list):
                 if isinstance(mid_name, str) and mid_name in mean_data_dict:
-                    mid_array_dict = mean_data_dict[mid_name]
+                    mean_mid_array_dict = mean_data_dict[mid_name]
                     array_len = None
-                    for mid_array in mid_array_dict.values():
+                    for mid_array in mean_mid_array_dict.values():
                         if mid_array is not None:
                             array_len = len(mid_array)
                             break
-                    # array_len = len(mid_array_dict.values().__iter__().__next__())
-                    if len(mid_array_dict) > 1:
+                    if len(mean_mid_array_dict) > 1:
                         mid_array_revised_dict = {
-                            color_class_key: mid_array_dict[color_class_key]
+                            color_class_key: mean_mid_array_dict[color_class_key]
                             for color_class_key in color_dict.keys()
-                            if color_class_key in mid_array_dict
+                            if color_class_key in mean_mid_array_dict
                         }
                     else:
-                        mid_array_revised_dict = mid_array_dict
+                        mid_array_revised_dict = mean_mid_array_dict
                     if error_bar_data_dict is not None:
                         error_bar_array_dict = error_bar_data_dict[mid_name]
                     else:
                         error_bar_array_dict = None
-                    mid_name_data_error_bar_array_dict_pair_list.append((mid_array_revised_dict, error_bar_array_dict))
+                    if all_data_point_dict is not None:
+                        all_data_point_array_dict = all_data_point_dict[mid_name]
+                    else:
+                        all_data_point_array_dict = None
+                    mid_name_data_error_bar_array_dict_pair_list.append(
+                        (mid_array_revised_dict, error_bar_array_dict, all_data_point_array_dict))
                     if mid_name in subplot_name_dict:
                         subplot_name = subplot_name_dict[mid_name]
                     else:
@@ -286,7 +301,7 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
                                 break
                         if array_len is None:
                             raise ValueError(f'Length of MID {mid_name} cannot be found!')
-                    mid_name_data_error_bar_array_dict_pair_list.append((None, None))
+                    mid_name_data_error_bar_array_dict_pair_list.append((None, None, None))
                     subplot_name_list.append(None)
                 else:
                     raise ValueError()

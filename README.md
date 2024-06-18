@@ -27,12 +27,14 @@ The tool is built for Python 3.8 and requires the following packages:
 
 Models utilized in this software are in [`scripts/model`](scripts/model) folder.
 
-The basic model ([`base_model_with_glns_m`](
-scripts/model/base_model/base_model_with_glns_m.py)) contains the base model utilized in algorithm development, analysis to data availability
+The basic model (
+[`base_model`](
+scripts/model/base_model/base_model.py)) contains the base model utilized in algorithm development, analysis to data availability
 and experimental data analysis for cultured cells.
 
 The basic model with GLC and CIT buffers (
-[`base_model_with_glc_tca_buffer_glns_m`](scripts/model/base_model/base_model_with_glc_tca_buffer_glns_m.py)) 
+[`base_model_with_glc_tca_buffer`](scripts/model/base_model/base_model_with_glc_tca_buffer.py)
+) 
 contains the model for analysis of in vivo infusion data from patients, 
 which is slightly different from base model in several reactions.
 
@@ -41,24 +43,24 @@ which is slightly different from base model in several reactions.
 All <sup>13</sup>C-isotope labeling data are in `scripts/data` folder.
 
 Infusion data from patients with renal, brain and lung cancer are from [Faubert *et
-al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) ([`renal_carcinoma/data.xlsx`](scripts/data/renal_carcinoma/data.xlsx) 
-and [Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) ([`lung_tumor/data.xlsx`](scripts/data/lung_tumor/data.xlsx))).
+al*, 2017](https://doi.org/10.1016/j.cell.2017.09.019) ([`renal_carcinoma/data.xlsx`](scripts/data/renal_carcinoma/data.xlsx)) 
+and [Courtney *et al*, 2018](https://doi.org/10.1016/j.cmet.2018.07.020) ([`lung_tumor/data.xlsx`](scripts/data/lung_tumor/data.xlsx)).
 
 Labeling data from cultured cell line HCT-116 are from [Reid *et
 al*, 2018](https://doi.org/10.1038/s41467-018-07868-6) ([`hct116_cultured_cell_line/13C-Glucose_tracing_Mike.xlsx`](
 scripts/data/hct116_cultured_cell_line/13C-Glucose_tracing_Mike.xlsx)).
 
-Data from other colon cancer cell lines are produced in this study (
+Data for the eight colon cancer cell lines are generated in this study (
 [`colon_cancer_cell_line/data.xlsx`](scripts/data/colon_cancer_cell_line/data.xlsx)).
 
 These raw data are loaded and converted to standard form for MFA.
 
 ## Algorithm and Solver
 
-Algorithm and solver utilized in this study are located in the `scripts/src/core` folder.
+Algorithm and solver utilized in this study are located in the [`scripts/src/core`](scripts/src/core) folder.
 
 The `model` and `data` folder include some class definition and corresponding processing functions. Specifically, EMU
-algorithm is encoded in `model/emu_analyzer_functions.py`.
+algorithm is encoded in [`model/emu_analyzer_functions.py`](scripts/src/core/model/emu_analyzer_functions.py).
 
 Most optimizations are based on `slsqp_solver` and `slsqp_numba_solver`. As their names indicate,
 the `slsqp_numba_solver` is implemented based on `numba` package for faster execution (roughly 50% time reduction).
@@ -231,6 +233,7 @@ There are 12 different options under the `figure` manu, of which 5 are main figu
 python main.py figure 1
 ```
 
+<!--
 | Arguments | Figures     | Main figure or supplementary figure |
 |-----------|-------------|-------------------------------------|
 | `1`       | Figure 1    | Main figure                         |
@@ -245,7 +248,16 @@ python main.py figure 1
 | `s5`      | Figure S5   | Supplementary figure                |
 | `s6`      | Figure S6   | Supplementary figure                |
 | `all`     | All figures | All figures                         |
+-->
 
+| Arguments | Figures     | Main figure or supplementary figure |
+|-----------|-------------|-------------------------------------|
+| `1`       | Figure 1    | Main figure                         |
+| `s1`      | Figure S1   | Supplementary figure                |
+| `s2`      | Figure S2   | Supplementary figure                |
+| `s3`      | Figure S3   | Supplementary figure                |
+| `s4`      | Figure S4   | Supplementary figure                |
+| `s5`      | Figure S5   | Supplementary figure                |
 
 ## Contributors
 

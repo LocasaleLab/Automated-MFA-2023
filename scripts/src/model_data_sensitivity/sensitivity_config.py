@@ -744,7 +744,9 @@ def return_analyzed_set_and_selected_min_loss_set(test_raw_model_analysis=False,
             analyzed_set_size_list = (20000,)
             selected_min_loss_size_list = (100,)
     elif current_experiment_name in {
-            ExperimentName.raw_model_with_glns_m_all_data, ExperimentName.raw_model_with_glns_m_raw_data}:
+            ExperimentName.raw_model_with_glns_m_all_data, ExperimentName.raw_model_with_glns_m_raw_data,
+            ExperimentName.raw_model_all_data, ExperimentName.raw_model_raw_data,
+    }:
         analyzed_set_size_list = (400, 20000)
         selected_min_loss_size_list = (1, 100)
     else:

@@ -20,7 +20,7 @@ class Direct(object):
 # test_mode = True
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion_squared_loss
-# data_model_name = DataModelType.renal_carcinoma_invivo_infusion_traditional_method
+data_model_name = DataModelType.renal_carcinoma_invivo_infusion_traditional_method
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion_with_glns_m
 # data_model_name = DataModelType.renal_carcinoma_invivo_infusion_with_glns_m_traditional_method
 # data_model_name = DataModelType.lung_tumor_invivo_infusion
@@ -28,7 +28,7 @@ class Direct(object):
 # data_model_name = DataModelType.colon_cancer_cell_line_squared_loss
 # data_model_name = DataModelType.colon_cancer_cell_line_traditional_method
 # data_model_name = DataModelType.colon_cancer_cell_line_with_glns_m
-data_model_name = DataModelType.colon_cancer_cell_line_with_glns_m_traditional_method
+# data_model_name = DataModelType.colon_cancer_cell_line_with_glns_m_traditional_method
 # data_model_name = DataModelType.hct116_cultured_cell_line
 # data_model_name = DataModelType.hct116_cultured_cell_line_with_glns_m
 load_previous_results = True

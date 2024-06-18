@@ -3,6 +3,7 @@ from .third_party_packages import plt, np, mcolors, cm, mpatches
 from .light_weight_functions import round_to_str_with_fixed_point, default_parameter_extract
 
 shape_category_list = ['o', 'v', 's', '^']
+random_seed = np.random.default_rng(4536251)
 
 
 def cmap_listed_mapper_generator(color_list):
@@ -736,7 +737,8 @@ def bar_plot_warp_func(
 def core_single_ax_bar_plot(
         ax, array_data_dict, color_dict, error_bar_data_dict, array_len,
         bar_total_width, edge, y_lim=None, y_ticks=None, cmap=None, bar_param_dict=None, error_bar_param_dict=None,
-        cutoff=None, cutoff_param_dict=None, twin_x_axis=False, max_bar_num_each_group=None):
+        cutoff=None, cutoff_param_dict=None, twin_x_axis=False, max_bar_num_each_group=None,
+        raw_data_scatter_dict=None, raw_data_scatter_param_dict=None):
     def right_y_ticks_verification(_right_y_ticks):
         if isinstance(_right_y_ticks, str) and _right_y_ticks == 'default':
             return True
@@ -764,6 +766,14 @@ def core_single_ax_bar_plot(
     #     default_error_bar_dict.update(error_bar_param_dict)
     if error_bar_param_dict is None:
         error_bar_param_dict = {}
+    marker_size_label = 'marker_size'
+    marker_size = None
+    if raw_data_scatter_param_dict is None:
+        raw_data_scatter_param_dict = {}
+    else:
+        raw_data_scatter_param_dict = dict(raw_data_scatter_param_dict)
+        if marker_size_label in raw_data_scatter_param_dict:
+            marker_size = raw_data_scatter_param_dict.pop(marker_size_label)
     if array_data_dict is not None:
         for index, (data_label, data_value) in enumerate(array_data_dict.items()):
             loc_index = index
@@ -800,6 +810,14 @@ def core_single_ax_bar_plot(
                 core_error_bar_plotting(
                     current_ax, x_loc, data_array, error_bar_vector, edge_color=it.repeat(current_color),
                     **error_bar_param_dict)
+            if raw_data_scatter_dict is not None and data_label in raw_data_scatter_dict:
+                raw_data_matrix = raw_data_scatter_dict[data_label]
+                assert raw_data_matrix.shape[1] == array_len
+                raw_data_x_matrix = (random_seed.random((raw_data_matrix.shape[0], 1)) - 0.5) * bar_unit_width * 0.9 + x_loc
+                core_scatter_plotting(
+                    current_ax, raw_data_x_matrix.reshape([-1]), raw_data_matrix.reshape([-1]),
+                    marker_size=marker_size, marker_color=np.reshape(current_color, (1, -1)),
+                    marker_shape='o', scatter_param_dict=raw_data_scatter_param_dict)
     x_lim = [-edge, array_len + edge]
     if twin_x_axis:
         ax, right_ax = ax

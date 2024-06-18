@@ -1530,7 +1530,7 @@ class ColonCancerRawMaterials(object):
             500: 1,
         }
     }
-    with_glns_m = True
+    with_glns_m = False
     normal_network_fixed_flux_string_dict = {'ASP_input': CommonFigureString.fixed_flux_string_generator(100)}
 
     common_diagram_network_config_dict = {

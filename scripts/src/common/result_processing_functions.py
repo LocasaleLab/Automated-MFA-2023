@@ -150,31 +150,38 @@ def mid_name_list_generator_for_multiple_labeling_substrate(raw_metabolite_list,
 def experimental_mid_prediction(
         experiment_name, complex_predicted_data_dict, final_target_experimental_mid_data_dict,
         mid_prediction_output_direct, subset_index_dict=None, mid_tissue_raw_name_dict=None, direct_plotting=False):
+    final_group_mid_all_data_point_dict = {}
     final_group_mid_dict = {}
     final_stderr_dict = {}
-    final_complete_data_dict = {}
     for data_label, raw_final_predicted_data_dict in complex_predicted_data_dict.items():
         for result_label, result_specific_predicted_data_dict in raw_final_predicted_data_dict.items():
-            if result_label not in final_group_mid_dict:
+            if result_label not in final_group_mid_all_data_point_dict:
                 final_group_mid_dict[result_label] = {}
                 final_stderr_dict[result_label] = {}
+                final_group_mid_all_data_point_dict[result_label] = {}
             for mid_title, current_predicted_data_array_list in result_specific_predicted_data_dict.items():
                 if mid_tissue_raw_name_dict is not None:
                     tissue_name, raw_metabolite_name = mid_tissue_raw_name_dict[mid_title]
-                    if raw_metabolite_name not in final_group_mid_dict[result_label]:
+                    if raw_metabolite_name not in final_group_mid_all_data_point_dict[result_label]:
                         final_group_mid_dict[result_label][raw_metabolite_name] = {}
                         final_stderr_dict[result_label][raw_metabolite_name] = {}
-                    if tissue_name not in final_group_mid_dict[result_label][raw_metabolite_name]:
+                        final_group_mid_all_data_point_dict[result_label][raw_metabolite_name] = {}
+                    if tissue_name not in final_group_mid_all_data_point_dict[result_label][raw_metabolite_name]:
                         final_group_mid_dict[result_label][raw_metabolite_name][tissue_name] = {}
                         final_stderr_dict[result_label][raw_metabolite_name][tissue_name] = {}
+                        final_group_mid_all_data_point_dict[result_label][raw_metabolite_name][tissue_name] = {}
                     current_average_mid_dict = final_group_mid_dict[result_label][raw_metabolite_name][tissue_name]
                     current_stderr_mid_dict = final_stderr_dict[result_label][raw_metabolite_name][tissue_name]
+                    current_mid_data_point_dict = final_group_mid_all_data_point_dict[
+                        result_label][raw_metabolite_name][tissue_name]
                 else:
-                    if mid_title not in final_group_mid_dict[result_label]:
+                    if mid_title not in final_group_mid_all_data_point_dict[result_label]:
                         final_group_mid_dict[result_label][mid_title] = {}
                         final_stderr_dict[result_label][mid_title] = {}
+                        final_group_mid_all_data_point_dict[result_label][mid_title] = {}
                     current_average_mid_dict = final_group_mid_dict[result_label][mid_title]
                     current_stderr_mid_dict = final_stderr_dict[result_label][mid_title]
+                    current_mid_data_point_dict = final_group_mid_all_data_point_dict[result_label][mid_title]
                 current_predicted_data_array = np.array(current_predicted_data_array_list)
                 if subset_index_dict is not None:
                     target_predicted_data_array = current_predicted_data_array[subset_index_dict[result_label], :]
@@ -182,28 +189,33 @@ def experimental_mid_prediction(
                     target_predicted_data_array = current_predicted_data_array
                 current_average_mid_dict[data_label] = target_predicted_data_array.mean(axis=0)
                 current_stderr_mid_dict[data_label] = target_predicted_data_array.std(axis=0)
+                current_mid_data_point_dict[data_label] = target_predicted_data_array
     for data_label, raw_final_predicted_data_dict in complex_predicted_data_dict.items():
         for result_label, result_specific_predicted_data_dict in raw_final_predicted_data_dict.items():
             for mid_title in result_specific_predicted_data_dict.keys():
                 if mid_tissue_raw_name_dict is not None:
                     tissue_name, raw_metabolite_name = mid_tissue_raw_name_dict[mid_title]
-                    current_average_mid_dict = final_group_mid_dict[result_label][raw_metabolite_name][tissue_name]
+                    # current_average_mid_dict = final_group_mid_dict[result_label][raw_metabolite_name][tissue_name]
+                    current_mid_data_point_dict = final_group_mid_all_data_point_dict[result_label][raw_metabolite_name][tissue_name]
                 else:
-                    current_average_mid_dict = final_group_mid_dict[result_label][mid_title]
-                if Keywords.experimental not in current_average_mid_dict:
-                    current_average_mid_dict[Keywords.experimental] = final_target_experimental_mid_data_dict[
-                        result_label][mid_title]
-    for result_label, result_specific_plotting_data_dict in final_group_mid_dict.items():
+                    # current_average_mid_dict = final_group_mid_dict[result_label][mid_title]
+                    current_mid_data_point_dict = final_group_mid_all_data_point_dict[result_label][mid_title]
+                if Keywords.experimental not in current_mid_data_point_dict:
+                    current_mid_data_point_dict[Keywords.experimental] = final_target_experimental_mid_data_dict[
+                        result_label][mid_title].reshape([1, -1])
+    for result_label, result_specific_plotting_data_dict in final_group_mid_all_data_point_dict.items():
+        current_average_mid_dict = final_group_mid_dict[result_label]
         current_error_bar_data_dict = final_stderr_dict[result_label]
         current_result_mid_prediction_output_direct = '{}/{}'.format(mid_prediction_output_direct, result_label)
         check_and_mkdir_of_direct(current_result_mid_prediction_output_direct)
         if mid_tissue_raw_name_dict is not None:
-            for tissue_name, each_tissue_average_data_dict in result_specific_plotting_data_dict.items():
+            for tissue_name, each_tissue_all_data_point_dict in result_specific_plotting_data_dict.items():
                 each_tissue_error_bar_data_dict = current_error_bar_data_dict[tissue_name]
-                if result_label not in final_complete_data_dict:
-                    final_complete_data_dict[result_label] = {}
-                final_complete_data_dict[result_label][tissue_name] = (
-                    each_tissue_average_data_dict, each_tissue_error_bar_data_dict)
+                each_tissue_average_data_dict = current_average_mid_dict[tissue_name]
+                # if result_label not in final_complete_data_dict:
+                #     final_complete_data_dict[result_label] = {}
+                # final_complete_data_dict[result_label][tissue_name] = (
+                #     each_tissue_average_data_dict, each_tissue_error_bar_data_dict)
                 current_tissue_mid_prediction_output_direct = '{}/{}'.format(
                     current_result_mid_prediction_output_direct, tissue_name)
                 check_and_mkdir_of_direct(current_tissue_mid_prediction_output_direct)
@@ -212,13 +224,13 @@ def experimental_mid_prediction(
                         each_tissue_average_data_dict, error_bar_data_dict=each_tissue_error_bar_data_dict,
                         output_direct=current_tissue_mid_prediction_output_direct, ylim=(0, 1))
         else:
-            final_complete_data_dict[result_label] = (result_specific_plotting_data_dict, current_error_bar_data_dict)
+            # final_complete_data_dict[result_label] = (result_specific_plotting_data_dict, current_error_bar_data_dict)
             if direct_plotting:
                 group_bar_plot(
                     result_specific_plotting_data_dict, error_bar_data_dict=current_error_bar_data_dict,
                     output_direct=current_result_mid_prediction_output_direct, ylim=(0, 1))
     figure_raw_data = FigureData(FigureDataKeywords.mid_comparison, experiment_name)
-    figure_raw_data.save_data(final_complete_data_dict=final_complete_data_dict)
+    figure_raw_data.save_data(final_complete_data_dict=final_group_mid_all_data_point_dict)
 
 
 def reconstruct_and_filter_data_dict(

@@ -21,9 +21,9 @@ running_mode = RunningMode.flux_analysis
 # running_mode = RunningMode.result_process
 load_previous_results = True
 
-# current_experiment_name = ExperimentName.raw_model_raw_data
+current_experiment_name = ExperimentName.raw_model_raw_data
 # current_experiment_name = ExperimentName.raw_model_all_data
-current_experiment_name = ExperimentName.raw_model_with_glns_m_raw_data
+# current_experiment_name = ExperimentName.raw_model_with_glns_m_raw_data
 # current_experiment_name = ExperimentName.raw_model_with_glns_m_all_data
 # current_experiment_name = ExperimentName.prune_branches_all_data
 # current_experiment_name = ExperimentName.merge_reversible_reaction_all_data

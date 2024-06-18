@@ -70,31 +70,31 @@ class MetaboliteList(object):
 class ReactionList(object):
     reaction_name_mapping_dict = {
         'PGI_PFK_c': (
-            'PGI_c',
+            'PGI_c\nPFK_c',
             ['PGI_c', 'PFK_c'],
             lambda pgi_c_value_obj, pfk_c_value_obj: pgi_c_value_obj),
         'GAPD_PGK_c': (
-            'PGK_c',
+            'GAPD_c\nPGK_c',
             ['GAPD_c', 'PGK_c'],
             lambda gapd_c_value_obj, pgk_c_value_obj: pgk_c_value_obj),
         'PGM_ENO_c': (
-            'ENO_c',
+            'PGM_c\nENO_c',
             ['PGM_c', 'ENO_c'],
             lambda pgm_c_value_obj, eno_c_value_obj: eno_c_value_obj),
         'ACONT_ICDH_m': (
-            'ICDH_m',
+            'ACONT_m\nICDH_m',
             ['ACONT_m', 'ICDH_m'],
             lambda acont_m_value_obj, icdh_m_value_obj: icdh_m_value_obj),
         'AKGD_SUCOAS_m': (
-            'SUCOAS_m',
+            'AKGD_m\nSUCOAS_m',
             ['AKGD_m', 'SUCOAS_m'],
             lambda akgd_m_value_obj, sucoas_m_value_obj: sucoas_m_value_obj),
         'SUCD_FUMH_m': (
-            'FUMH_m',
+            'SUCD_m\nFUMH_m',
             ['SUCD_m', 'FUMH_m'],
             lambda sucd_m_value_obj, fumh_m_value_obj: fumh_m_value_obj),
         'RPE_TKT1_TKT2_TALA_c': (
-            'TALA_c',
+            'RPE_c TKT1_c\nTKT2_c TALA_c',
             ['RPE_c', 'TKT1_c', 'TKT2_c', 'TALA_c'],
             lambda rpe_c_value_obj, tkt1_c_value_obj, tkt2_c_value_obj, tala_c_value_obj: tala_c_value_obj),
         'GLN_to_GLU_c': (
@@ -113,6 +113,11 @@ class ReactionList(object):
             ['GLND_m', 'GLNS_m'],
             lambda glnd_m_value_obj, glns_m_value_obj: (glnd_m_value_obj, glns_m_value_obj)),
     }
+    normal_gln_to_glu_m = (
+        'GLND_m',
+        ['GLND_m', ],
+        lambda glnd_m_value_obj: glnd_m_value_obj
+    )
 
     def __init__(self, infusion=False, with_glns_m=False):
         # Glycolysis
@@ -171,6 +176,7 @@ class ReactionList(object):
             glnd_m_reversible = True
         else:
             glnd_m_reversible = False
+            self.reaction_name_mapping_dict['GLN_to_GLU_m'] = self.normal_gln_to_glu_m
         # self.obj_glnd_m = Reaction('GLND_m', glnd_m_reversible)
         self.obj_glnd_m = Reaction('GLN_to_GLU_m', glnd_m_reversible)
         self.obj_as_c = Reaction('GLN_to_GLU_c', True)
@@ -253,7 +259,7 @@ def reaction_raw_value_processing(reaction_raw_value_dict):
 
 def assign_value_to_network(
         reaction_raw_value_dict, reaction_list: ReactionList, infusion=False):
-    reaction_name_mapping_dict = ReactionList.reaction_name_mapping_dict
+    reaction_name_mapping_dict = reaction_list.reaction_name_mapping_dict
     processed_reaction_value_dict = reaction_raw_value_processing(reaction_raw_value_dict)
     for reaction_name, reaction_obj in reaction_list.content_list_pair:
         if reaction_name in processed_reaction_value_dict:
@@ -273,7 +279,7 @@ def assign_value_to_network(
 
 
 def assign_flux_name_to_network(reaction_list: ReactionList):
-    reaction_name_mapping_dict = ReactionList.reaction_name_mapping_dict
+    reaction_name_mapping_dict = reaction_list.reaction_name_mapping_dict
     for reaction_name, reaction_obj in reaction_list.content_list_pair:
         if reaction_name in reaction_name_mapping_dict:
             display_flux_name, *_ = reaction_name_mapping_dict[reaction_name]
