@@ -667,7 +667,7 @@ class SimulatedDataOptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarD
                         raw_selected_diff_vector_dict[target_selection_size][target_optimized_size]),
                     np.concatenate(
                         selected_averaged_diff_vector_dict[target_selection_size][target_optimized_size]),]
-                y_abs_lim = 120.0001
+                y_abs_lim = 125.0001
             else:
                 (
                     (initial_raw_selected_diff_vector_dict, initial_averaged_diff_vector_dict,

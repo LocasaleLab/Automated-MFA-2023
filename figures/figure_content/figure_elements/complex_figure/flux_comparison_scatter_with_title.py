@@ -112,7 +112,6 @@ class FluxComparisonScatterWithTitle(CompositeFigure):
             }
 
             figure_title_text_box_obj = TextBox(**figure_title_text_config_dict)
-            # figure_title_y_value = axis_top_y_value + figure_title_distance + figure_title_height / 2
         else:
             figure_title_text_box_obj = None
 

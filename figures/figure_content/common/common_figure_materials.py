@@ -114,6 +114,7 @@ class CommonFigureString(object):
     net_euclidean_distance_to_parameters_all_data = f'{net_euclidean_distance_to_parameters} {in_all_data}'
     relative_error = 'Relative error'
     relative_ratio = 'Relative ratio'
+    ratio_value = 'Ratio value'
     patient_id = 'Patient ID'
     cell_line = 'Cell line'
     comparison_between_kidney_and_carcinoma = 'Comparison between normal kidney\ntissue and kidney carcinoma'
@@ -1249,12 +1250,12 @@ class KidneyCarcinomaAllIndexSupMaterials(KidneyCarcinomaAllIndexMaterials):
     y_lim_list = attach_feature_to_flux_name_list(
         KidneyCarcinomaAllIndexMaterials.flux_name_location_list, {
             **KidneyCarcinomaRatioSupMaterials.y_lim_dict,
-            'mas_index': (-2.1, 1.2),
+            'mas_index': (-1, 1),
         }, KidneyCarcinomaAllIndexMaterials.y_lim_list)
     y_ticks_list = attach_feature_to_flux_name_list(
         KidneyCarcinomaAllIndexMaterials.flux_name_location_list, {
             **KidneyCarcinomaRatioSupMaterials.y_ticks_dict,
-            'mas_index': [-2, -1, 0, 1],
+            'mas_index': [-1, -0.5, 0, 0.5, 1],
         }, KidneyCarcinomaAllIndexMaterials.y_ticks_list)
     p_value_y_value_list = [
         [0.88, 0.13],
@@ -1678,6 +1679,7 @@ def kidney_carcinoma_comparison_dict_generator(config_class, data_set_name=DataN
         ParameterName.name_dict: config_class.name_dict,
         ParameterName.color_dict: config_class.color_dict,
         ParameterName.legend: True,
+        ParameterName.common_y_label: CommonFigureString.ratio_value,
         ParameterName.common_x_label: CommonFigureString.patient_id,
         ParameterName.compare_one_by_one: True,
         ParameterName.scatter_line: False,
@@ -1702,6 +1704,7 @@ def colon_cancer_comparison_dict_generator(config_class, data_set_name=DataName.
         ParameterName.name_dict: config_class.name_dict,
         ParameterName.color_dict: config_class.color_dict,
         ParameterName.legend: True,
+        ParameterName.common_y_label: CommonFigureString.ratio_value,
         ParameterName.common_x_label: CommonFigureString.cell_line,
         ParameterName.compare_one_by_one: True,
         ParameterName.scatter_line: False,

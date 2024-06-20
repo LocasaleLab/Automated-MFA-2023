@@ -590,7 +590,6 @@ def p_value_parameter_list_generator(
 class FluxComparisonScatterDataFigure(ScatterDataFigure):
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
-        # ax_total_bottom_left = Vector(0.1, 0.06)
         ax_total_bottom_left = Vector(0, 0)
         ax_total_size = Vector(1, 1) - ax_total_bottom_left
 
