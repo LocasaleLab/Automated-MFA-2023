@@ -58,6 +58,7 @@ class ParamName(object):
     base_lp = 'base_lp'
     loss_type = 'loss_type'
     batch_size = 'batch_size'
+    each_portion_flux_num = 'each_portion_flux_num'
     optimization_mode = 'optimization_mode'
     thinning = 'thinning'
 
@@ -140,12 +141,18 @@ class ParamName(object):
     total_stored_distribution_num = 'total_stored_distribution_num'
 
     # tf2 slsqp parameter
+    max_initial_stock_num = 'max_initial_stock_num'
     report_interval = 'report_interval'
+    finished_solution_report_interval = 'finished_solution_report_interval'
     delta_p_threshold = 'delta_p_threshold'
     allowed_update_failed_time = 'allowed_update_failed_time'
     jacobian_threshold = 'jacobian_threshold'
     allowed_sqp_search_failed_time = 'allowed_sqp_search_failed_time'
+    refresh_hessian_threshold = 'refresh_hessian_threshold'
+    less_update_ratio_for_hessian_refresh = 'less_update_ratio_for_hessian_refresh'
     gradient_repeat_time = 'gradient_repeat_time'
+    hessian_reset_threshold_time = 'hessian_reset_threshold_time'
+    hessian_refresh_block_time = 'hessian_refresh_block_time'
     division_eps = 'division_eps'
     boundary_eps = 'boundary_eps'
     alpha_eps = 'alpha_eps'

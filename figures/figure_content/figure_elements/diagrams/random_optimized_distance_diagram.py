@@ -188,8 +188,8 @@ class RandomOptimizedDistanceDiagram(ProtocolDiagram):
                 }))
                 text_config_list.append({
                     **RandomOptimizedDistanceDiagramConfig.random_dot_text_config,
-                    ParameterName.string: 'Random\nfluxes',
-                    ParameterName.center: random_real_location + Vector(0.1, 0.01),
+                    ParameterName.string: CommonFigureString.random_fluxes_wrap,
+                    ParameterName.center: random_real_location + Vector(0.11, -0.015),
                 })
                 # mid_location = (global_optimum_location + random_real_location) / 2
                 # text_config_list.append({

@@ -84,6 +84,7 @@ class Direct(GeneralDirect):
     predicted_dict = 'predicted_dict'
     flux_name_index_dict = 'flux_name_index_dict'
     experimental_data = 'experimental_data'
+    solution_id_array = 'solution_id_array'
 
     simulated_input_file_name = 'simulated_flux_vector_and_mid_data.py'
     simulated_input_file_path = f'scripts/src/simulated_data/{simulated_input_file_name}'

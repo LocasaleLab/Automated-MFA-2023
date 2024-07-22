@@ -48,6 +48,7 @@ class FinalResult(object):
         self.final_flux_name_index_dict = {}
         self.final_target_experimental_mid_data_dict = {}
         self.processed_mid_name_dict = {}
+        self.final_solution_id_array_dict = {}
 
         self.data_count_dict = {}
         assert isinstance(maximal_save_point, int)
@@ -74,6 +75,11 @@ class FinalResult(object):
         current_result_path = '{}/{}'.format(self.raw_result_data_output_direct, current_result_label)
         check_and_mkdir_of_direct(current_result_path)
         return self._generate_path_given_result_path(current_result_path)
+
+    def _generate_solution_id_path(self, current_result_label):
+        current_solution_id_array_path = '{}/{}/{}'.format(
+            self.raw_result_data_output_direct, current_result_label, Direct.solution_id_array)
+        return current_solution_id_array_path
 
     def _check_and_convert_object_matrix_to_numeric(self, array_path, array_label):
         print(f'{array_label} array of {self.result_name} is not pure number. Checking it...')
@@ -198,6 +204,10 @@ class FinalResult(object):
             raw_target_experimental_mid_data_dict = {}
         return solution_array, time_array, loss_array, raw_predicted_dict, result_information_dict, \
             flux_name_index_dict, raw_target_experimental_mid_data_dict
+
+    def _load_solution_id(self, solution_id_array_path):
+        solution_id_array = npz_load(solution_id_array_path, Direct.solution_id_array)
+        return solution_id_array
 
     def _slice_data(
             self, index_array, final_time_array, final_loss_array,
@@ -459,9 +469,17 @@ class FinalResult(object):
             warnings.warn('Cannot find any previous data with label: {}'.format(result_label))
             return 0
         else:
-            self._merge_to_final_result_dict(
-                result_label, solution_array, time_array, loss_array, raw_predicted_dict, result_information_dict,
-                flux_name_index_dict, raw_target_experimental_mid_data_dict)
+            solution_id_array_path = self._generate_solution_id_path(result_label)
+            try:
+                solution_id_array = self._load_solution_id(solution_id_array_path)
+            except FileNotFoundError:
+                self._merge_to_final_result_dict(
+                    result_label, solution_array, time_array, loss_array, raw_predicted_dict, result_information_dict,
+                    flux_name_index_dict, raw_target_experimental_mid_data_dict)
+            else:
+                self._merge_to_final_result_dict_with_solution_id(
+                    result_label, solution_array, time_array, loss_array, raw_predicted_dict, result_information_dict,
+                    flux_name_index_dict, raw_target_experimental_mid_data_dict, solution_id_array)
             return self.data_count_dict[result_label]
 
     def repair_predicted_mid_dict_and_merge(self, solver_dict):
@@ -503,6 +521,76 @@ class FinalResult(object):
             self._save_data(
                 result_label, solution_array, time_array, loss_array, predicted_data_dict,
                 result_information_dict, flux_name_index_dict, new_target_experimental_mid_data_dict)
+
+    @staticmethod
+    def process_existing_new_id_array(existing_id_array, new_id_array):
+        if existing_id_array is None:
+            complete_id_array = new_id_array
+        else:
+            complete_id_array = np.concatenate([existing_id_array, new_id_array])
+        sorted_index = np.argsort(complete_id_array)
+        sorted_complete_id_array = complete_id_array[sorted_index]
+        return sorted_index, sorted_complete_id_array
+
+    def _merge_to_final_result_dict_with_solution_id(
+            self, current_result_label, current_solution_array, current_time_array, current_loss_array,
+            current_predicted_dict, current_result_information, flux_name_index_dict,
+            target_experimental_mid_data_dict, solution_id_array):
+        if current_result_label in self.final_solution_data_dict:
+            self._check_dim_of_new_solution_data(current_result_label, current_solution_array)
+            existing_id_array = self.final_solution_id_array_dict[current_result_label]
+            complete_solution_array = np.concatenate([
+                self.final_solution_data_dict[current_result_label], current_solution_array])
+            complete_time_array = np.concatenate([
+                self.final_time_data_dict[current_result_label], current_time_array])
+            complete_loss_array = np.concatenate([
+                self.final_loss_data_dict[current_result_label], current_loss_array])
+        else:
+            existing_id_array = None
+            self.final_information_dict[current_result_label] = current_result_information
+            self.final_flux_name_index_dict[current_result_label] = flux_name_index_dict
+            self.final_target_experimental_mid_data_dict[current_result_label] = target_experimental_mid_data_dict
+            complete_solution_array = current_solution_array
+            complete_time_array = current_time_array
+            complete_loss_array = current_loss_array
+            self.final_predicted_data_dict[current_result_label] = {}
+        # if current_result_label not in self.final_solution_data_dict:
+        #     self.final_solution_data_dict[current_result_label] = current_solution_array
+        #     self.final_time_data_dict[current_result_label] = current_time_array
+        #     self.final_loss_data_dict[current_result_label] = current_loss_array
+        #     self.final_predicted_data_dict[current_result_label] = current_predicted_dict
+        #     self.final_information_dict[current_result_label] = current_result_information
+        #     self.final_flux_name_index_dict[current_result_label] = flux_name_index_dict
+        #     self.final_target_experimental_mid_data_dict[current_result_label] = target_experimental_mid_data_dict
+        #     self.final_solution_id_array_dict[current_result_label] = solution_id_array
+        # else:
+        #     self._check_dim_of_new_solution_data(current_result_label, current_solution_array)
+        #     existing_id_array = self.final_solution_id_array_dict[current_result_label]
+        sorted_index, self.final_solution_id_array_dict[current_result_label] = self.process_existing_new_id_array(
+            existing_id_array, solution_id_array)
+        # self.final_solution_data_dict[current_result_label] = np.concatenate([
+        #     self.final_solution_data_dict[current_result_label], current_solution_array])[sorted_index]
+        # self.final_loss_data_dict[current_result_label] = np.concatenate([
+        #     self.final_loss_data_dict[current_result_label], current_loss_array])[sorted_index]
+        # self.final_time_data_dict[current_result_label] = np.concatenate([
+        #     self.final_time_data_dict[current_result_label], current_time_array])[sorted_index]
+        self.final_solution_data_dict[current_result_label] = complete_solution_array[sorted_index]
+        self.final_loss_data_dict[current_result_label] = complete_loss_array[sorted_index]
+        self.final_time_data_dict[current_result_label] = complete_time_array[sorted_index]
+        this_result_predicted_dict = self.final_predicted_data_dict[current_result_label]
+        for emu_name, predicted_vector_list in current_predicted_dict.items():
+            if emu_name not in this_result_predicted_dict:
+                this_result_predicted_dict[emu_name] = np.array(predicted_vector_list)[sorted_index]
+            else:
+                this_result_predicted_dict[emu_name] = np.concatenate([
+                    this_result_predicted_dict[emu_name], predicted_vector_list])[sorted_index]
+        if current_result_label not in self.data_count_dict:
+            self.data_count_dict[current_result_label] = 0
+        self.data_count_dict[current_result_label] += current_solution_array.shape[0]
+
+    def _save_solution_id(self, current_result_label, solution_id_array):
+        current_solution_id_array_path = self._generate_solution_id_path(current_result_label)
+        npz_save(current_solution_id_array_path, **{Direct.solution_id_array: solution_id_array})
 
     def final_process(self, *args):
         pass

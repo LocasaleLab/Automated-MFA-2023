@@ -17,6 +17,11 @@ class SubfigureA(Subfigure):
         figure_data_parameter_dict = {
             ParameterName.data_name: hct_116_data_name,
             ParameterName.result_label: 'HCT116_WQ2101__ctrl__1',
+            ParameterName.legend_config_dict: {
+                ParameterName.location_config_dict: {
+                    ParameterName.total_horiz_edge_ratio: 0.2
+                }
+            },
         }
         scale = 0.4
         hct116_cultured_cell_line_mid_comparison_figure = Elements.MIDComparisonGridBarWithLegendDataFigure(**{

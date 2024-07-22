@@ -349,7 +349,7 @@ def optimization_diagram_generator(mode):
     chevron_arrow_config_list.append(chevron_arrow2_config)
 
     predicted_mid_text_config = {
-        ParameterName.string: 'Predicted MIDs of\ntarget metabolites',
+        ParameterName.string: 'Computed MIDs of\ntarget metabolites',
         ParameterName.center: Vector(main_vert_axis, main_horiz_axis_document_text_y_loc - 0.01),
         **OptimizationDiagramConfig.document_text_config,
         ParameterName.font_size: OptimizationDiagramConfig.smaller_document_size,

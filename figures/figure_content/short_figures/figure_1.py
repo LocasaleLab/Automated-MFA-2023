@@ -95,7 +95,6 @@ class SubfigureD(Subfigure):
             ParameterName.bottom_left_offset: subfigure_bottom_left,
             ParameterName.scale: scale,
             ParameterName.figure_data_parameter_dict: {
-                # ParameterName.total_width: 0.8,
                 ParameterName.data_name: hct_116_data_name,
                 ParameterName.total_width: 0.6,
                 ParameterName.horiz_or_vertical: ParameterName.vertical,

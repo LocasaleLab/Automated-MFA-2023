@@ -45,8 +45,11 @@ class TimeLossStack(CompositeFigure):
             ParameterName.legend_area_size: Vector(total_width, legend_height),
             ParameterName.name_dict: CommonFigureMaterials.time_loss_name_dict,
             ParameterName.text_config_dict: {
-                ParameterName.font_size: 10,
+                ParameterName.font_size: 9,
                 ParameterName.font_weight: FontWeight.bold
+            },
+            ParameterName.location_config_dict: {
+                ParameterName.total_horiz_edge_ratio: 0.4
             }
         }
         running_loss_config_dict = {

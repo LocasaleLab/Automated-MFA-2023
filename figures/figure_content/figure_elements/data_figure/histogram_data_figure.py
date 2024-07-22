@@ -64,13 +64,9 @@ class TimeLossDistanceHistogramDataFigure(HistogramDataFigure):
     def __init__(
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector,
             scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
-        # ax_total_bottom_left = Vector(0.05, 0.05)
-        # ax_total_size = Vector(0.95, 0.95)
-        # ax_total_bottom_left = DataFigureConfig.common_ax_total_bottom_left
         ax_total_bottom_left = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.ax_total_bottom_left,
             DataFigureConfig.common_ax_total_bottom_left)
-        # ax_total_size = DataFigureConfig.common_ax_total_size
         ax_total_size = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.ax_total_size,
             DataFigureConfig.common_ax_total_size

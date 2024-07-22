@@ -36,7 +36,7 @@ class CommonFigureString(object):
     mean = 'Mean'
     std = 'STD'
 
-    random_solutions = 'Random solutions'
+    random_solutions = 'Random initial fluxes'
     optimized_solution = 'Optimized solutions'
     optimized_solution_wrap = 'Optimized\nsolutions'
     best_optimized_solution = 'The minimal loss solution'
@@ -44,9 +44,12 @@ class CommonFigureString(object):
     global_optimum = 'Global optimal point'
     local_optimum = 'Local optimal point'
     random_point = 'Random point'
-    traditional_method = 'Traditional method solutions'
-    traditional_method_wrap = 'Traditional method\nsolutions'
-    traditional_method_double_wrap = 'Traditional\nmethod\nsolutions'
+    # traditional_method = 'Traditional method solutions'
+    # traditional_method_wrap = 'Traditional method\nsolutions'
+    # traditional_method_double_wrap = 'Traditional\nmethod\nsolutions'
+    traditional_method = 'Benchmark'
+    traditional_method_wrap = 'Benchmark'
+    traditional_method_double_wrap = 'Benchmark'
     selected_solution = 'Selected solutions'
     selected_solution_wrap = 'Selected\nsolutions'
     averaged_solution = 'Averaged solutions'
@@ -59,8 +62,8 @@ class CommonFigureString(object):
     minimal_loss = 'Minimal loss'
     number = 'No.'
     top = 'Top'
-    random_fluxes = 'Random fluxes'
-    random_fluxes_wrap = 'Random\nfluxes'
+    random_fluxes = 'Random initial fluxes'
+    random_fluxes_wrap = 'Random\ninitial fluxes'
     difference = 'Difference'
     difference_from_best_optimized_solution = 'Difference from the minimal loss solution'
     difference_from_known_flux = 'Difference from the known flux'
@@ -843,7 +846,7 @@ class CommonFigureMaterials(object):
     # global_optimum_str = 'Global optimal point'
     # local_optimum_str = 'Local optimal point'
     # random_point_str = 'Random point'
-    random_fluxes_str = CommonFigureString.random_solutions
+    random_fluxes_str = CommonFigureString.random_fluxes
     optimized_solution_str = CommonFigureString.optimized_solution
     best_optimized_solution_str = CommonFigureString.best_optimized_solution
     global_optimum_str = CommonFigureString.global_optimum
@@ -862,7 +865,7 @@ class CommonFigureMaterials(object):
     different_simulated_solution_distance_wrap_str = CommonFigureString.different_simulated_solution_distance_wrap
 
     mid_comparison_name_dict = {
-        ParameterName.unoptimized: 'MID from random flux',
+        ParameterName.unoptimized: 'MID from random initial fluxes',
         ParameterName.optimized: 'Optimized MID',
         ParameterName.experimental: 'Target experimental MID',
     }
