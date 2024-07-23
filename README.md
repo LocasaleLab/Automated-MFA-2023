@@ -55,6 +55,8 @@ Data for the eight colon cancer cell lines are generated in this study (
 
 These raw data are loaded and converted to standard form for MFA.
 
+For MFA results, please refer to the [Results](#Results) section.
+
 ## Algorithm and Solver
 
 Algorithm and solver utilized in this study are located in the [`scripts/src/core`](scripts/src/core) folder.
@@ -258,6 +260,73 @@ python main.py figure 1
 | `s3`      | Figure S3   | Supplementary figure                | [`short_figure_s3.pdf`](figures/output_figure/short_figure_s3.pdf) |
 | `s4`      | Figure S4   | Supplementary figure                | [`short_figure_s4.pdf`](figures/output_figure/short_figure_s4.pdf) |
 | `s5`      | Figure S5   | Supplementary figure                | [`short_figure_s5.pdf`](figures/output_figure/short_figure_s5.pdf) |
+
+## Results
+
+### MFA for HCT116 cultured cancer cell line ([Figure 1](figures/output_figure/short_figure_1.pdf), [Figure S1](figures/output_figure/short_figure_s1.pdf))
+
+Solver description: [solver_descriptions.xlsx](common_data/raw_data/experimental_data_analysis/hct116_cultured_cell_line/solver_descriptions.xlsx)
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/hct116_cultured_cell_line/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/hct116_cultured_cell_line/mid_raw_data.xlsx)
+
+
+### Simulated data
+
+Fluxes and simulated MID: [simulated_flux_vector_and_mid_data.xlsx](common_data/raw_data/simulated_data/simulated_flux_vector_and_mid_data.xlsx)
+
+### Development and benchmark of the algorithm ([Figure 1](figures/output_figure/short_figure_1.pdf), [Figure S2](figures/output_figure/short_figure_s2.pdf), [Figure S3](figures/output_figure/short_figure_s3.pdf))
+
+#### All-available MID data:
+
+Solver description: [solver_descriptions.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_all_data/solver_descriptions.xlsx)
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_all_data/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_all_data/mid_raw_data.xlsx)
+
+#### Experimentally-available MID data:
+
+Solver description: [solver_descriptions.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_raw_data/solver_descriptions.xlsx)
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_raw_data/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/model_data_sensitivity/raw_model_raw_data/mid_raw_data.xlsx)
+
+
+### MFA for renal carcinoma ([Figure S4](figures/output_figure/short_figure_s4.pdf))
+
+#### Results from optimization-averaging algorithm:
+
+Solver description: [solver_descriptions.xlsx](common_data/raw_data/experimental_data_analysis/renal_carcinoma_invivo_infusion/solver_descriptions.xlsx)
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/renal_carcinoma_invivo_infusion/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/renal_carcinoma_invivo_infusion/mid_raw_data.xlsx)
+
+#### Benchmark results
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/renal_carcinoma_invivo_infusion_traditional_method/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/renal_carcinoma_invivo_infusion_traditional_method/mid_raw_data.xlsx)
+
+
+### MFA for 8 cultured colon cancer cell lines ([Figure 1](figures/output_figure/short_figure_1.pdf), [Figure S5](figures/output_figure/short_figure_s5.pdf))
+
+#### Results from optimization-averaging algorithm:
+
+Solver description: [solver_descriptions.xlsx](common_data/raw_data/experimental_data_analysis/colon_cancer_cell_line/solver_descriptions.xlsx)
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/colon_cancer_cell_line/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/colon_cancer_cell_line/mid_raw_data.xlsx)
+
+#### Benchmark results
+
+Flux raw data: [flux_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/colon_cancer_cell_line_traditional_method/flux_raw_data.xlsx)
+
+MID raw data: [mid_raw_data.xlsx](common_data/raw_data/experimental_data_analysis/colon_cancer_cell_line_traditional_method/mid_raw_data.xlsx)
 
 ## Contributors
 

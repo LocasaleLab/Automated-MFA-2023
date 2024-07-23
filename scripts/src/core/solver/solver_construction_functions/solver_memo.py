@@ -2,8 +2,6 @@ from ...common.classes import MFAConfig
 from ...model.model_class import MFAModel, CompositeNode, CompositeReaction
 from ...data.data_class import MFAData
 
-from ...common.dispensable_packages import xlsxwriter
-
 
 class ContentName(object):
     reaction_name = 'Name'

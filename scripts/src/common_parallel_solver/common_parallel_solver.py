@@ -33,164 +33,45 @@ def slsqp_solving(slsqp_solver_obj, input_matrix, verbose=False, report_interval
     return final_solution_array, final_time_array, final_loss_array, final_predicted_dict
 
 
-# def batch_solving_func(
-#         final_result_obj, result_label, result_information, slsqp_solver_obj, initial_flux_input,
-#         this_case_optimization_num, pbar, parallel_parameter_dict, verbose=False):
-#     def single_step_initial_input_generator(
-#             initial_flux_input, this_case_optimization_num, max_initial_num_each_generation, batch_size):
-#         if initial_flux_input is None:
-#             total_optimization_num = this_case_optimization_num
-#             rest_initial_num = 0
-#             rest_initial_input = None
-#         else:
-#             total_optimization_num = initial_flux_input.shape[0]
-#             rest_initial_input = initial_flux_input
-#             rest_initial_num = total_optimization_num
-#         for start_initial_index in range(0, total_optimization_num, batch_size):
-#             current_step_num = min(total_optimization_num - start_initial_index, batch_size)
-#             if initial_flux_input is None:
-#                 if rest_initial_num < current_step_num:
-#                     initial_num_to_generate = min(
-#                         total_optimization_num - start_initial_index, max_initial_num_each_generation)
-#                     print(f'Generating {initial_num_to_generate} initial value of {result_label}...')
-#                     new_initial_input = universal_feasible_solution_generator(
-#                         slsqp_solver_obj, initial_num_to_generate)
-#                     if new_initial_input is None:
-#                         print(f'{result_label} failed to generate initial flux')
-#                         exit(-1)
-#                     else:
-#                         print('Initial flux generated')
-#                     diff = current_step_num - rest_initial_num
-#                     if rest_initial_input is None:
-#                         current_step_initial_input = new_initial_input[:diff]
-#                     else:
-#                         current_step_initial_input = np.vstack([rest_initial_input, new_initial_input[:diff]])
-#                     rest_initial_input = new_initial_input[diff:]
-#                 else:
-#                     current_step_initial_input = rest_initial_input[:current_step_num]
-#                     rest_initial_input = rest_initial_input[current_step_num:]
-#             else:
-#                 current_step_initial_input = initial_flux_input[
-#                     start_initial_index:start_initial_index + current_step_num]
-#             yield current_step_num, current_step_initial_input
-#
-#     batch_size = parallel_parameter_dict[Keywords.batch_solving]
-#     max_initial_num_each_generation = parameter_extract(
-#         parallel_parameter_dict, Keywords.max_optimization_each_generation, this_case_optimization_num)
-#     maximal_save_point = parameter_extract(
-#         parallel_parameter_dict, Keywords.maximal_save_point, max_initial_num_each_generation)
-#     report_interval = 100
-#     # if initial_flux_input is None:
-#     #     initial_flux_input = universal_feasible_solution_generator(slsqp_solver_obj, this_case_optimization_num)
-#     # if initial_flux_input is None:
-#     #     print(f'{result_label} failed to generate initial flux')
-#     # else:
-#     #     print('Initial flux generated')
-#     final_time_list = []
-#     final_loss_list = []
-#     final_solution_list = []
-#     final_predicted_dict = {}
-#     calculated_solution_num = 0
-#     solution_num_since_last_save = 0
-#     for current_step_num, current_step_initial_input in single_step_initial_input_generator(
-#             initial_flux_input, this_case_optimization_num, max_initial_num_each_generation, batch_size):
-#         if verbose:
-#             print(f'Start solving solution # {calculated_solution_num} ~ {calculated_solution_num + current_step_num}')
-#         final_solution, final_obj_value = slsqp_solver_obj.solve(current_step_initial_input)
-#         time_array = np.ones(batch_size) * slsqp_solver_obj.recorder.running_time / batch_size
-#         print(time_array)
-#         exit()
-#         result_list = (final_solution, time_array, final_obj_value, {})
-#         calculated_solution_num += current_step_num
-#         final_result_obj.add_and_save_result(
-#             result_label, result_information, result_list, slsqp_solver_obj.flux_name_index_dict,
-#             slsqp_solver_obj.target_experimental_mid_data_dict)
-#         solution_num_since_last_save += current_step_num
-#         pbar.update(current_step_num)
-#         if verbose and solution_num_since_last_save >= report_interval:
-#             print('{} finished'.format(calculated_solution_num))
-#             solution_num_since_last_save = 0
-#     final_solution_array = np.array(final_solution_list)
-#     final_time_array = np.array(final_time_list)
-#     final_loss_array = np.array(final_loss_list)
-#
-#     print(f'{result_label} ended')
-#     return final_solution_array, final_time_array, final_loss_array, final_predicted_dict
-
-
 def batch_continuously_solving_func(
         final_result_obj, result_label, result_information, slsqp_solver_obj, initial_flux_input,
         this_case_optimization_num, pbar, parallel_parameter_dict, initial_flux_input_id=None, verbose=False):
-    # def single_step_initial_input_generator(
-    #         _initial_flux_input, _initial_flux_input_id, _this_case_optimization_num, _max_initial_num_each_generation):
-    #     if _initial_flux_input is None:
-    #         total_optimization_num = _this_case_optimization_num
-    #         rest_initial_num = 0
-    #         rest_initial_input = None
-    #     else:
-    #         total_optimization_num = _initial_flux_input.shape[0]
-    #         rest_initial_input = _initial_flux_input
-    #         rest_initial_num = total_optimization_num
-    #         if _initial_flux_input_id is None:
-    #             _initial_flux_input_id = np.arange(0, total_optimization_num)
-    #     fake_step_num = -1
-    #     fake_step_flux_input = None
-    #     fake_step_solution_id_array = None
-    #
-    #     for start_initial_index in range(0, total_optimization_num, _max_initial_num_each_generation):
-    #         current_step_num = min(total_optimization_num - start_initial_index, _max_initial_num_each_generation)
-    #         end_initial_index = start_initial_index + current_step_num
-    #         if _initial_flux_input is None:
-    #             if rest_initial_num < current_step_num:
-    #                 initial_num_to_generate = min(
-    #                     total_optimization_num - start_initial_index, _max_initial_num_each_generation)
-    #                 print(f'Generating {initial_num_to_generate} initial value of {result_label}...')
-    #                 new_initial_input = universal_feasible_solution_generator(
-    #                     slsqp_solver_obj, initial_num_to_generate)
-    #                 if new_initial_input is None:
-    #                     print(f'{result_label} failed to generate initial flux')
-    #                     exit(-1)
-    #                 else:
-    #                     print('Initial flux generated')
-    #                 diff = current_step_num - rest_initial_num
-    #                 if rest_initial_input is None:
-    #                     current_step_initial_input = new_initial_input[:diff]
-    #                 else:
-    #                     current_step_initial_input = np.vstack([rest_initial_input, new_initial_input[:diff]])
-    #                 rest_initial_input = new_initial_input[diff:]
-    #             else:
-    #                 current_step_initial_input = rest_initial_input[:current_step_num]
-    #                 rest_initial_input = rest_initial_input[current_step_num:]
-    #         else:
-    #             current_step_initial_input = _initial_flux_input[start_initial_index:end_initial_index]
-    #         if _initial_flux_input_id is None:
-    #             current_step_initial_id_array = np.arange(start_initial_index, end_initial_index)
-    #         else:
-    #             current_step_initial_id_array = _initial_flux_input_id[start_initial_index:end_initial_index]
-    #         if fake_step_num < 0:
-    #             fake_step_num = current_step_num
-    #             fake_step_flux_input = current_step_initial_input
-    #             fake_step_solution_id_array = current_step_initial_id_array
-    #         yield current_step_num, current_step_initial_input, current_step_initial_id_array, 1
-    #     yield 0, None, None, 0
-    #     while True:
-    #         yield fake_step_num, fake_step_flux_input, fake_step_solution_id_array, -1
-
     def no_specific_initial_input_generator(_this_case_optimization_num, _max_initial_num_each_generation):
         start_initial_index = 0
+        saved_initial_input = None
+        target_total_initial_num = int(1.3 * _this_case_optimization_num)
         while True:
-            initial_num_to_generate = _max_initial_num_each_generation
-            print(f'Generating {initial_num_to_generate} initial value of {result_label}...')
-            new_initial_input = universal_feasible_solution_generator(
-                slsqp_solver_obj, initial_num_to_generate)
-            if new_initial_input is None:
-                print(f'{result_label} failed to generate initial flux')
-                exit(-1)
+            default_initial_num = _max_initial_num_each_generation
+            this_turn_real_initial_num_to_generate = min(max(
+                target_total_initial_num - start_initial_index, 0), _max_initial_num_each_generation)
+            # initial_num_to_generate = _max_initial_num_each_generation
+            # if start_initial_index >= 1.3 * _this_case_optimization_num:
+            #     yield initial_num_to_generate, saved_initial_id_array, saved_initial_input, 0
+            # else:
+            if this_turn_real_initial_num_to_generate > 0:
+                print(f'Generating {this_turn_real_initial_num_to_generate} initial value of {result_label}...')
+                new_initial_input = universal_feasible_solution_generator(
+                    slsqp_solver_obj, this_turn_real_initial_num_to_generate)
+                if new_initial_input is None:
+                    print(f'{result_label} failed to generate initial flux')
+                    exit(-1)
+                else:
+                    print('Initial flux generated')
+                if this_turn_real_initial_num_to_generate < default_initial_num:
+                    complete_new_initial_input = np.tile(
+                        new_initial_input,
+                        (np.ceil(default_initial_num / this_turn_real_initial_num_to_generate), 1)
+                    )[:default_initial_num]
+                else:
+                    complete_new_initial_input = new_initial_input
+                if saved_initial_input is None:
+                    saved_initial_input = complete_new_initial_input
             else:
-                print('Initial flux generated')
-            new_initial_id_array = np.arange(start_initial_index, start_initial_index + initial_num_to_generate)
-            start_initial_index += initial_num_to_generate
-            yield initial_num_to_generate, new_initial_input, new_initial_id_array, initial_num_to_generate
+                complete_new_initial_input = saved_initial_input
+            new_initial_id_array = np.arange(start_initial_index, start_initial_index + default_initial_num)
+            start_initial_index += default_initial_num
+            yield default_initial_num, complete_new_initial_input, new_initial_id_array, \
+                this_turn_real_initial_num_to_generate
 
     def specific_initial_input_generator(
             _initial_flux_input, _initial_flux_input_id, _max_initial_num_each_generation):
@@ -254,6 +135,7 @@ def batch_continuously_solving_func(
         initial_iterator = specific_initial_input_generator(
             initial_flux_input, initial_flux_input_id, max_initial_num_each_generation)
         assert initial_flux_input.shape[0] == this_case_optimization_num
+    print(f'Start solving {result_label}...')
     for (
             current_step_num, this_step_initial_input, this_step_initial_id_array, real_input_num
     ) in initial_iterator:
@@ -446,10 +328,10 @@ def serial_solver_wrap(
         initial_flux_input = None
         if isinstance(this_case_optimization_num, int):
             if this_case_optimization_num == 0:
-                print(f'No solutions of {result_label} needs to be generated.')
+                print(f'No solutions of {result_label} needs to be obtained.')
                 continue
             else:
-                print(f'{result_label} started: {this_case_optimization_num} solutions need to be generated')
+                print(f'{result_label} started: {this_case_optimization_num} solutions need to be obtained.')
         elif isinstance(this_case_optimization_num, (list, np.ndarray)):
             initial_flux_input = this_case_optimization_num
             this_case_optimization_num = len(initial_flux_input)
@@ -457,9 +339,6 @@ def serial_solver_wrap(
             raise ValueError()
         slsqp_obj = specific_solver_constructor(base_solver_obj, mfa_config)
         if batch_solving:
-            # batch_solving_func(
-            #     final_result_obj, result_label, result_information, slsqp_obj, initial_flux_input,
-            #     this_case_optimization_num, pbar, parallel_parameter_dict, verbose=not test_mode)
             batch_continuously_solving_func(
                 final_result_obj, result_label, result_information, slsqp_obj, initial_flux_input,
                 this_case_optimization_num, pbar, parallel_parameter_dict, verbose=not test_mode)
@@ -484,7 +363,7 @@ def solver_and_solution_list_construct(
         parallel_parameters=None, predefined_initial_solution_matrix_loader=None, batch_solving=False):
     result_list = []
     total_optimization_num = 0
-    if parallel_parameters is None:
+    if parallel_parameters is None or batch_solving:
         each_process_optimization_num = None
         max_optimization_each_generation = None
     else:
@@ -538,15 +417,14 @@ def solver_and_solution_list_construct(
                     new_optimization_num, each_process_optimization_num, solver_obj=base_solver_obj,
                     total_initial_flux_input=predefined_solution_flux_matrix,
                     result_label=result_label)
+        elif parallel_parameters is None or batch_solving:
+            each_case_iter = new_optimization_num
         else:
-            if parallel_parameters is None or batch_solving:
-                each_case_iter = new_optimization_num
-            else:
-                print(f'{new_optimization_num} initial value of {result_label} needs to be generated')
-                each_case_iter = each_case_optimization_distribution_iter_generator(
-                    new_optimization_num, each_process_optimization_num, solver_obj=base_solver_obj,
-                    max_optimization_each_generation=max_optimization_each_generation,
-                    result_label=result_label)
+            print(f'{new_optimization_num} initial value of {result_label} needs to be generated')
+            each_case_iter = each_case_optimization_distribution_iter_generator(
+                new_optimization_num, each_process_optimization_num, solver_obj=base_solver_obj,
+                max_optimization_each_generation=max_optimization_each_generation,
+                result_label=result_label)
         total_optimization_num += new_optimization_num
         result_list.append((
             base_solver_obj, mfa_config, each_case_iter, result_label, result_information,
