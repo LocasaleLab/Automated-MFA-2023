@@ -142,6 +142,7 @@ class ParamName(object):
 
     # tf2 slsqp parameter
     max_initial_stock_num = 'max_initial_stock_num'
+    max_output_stock_num = 'max_output_stock_num'
     report_interval = 'report_interval'
     finished_solution_report_interval = 'finished_solution_report_interval'
     delta_p_threshold = 'delta_p_threshold'

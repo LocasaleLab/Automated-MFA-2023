@@ -23,6 +23,8 @@ The tool is built for Python 3.8 and requires the following packages:
 
 [//]: # (For convenience, an out-of-the-box Docker image is provided to run this code. This docker image is tested on `docker-ce` in Ubuntu with Docker version `19.03.1`. &#40;See Usages part for details.&#41;)
 
+[Anaconda](https://www.anaconda.com/) is recommended as it includes most of the necessary packages. The packages provided by Anaconda are also optimized for Intel CPUs, ensuring better performance.
+
 ## Model
 
 Models utilized in this software are in [`scripts/model`](scripts/model) folder.
@@ -112,8 +114,8 @@ You could try multiple different arguments according to help information. For ex
 python main.py computation experiments flux_analysis hct116_cultured_cell_line -t
 ```
 
-This instruction means running a `computation`, which is a `flux_analysis` process of data in `experiments`
-named `hct116_cultured_cell_line` in test mode (`-t`).
+This instruction means running a `computation`, which is a `flux_analysis` process of data in `experiments` named `hct116_cultured_cell_line` in test mode (`-t`). This process typically completes in 30 minutes.
+
 Detailed argument list will be explained below.
 
 ## Arguments

@@ -60,7 +60,7 @@ def batch_continuously_solving_func(
                 if this_turn_real_initial_num_to_generate < default_initial_num:
                     complete_new_initial_input = np.tile(
                         new_initial_input,
-                        (np.ceil(default_initial_num / this_turn_real_initial_num_to_generate), 1)
+                        (int(np.ceil(default_initial_num / this_turn_real_initial_num_to_generate)), 1)
                     )[:default_initial_num]
                 else:
                     complete_new_initial_input = new_initial_input
@@ -100,7 +100,7 @@ def batch_continuously_solving_func(
                 unreal_input_num = current_step_num - real_input_num
                 real_initial_input = _initial_flux_input[start_initial_index:]
                 current_step_initial_input = np.tile(
-                    real_initial_input, (np.ceil(current_step_num / real_input_num), 1)
+                    real_initial_input, (int(np.ceil(current_step_num / real_input_num)), 1)
                 )[:current_step_num]
                 if _initial_flux_input_id is not None:
                     real_initial_id_array = _initial_flux_input_id[start_initial_index:]
@@ -386,6 +386,9 @@ def solver_and_solution_list_construct(
                 final_result_obj, *label_tuple, optimization_from_predefined_initial_solution_parameter_dict)
             if set_specific_target_optimization_num:
                 assert this_case_target_optimization_num <= len(predefined_solution_flux_matrix)
+            elif test_mode:
+                this_case_target_optimization_num = each_case_target_optimization_num
+                predefined_solution_flux_matrix = predefined_solution_flux_matrix[:this_case_target_optimization_num]
             else:
                 this_case_target_optimization_num = len(predefined_solution_flux_matrix)
         else:
