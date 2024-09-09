@@ -499,16 +499,6 @@ def merge_complete_config_dict(complete_figure_config_dict, update_figure_config
 
     modified_figure_config_dict = dict(complete_figure_config_dict)
     for update_key, update_dict in update_figure_config_dict.items():
-        # if update_key in modified_figure_config_dict:
-        #     current_dict = modified_figure_config_dict[update_key]
-        #     if isinstance(current_dict, dict):
-        #         assert isinstance(update_dict, dict)
-        #         modified_figure_config_dict[update_key] = {
-        #             **current_dict, **update_dict}
-        #     else:
-        #         modified_figure_config_dict[update_key] = update_dict
-        # else:
-        #     modified_figure_config_dict[update_key] = update_dict
         if update_key not in modified_figure_config_dict:
             modified_figure_config_dict[update_key] = update_dict
         else:
@@ -587,3 +577,45 @@ def generate_violin_config_dict(column_width, box_body_alpha, line_width, main_c
             ParameterName.edge_width: line_width
         } for median_color in median_color_list],
     }
+
+
+def expand_one_axis_dict(figure_data_parameter_dict):
+    ax_bottom_left = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.ax_bottom_left_list, Vector(0, 0), pop=True)
+    ax_size = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.ax_size_list, Vector(1, 1), pop=True)
+    x_lim = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.x_lim_list, None, pop=True)
+    x_label = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.x_label_list, None, pop=True)
+    x_ticks = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.x_ticks_list, None, pop=True)
+    x_tick_labels = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.x_tick_labels_list, Keywords.default, pop=True)
+    y_lim = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.y_lim_list, None, pop=True)
+    y_label = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.y_label_list, None, pop=True)
+    y_ticks = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.y_ticks_list, None, pop=True)
+    y_tick_labels = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.y_tick_labels_list, Keywords.default, pop=True)
+    supplementary_text_list = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.supplementary_text_list, None, pop=True)
+    supplementary_text_loc_list = default_parameter_extract(
+        figure_data_parameter_dict, ParameterName.supplementary_text_loc_list, None, pop=True)
+    expanded_axis_related_dict = {
+        ParameterName.ax_bottom_left_list: [ax_bottom_left],
+        ParameterName.ax_size_list: [ax_size],
+        ParameterName.x_lim_list: [x_lim],
+        ParameterName.x_label_list: [x_label],
+        ParameterName.x_ticks_list: [x_ticks],
+        ParameterName.x_tick_labels_list: [x_tick_labels],
+        ParameterName.y_lim_list: [y_lim],
+        ParameterName.y_ticks_list: [y_ticks],
+        ParameterName.y_label_list: [y_label],
+        ParameterName.y_tick_labels_list: [y_tick_labels],
+        ParameterName.supplementary_text_list: [supplementary_text_list],
+        ParameterName.supplementary_text_loc_list: [supplementary_text_loc_list],
+    }
+    return expanded_axis_related_dict

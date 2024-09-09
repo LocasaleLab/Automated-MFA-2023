@@ -640,7 +640,7 @@ class SimulatedDataOptimizedFluxErrorBarDataFigure(CommonDifferenceFluxErrorBarD
             bottom_y_lim = [-1.1, -0.34]
             middle_y_lim, middle_y_ticks = symmetrical_lim_tick_generator_with_zero(
                 0.32, 0.32, 0.1)
-            top_y_lim = [0.34, 1.2]
+            top_y_lim = [0.34, 1.3]
             y_lim = [bottom_y_lim, middle_y_lim, top_y_lim]
             y_ticks = [[-1.0, -0.5], middle_y_ticks, [0.5, 1.0]]
             y_label = [None, CommonFigureString.relative_error, None]

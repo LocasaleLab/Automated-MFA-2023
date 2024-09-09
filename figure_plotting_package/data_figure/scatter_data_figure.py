@@ -139,8 +139,7 @@ class BasicScatterDataFigure(DataFigure):
                     self.supplementary_text_list, self.supplementary_text_loc_list, ax_and_transform_list):
                 draw_text_by_axis_loc(
                     current_ax, supplementary_text, supplementary_loc, current_transform,
-                    **self.figure_config_dict[ParameterName.supplementary_text_format_dict]
-                )
+                    **self.figure_config_dict[ParameterName.supplementary_text_format_dict])
 
     def move_and_scale(self, scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1):
         super().move_and_scale(

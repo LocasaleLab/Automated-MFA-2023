@@ -73,6 +73,11 @@ class BasicViolinBoxDataFigure(DataFigure):
                 ParameterName.subplot_name_list,
                 ParameterName.text_axis_loc_pair,
              )]
+        self.supplementary_text_list, self.supplementary_text_loc_list = default_parameter_extract(
+            figure_data_parameter_dict, [
+                ParameterName.supplementary_text_list,
+                ParameterName.supplementary_text_loc_list,
+            ], None, repeat_default_value=True)
 
         (
             self.cutoff_value_list,
@@ -137,6 +142,12 @@ class BasicViolinBoxDataFigure(DataFigure):
                 draw_text_by_axis_loc(
                     current_ax, subplot_name, self.text_axis_loc_pair, current_transform,
                     **self.figure_config_dict[ParameterName.subplot_name_text_format_dict])
+        if self.supplementary_text_list is not None:
+            for supplementary_text, supplementary_loc, (current_ax, current_transform) in zip(
+                    self.supplementary_text_list, self.supplementary_text_loc_list, ax_and_transform_list):
+                draw_text_by_axis_loc(
+                    current_ax, supplementary_text, supplementary_loc, current_transform,
+                    **self.figure_config_dict[ParameterName.supplementary_text_format_dict])
 
     def move_and_scale(self, scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1):
         super().move_and_scale(

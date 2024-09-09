@@ -33,104 +33,105 @@ def slsqp_solving(slsqp_solver_obj, input_matrix, verbose=False, report_interval
     return final_solution_array, final_time_array, final_loss_array, final_predicted_dict
 
 
+def no_specific_initial_input_generator(
+        slsqp_solver_obj, result_label, this_case_optimization_num, max_initial_num_each_generation):
+    start_initial_index = 0
+    saved_initial_input = None
+    target_total_initial_num = int(1.3 * this_case_optimization_num)
+    while True:
+        default_initial_num = max_initial_num_each_generation
+        this_turn_real_initial_num_to_generate = min(max(
+            target_total_initial_num - start_initial_index, 0), max_initial_num_each_generation)
+        if this_turn_real_initial_num_to_generate > 0:
+            print(f'Generating {this_turn_real_initial_num_to_generate} initial value of {result_label}...')
+            new_initial_input = universal_feasible_solution_generator(
+                slsqp_solver_obj, this_turn_real_initial_num_to_generate)
+            if new_initial_input is None:
+                print(f'{result_label} failed to generate initial flux')
+                exit(-1)
+            else:
+                print('Initial flux generated')
+            if this_turn_real_initial_num_to_generate < default_initial_num:
+                complete_new_initial_input = np.tile(
+                    new_initial_input,
+                    (int(np.ceil(default_initial_num / this_turn_real_initial_num_to_generate)), 1)
+                )[:default_initial_num]
+            else:
+                complete_new_initial_input = new_initial_input
+            if saved_initial_input is None:
+                saved_initial_input = complete_new_initial_input
+        else:
+            complete_new_initial_input = saved_initial_input
+        new_initial_id_array = np.arange(start_initial_index, start_initial_index + default_initial_num)
+        start_initial_index += default_initial_num
+        yield default_initial_num, complete_new_initial_input, new_initial_id_array, \
+            this_turn_real_initial_num_to_generate
+
+
+def specific_initial_input_generator(
+        initial_flux_input, initial_flux_input_id, max_initial_num_each_generation):
+    total_optimization_num = initial_flux_input.shape[0]
+    if initial_flux_input_id is None:
+        initial_flux_input_id = np.arange(0, total_optimization_num)
+    start_initial_index = 0
+    fake_step_num = -1
+    fake_step_flux_input = None
+    max_id = 0
+    default_step_num = max_initial_num_each_generation
+    while True:
+        end_initial_index = start_initial_index + default_step_num
+        if end_initial_index < total_optimization_num:
+            real_input_num = default_step_num
+            current_step_initial_input = initial_flux_input[start_initial_index:end_initial_index]
+            if initial_flux_input_id is not None:
+                current_step_initial_id_array = initial_flux_input_id[start_initial_index:end_initial_index]
+                max_id = max(max_id, current_step_initial_id_array.max())
+            else:
+                current_step_initial_id_array = np.arange(
+                    start_initial_index, start_initial_index + default_step_num)
+                max_id += default_step_num
+        elif start_initial_index < total_optimization_num:
+            real_input_num = total_optimization_num - start_initial_index
+            unreal_input_num = default_step_num - real_input_num
+            real_initial_input = initial_flux_input[start_initial_index:]
+            current_step_initial_input = np.tile(
+                real_initial_input, (int(np.ceil(default_step_num / real_input_num)), 1)
+            )[:default_step_num]
+            if initial_flux_input_id is not None:
+                real_initial_id_array = initial_flux_input_id[start_initial_index:]
+                max_id = max(max_id, real_initial_id_array.max())
+                current_step_initial_id_array = np.concatenate(
+                    [real_initial_id_array, np.arange(max_id, max_id + unreal_input_num)])
+                max_id += unreal_input_num
+            else:
+                current_step_initial_id_array = np.arange(
+                    start_initial_index, start_initial_index + default_step_num)
+                max_id += default_step_num
+        else:
+            real_input_num = 0
+            current_step_initial_input = fake_step_flux_input
+            current_step_initial_id_array = np.arange(max_id, max_id + default_step_num)
+            max_id += default_step_num
+
+        if fake_step_num < 0:
+            fake_step_num = default_step_num
+            fake_step_flux_input = current_step_initial_input
+        start_initial_index += default_step_num
+        yield default_step_num, current_step_initial_input, current_step_initial_id_array, real_input_num
+
+
 def batch_continuously_solving_func(
-        final_result_obj, result_label, result_information, slsqp_solver_obj, initial_flux_input,
-        this_case_optimization_num, pbar, parallel_parameter_dict, initial_flux_input_id=None, verbose=False):
-    def no_specific_initial_input_generator(_this_case_optimization_num, _max_initial_num_each_generation):
-        start_initial_index = 0
-        saved_initial_input = None
-        target_total_initial_num = int(1.3 * _this_case_optimization_num)
-        while True:
-            default_initial_num = _max_initial_num_each_generation
-            this_turn_real_initial_num_to_generate = min(max(
-                target_total_initial_num - start_initial_index, 0), _max_initial_num_each_generation)
-            # initial_num_to_generate = _max_initial_num_each_generation
-            # if start_initial_index >= 1.3 * _this_case_optimization_num:
-            #     yield initial_num_to_generate, saved_initial_id_array, saved_initial_input, 0
-            # else:
-            if this_turn_real_initial_num_to_generate > 0:
-                print(f'Generating {this_turn_real_initial_num_to_generate} initial value of {result_label}...')
-                new_initial_input = universal_feasible_solution_generator(
-                    slsqp_solver_obj, this_turn_real_initial_num_to_generate)
-                if new_initial_input is None:
-                    print(f'{result_label} failed to generate initial flux')
-                    exit(-1)
-                else:
-                    print('Initial flux generated')
-                if this_turn_real_initial_num_to_generate < default_initial_num:
-                    complete_new_initial_input = np.tile(
-                        new_initial_input,
-                        (int(np.ceil(default_initial_num / this_turn_real_initial_num_to_generate)), 1)
-                    )[:default_initial_num]
-                else:
-                    complete_new_initial_input = new_initial_input
-                if saved_initial_input is None:
-                    saved_initial_input = complete_new_initial_input
-            else:
-                complete_new_initial_input = saved_initial_input
-            new_initial_id_array = np.arange(start_initial_index, start_initial_index + default_initial_num)
-            start_initial_index += default_initial_num
-            yield default_initial_num, complete_new_initial_input, new_initial_id_array, \
-                this_turn_real_initial_num_to_generate
+        final_result_obj, result_label, result_information, base_solver_obj, mfa_config, initial_flux_input,
+        this_case_optimization_num, pbar, update_q, parallel_parameter_dict, initial_flux_input_id=None, verbose=False):
 
-    def specific_initial_input_generator(
-            _initial_flux_input, _initial_flux_input_id, _max_initial_num_each_generation):
-        total_optimization_num = _initial_flux_input.shape[0]
-        if _initial_flux_input_id is None:
-            _initial_flux_input_id = np.arange(0, total_optimization_num)
-        start_initial_index = 0
-        fake_step_num = -1
-        fake_step_flux_input = None
-        max_id = 0
-        current_step_num = _max_initial_num_each_generation
-        while True:
-            end_initial_index = start_initial_index + current_step_num
-            if end_initial_index < total_optimization_num:
-                real_input_num = current_step_num
-                current_step_initial_input = _initial_flux_input[start_initial_index:end_initial_index]
-                if _initial_flux_input_id is not None:
-                    current_step_initial_id_array = _initial_flux_input_id[start_initial_index:end_initial_index]
-                    max_id = max(max_id, current_step_initial_id_array.max())
-                else:
-                    current_step_initial_id_array = np.arange(
-                        start_initial_index, start_initial_index + current_step_num)
-                    max_id += current_step_num
-            elif start_initial_index < total_optimization_num:
-                real_input_num = total_optimization_num - start_initial_index
-                unreal_input_num = current_step_num - real_input_num
-                real_initial_input = _initial_flux_input[start_initial_index:]
-                current_step_initial_input = np.tile(
-                    real_initial_input, (int(np.ceil(current_step_num / real_input_num)), 1)
-                )[:current_step_num]
-                if _initial_flux_input_id is not None:
-                    real_initial_id_array = _initial_flux_input_id[start_initial_index:]
-                    max_id = max(max_id, real_initial_id_array.max())
-                    current_step_initial_id_array = np.concatenate(
-                        [real_initial_id_array, np.arange(max_id, max_id + unreal_input_num)])
-                    max_id += unreal_input_num
-                else:
-                    current_step_initial_id_array = np.arange(
-                        start_initial_index, start_initial_index + current_step_num)
-                    max_id += current_step_num
-            else:
-                real_input_num = 0
-                current_step_initial_input = fake_step_flux_input
-                current_step_initial_id_array = np.arange(max_id, max_id + current_step_num)
-                max_id += current_step_num
-
-            if fake_step_num < 0:
-                fake_step_num = current_step_num
-                fake_step_flux_input = current_step_initial_input
-            start_initial_index += current_step_num
-            yield current_step_num, current_step_initial_input, current_step_initial_id_array, real_input_num
-
+    slsqp_solver_obj = specific_solver_constructor(base_solver_obj, mfa_config)
     max_initial_num_each_generation = parameter_extract(
         parallel_parameter_dict, Keywords.max_optimization_each_generation, this_case_optimization_num)
     """status: 0: new initial: start, 1: save, 2: more initial"""
     finish_status = False
     if initial_flux_input is None:
         initial_iterator = no_specific_initial_input_generator(
-            this_case_optimization_num, max_initial_num_each_generation)
+            slsqp_solver_obj, result_label, this_case_optimization_num, max_initial_num_each_generation)
     else:
         initial_iterator = specific_initial_input_generator(
             initial_flux_input, initial_flux_input_id, max_initial_num_each_generation)
@@ -139,33 +140,29 @@ def batch_continuously_solving_func(
     for (
             current_step_num, this_step_initial_input, this_step_initial_id_array, real_input_num
     ) in initial_iterator:
-        starting_index = 0
         process_new_input = True
         while not finish_status:
             (
-                save, finish_status, rest_starting_index, final_solution_id_array, final_solution, final_obj_value,
+                save, finish_status, final_solution_id_array, final_solution, final_obj_value,
                 final_running_time
             ) = slsqp_solver_obj.continuously_solve(
                 total_optimization_num=this_case_optimization_num, process_new_input=process_new_input,
-                real_input_num=real_input_num,
                 initial_flux_array=this_step_initial_input, initial_id_array=this_step_initial_id_array,
-                starting_index=starting_index, pbar=pbar)
+                real_input_num=real_input_num, pbar=pbar, update_q=update_q)
             if save:
                 result_list = (final_solution, final_running_time, final_obj_value, {})
                 final_result_obj.add_and_save_result(
                     result_label, result_information, result_list, slsqp_solver_obj.flux_name_index_dict,
                     slsqp_solver_obj.target_experimental_mid_data_dict, final_solution_id_array)
                 process_new_input = False
-                starting_index = rest_starting_index
             else:
-                process_new_input = True
-                if rest_starting_index == current_step_num:
-                    break
-                else:
-                    starting_index = rest_starting_index
+                break
         if finish_status:
             break
+    del slsqp_solver_obj
     print(f'{result_label} ended')
+    if update_q is not None:
+        update_q.put(-1)
 
 
 def each_case_optimization_distribution_iter_generator(
@@ -319,9 +316,11 @@ def serial_solver_wrap(
         total=total_optimization_num, smoothing=0, maxinterval=5,
         desc="Computation progress of {}".format(final_result_obj.result_name))
     batch_solving = False
+    update_q = None
     if parallel_parameter_dict is not None:
         if Keywords.batch_solving in parallel_parameter_dict:
             batch_solving = True
+            update_q = mp.Queue()
     for (
             base_solver_obj, mfa_config, this_case_optimization_num, result_label, result_information,
             each_case_target_optimization_num) in result_list:
@@ -337,12 +336,21 @@ def serial_solver_wrap(
             this_case_optimization_num = len(initial_flux_input)
         else:
             raise ValueError()
-        slsqp_obj = specific_solver_constructor(base_solver_obj, mfa_config)
         if batch_solving:
-            batch_continuously_solving_func(
-                final_result_obj, result_label, result_information, slsqp_obj, initial_flux_input,
-                this_case_optimization_num, pbar, parallel_parameter_dict, verbose=not test_mode)
+            new_solving_process = mp.Process(
+                target=batch_continuously_solving_func, args=(
+                    final_result_obj, result_label, result_information, base_solver_obj, mfa_config, initial_flux_input,
+                    this_case_optimization_num, None, update_q, parallel_parameter_dict, not test_mode))
+            new_solving_process.start()
+            while True:
+                update_num = update_q.get()
+                if update_num < 0:
+                    break
+                pbar.update(update_num)
+            new_solving_process.join()
+            new_solving_process.close()
         else:
+            slsqp_obj = specific_solver_constructor(base_solver_obj, mfa_config)
             if initial_flux_input is None:
                 initial_flux_input = universal_feasible_solution_generator(slsqp_obj, this_case_optimization_num)
             if initial_flux_input is None:

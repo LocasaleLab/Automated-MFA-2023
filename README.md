@@ -254,14 +254,14 @@ python main.py figure 1
 | `all`     | All figures | All figures                         |
 -->
 
-| Arguments | Figures     | Main figure or supplementary figure | Output files                                                       |
-|-----------|-------------|-------------------------------------|--------------------------------------------------------------------|
-| `1`       | Figure 1    | Main figure                         | [`short_figure_1.pdf`](figures/output_figure/short_figure_1.pdf)   |
-| `s1`      | Figure S1   | Supplementary figure                | [`short_figure_s1.pdf`](figures/output_figure/short_figure_s1.pdf) |
-| `s2`      | Figure S2   | Supplementary figure                | [`short_figure_s2.pdf`](figures/output_figure/short_figure_s2.pdf) |
-| `s3`      | Figure S3   | Supplementary figure                | [`short_figure_s3.pdf`](figures/output_figure/short_figure_s3.pdf) |
-| `s4`      | Figure S4   | Supplementary figure                | [`short_figure_s4.pdf`](figures/output_figure/short_figure_s4.pdf) |
-| `s5`      | Figure S5   | Supplementary figure                | [`short_figure_s5.pdf`](figures/output_figure/short_figure_s5.pdf) |
+| Arguments | Figures                | Main figure or supplementary figure | Output files                                                       |
+|-----------|------------------------|-------------------------------------|--------------------------------------------------------------------|
+| `1`       | Figure 1               | Main figure                         | [`short_figure_1.pdf`](figures/output_figure/short_figure_1.pdf)   |
+| `s1`      | Supplementary Figure 1 | Supplementary figure                | [`short_figure_s1.pdf`](figures/output_figure/short_figure_s1.pdf) |
+| `s2`      | Supplementary Figure 2 | Supplementary figure                | [`short_figure_s2.pdf`](figures/output_figure/short_figure_s2.pdf) |
+| `s3`      | Supplementary Figure 3 | Supplementary figure                | [`short_figure_s3.pdf`](figures/output_figure/short_figure_s3.pdf) |
+| `s4`      | Supplementary Figure 4 | Supplementary figure                | [`short_figure_s4.pdf`](figures/output_figure/short_figure_s4.pdf) |
+| `s5`      | Supplementary Figure 5 | Supplementary figure                | [`short_figure_s5.pdf`](figures/output_figure/short_figure_s5.pdf) |
 
 ## Results
 

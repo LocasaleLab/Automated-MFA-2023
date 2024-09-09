@@ -712,7 +712,7 @@ class ArcChevronArrow(ArrowBase):
     def __init__(
             self, center: Vector, radius: float, theta_head: float, theta_tail_end_center: float, width: float,
             head_len_width_ratio: float, scale=1, bottom_left_offset=None, **kwargs):
-        # head -> outer_arc -> tail -> inner_arc (CCW if head > tail, CW if head < tail)
+        """head -> outer_arc -> tail -> inner_arc (CCW if head > tail, CW if head < tail)"""
         self.center = initialize_vector_input(center)
         assert radius > 0
         self.radius = radius
@@ -910,10 +910,12 @@ def generate_arc_path_list_in_bent_arrow(
 def arc_adjacent_path_check(
         arc_path_list, upstream_lineto_point, normal_downstream_lineto_point,
         downstream_backup_point, mid_location):
-    # If the arc is normal, use the normal_downstream_lineto_point
-    # If the arc is empty, use downstream_backup_point as transition point
+    """
+        If the arc is normal, use the normal_downstream_lineto_point
+        If the arc is empty, use downstream_backup_point as transition point
+    """
     if len(arc_path_list) == 0:
-        # Correct point will be always further to mid_location
+        """Correct point will be always further to mid_location"""
         combined_point_1 = Vector(upstream_lineto_point.x, downstream_backup_point.y)
         combined_point_2 = Vector(downstream_backup_point.x, upstream_lineto_point.y)
         if abs(combined_point_1.x - mid_location.x) > abs(combined_point_2.x - mid_location.x):
@@ -924,10 +926,6 @@ def arc_adjacent_path_check(
             PathStep(PathOperation.lineto, combined_point),
             PathStep(PathOperation.lineto, normal_downstream_lineto_point)
         ]
-        # path_list = [
-        #     PathStep(PathOperation.lineto, upstream_lineto_point),
-        #     PathStep(PathOperation.lineto, downstream_lineto_point)
-        # ]
     else:
         path_list = [
             PathStep(PathOperation.lineto, upstream_lineto_point),

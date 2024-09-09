@@ -202,7 +202,7 @@ class SubfigureE(Subfigure):
 
 class FigureS2(Figure):
     figure_label = 'short_figure_s2'
-    figure_title = 'Figure S2'
+    figure_title = 'Supplementary Figure 2'
 
     def __init__(self):
         subfigure_class_list = [
@@ -211,11 +211,6 @@ class FigureS2(Figure):
             SubfigureC,
             SubfigureD,
             SubfigureE,
-            # SubfigureF,
-            # SubfigureG,
-            # SubfigureH,
-            # SubfigureI,
-            # SubfigureJ,
         ]
 
         subfigure_a_height = 0.22
@@ -257,12 +252,6 @@ class FigureS2(Figure):
         single_subfigure_layout_dict = {
             'b': (subfigure_b_center, subfigure_b_size),
             'e': (subfigure_e_center, subfigure_e_size),
-            # 'f': (subfigure_f_center, subfigure_f_size),
-            # 'f': (subfigure_f_center, subfigure_f_size),
-            # 'g': (subfigure_g_center, subfigure_g_size),
-            # 'h': (subfigure_h_center, subfigure_h_size),
-            # 'i': (subfigure_i_center, subfigure_i_size),
-            # 'j': (subfigure_j_center, subfigure_j_size),
         }
         super().__init__(
             self.figure_label, subfigure_class_list, figure_layout_list, single_subfigure_layout_dict,

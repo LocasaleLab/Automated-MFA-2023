@@ -199,7 +199,7 @@ class SubfigureF(Subfigure):
 
 class FigureS1(Figure):
     figure_label = 'short_figure_s1'
-    figure_title = 'Figure S1'
+    figure_title = 'Supplementary Figure 1'
 
     def __init__(self):
         subfigure_class_list = [

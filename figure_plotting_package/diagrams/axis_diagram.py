@@ -117,6 +117,21 @@ class AxisDiagram(CompositeFigure):
         else:
             raise ValueError()
 
+    def transform_single_point(self, single_point, vertex_scale_vector, minimum_value):
+        new_point = self.box_transform(
+            single_point * vertex_scale_vector + Vector(0, minimum_value))
+        return new_point
+
+    def transform_path_list(self, function_path_list, vertex_scale_vector, minimum_value):
+        new_path_step_list = []
+        for path_step in function_path_list:
+            copied_path_step = path_step.copy()
+            for vertex_index, path_vertex in enumerate(copied_path_step.vertex_list):
+                copied_path_step.vertex_list[vertex_index] = self.box_transform(
+                    path_vertex * vertex_scale_vector + Vector(0, minimum_value), inplace=False)
+            new_path_step_list.append(copied_path_step)
+        return new_path_step_list
+
 
 class CrossAxisDiagram(CompositeFigure):
     box_size = Vector(0.8, 0.6)

@@ -14,14 +14,11 @@ class ParameterName(GeneralParameterName):
     mid_diagram_suffix = 'mid_diagram'
     common = 'common'
 
-    data_vector = 'data_vector'
-    carbon_num = 'carbon_num'
     color_name = 'color_name'
 
     bound_box = 'bound_box'
     cross_axis = 'cross_axis'
     bar = 'bar'
-    text = 'text'
     chevron_arrow = 'chevron_arrow'
     constructed_obj = 'constructed_obj'
     metabolite = 'metabolite'

@@ -135,7 +135,7 @@ class SubfigureD(Subfigure):
 
 class FigureS5(Figure):
     figure_label = 'short_figure_s5'
-    figure_title = 'Figure S5'
+    figure_title = 'Supplementary Figure 5'
 
     def __init__(self):
         subfigure_class_list = [

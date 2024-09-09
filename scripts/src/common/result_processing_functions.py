@@ -86,16 +86,30 @@ def select_solutions(loss_array, loss_percentile=None, select_num=None, index_st
 
 
 def time_distribution_plotting(
-        experiment_name, time_data_dict, output_direct=None):
-    group_violin_box_distribution_plot(
-        {'time_distribution': time_data_dict}, nested_color_dict=None,
-        nested_median_color_dict=None, cutoff_dict=None, title_dict=None,
-        output_direct=output_direct, ylim=None, xaxis_rotate=True,
-        figsize=None, figure_type='box')
+        experiment_name, time_data_dict, output_direct=None, subset_index_dict=None, parallel_num=None):
+    filtered_time_data_dict = {}
+    if parallel_num is not None:
+        for result_label, time_data_array in time_data_dict.items():
+            time_data_dict[result_label] = time_data_array / parallel_num
+    if output_direct is not None:
+        group_violin_box_distribution_plot(
+            {'time_distribution': time_data_dict}, nested_color_dict=None,
+            nested_median_color_dict=None, cutoff_dict=None, title_dict=None,
+            output_direct=output_direct, ylim=None, xaxis_rotate=True,
+            figsize=None, figure_type='box')
+        if subset_index_dict is not None:
+            for result_label, time_array in time_data_dict.items():
+                filtered_index = subset_index_dict[result_label]
+                filtered_time_data_dict[result_label] = time_array[filtered_index]
+            group_violin_box_distribution_plot(
+                {'filtered_time_distribution': filtered_time_data_dict}, nested_color_dict=None,
+                nested_median_color_dict=None, cutoff_dict=None, title_dict=None,
+                output_direct=output_direct, ylim=None, xaxis_rotate=True,
+                figsize=None, figure_type='box')
     if output_direct is not None:
         figure_raw_data = FigureData(FigureDataKeywords.time_data_distribution, experiment_name)
         figure_raw_data.save_data(
-            time_data_dict=time_data_dict)
+            time_data_dict=time_data_dict, filtered_time_data_dict=filtered_time_data_dict)
 
 
 def loss_data_distribution_plotting(

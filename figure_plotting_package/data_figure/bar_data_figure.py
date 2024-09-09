@@ -1,6 +1,9 @@
-from .config import DataFigureConfig, ParameterName, Vector, it, Keywords, merge_axis_format_dict, np, \
-    mid_carbon_num_dict, common_legend_generator, default_parameter_extract, \
-    net_flux_x_axis_labels_generator, ColorConfig, LineStyle, merge_complete_config_dict
+from .config import (
+    DataFigureConfig, ParameterName, Vector, it, Keywords, merge_axis_format_dict, np,
+    mid_carbon_num_dict, common_legend_generator, default_parameter_extract, CommonElementConfig,
+    net_flux_x_axis_labels_generator, ColorConfig, LineStyle, merge_complete_config_dict, expand_one_axis_dict,
+    HorizontalAlignment, VerticalAlignment
+)
 from .data_figure_plotting_and_data_output_generator import draw_text_by_axis_loc, single_bar_plotting
 
 from .data_figure import DataFigure
@@ -48,6 +51,7 @@ class BasicBarDataFigure(DataFigure):
                     ParameterName.scatter_param_dict, ParameterName.subplot_name_text_format_dict,
                     ParameterName.x_tick_separator_format_dict, ParameterName.x_tick_separator_label_format_dict,
                     ParameterName.y_tick_separator_format_dict, ParameterName.y_tick_separator_label_format_dict,
+                    ParameterName.supplementary_text_format_dict,
                 ] if key in new_figure_config_dict
             },
             ParameterName.x_label_format_dict: merge_axis_format_dict(
@@ -72,6 +76,11 @@ class BasicBarDataFigure(DataFigure):
                 ParameterName.subplot_name_list,
                 ParameterName.text_axis_loc_pair,
                 ParameterName.max_bar_num_each_group,
+            ], None, repeat_default_value=True)
+        self.supplementary_text_list, self.supplementary_text_loc_list = default_parameter_extract(
+            figure_data_parameter_dict, [
+                ParameterName.supplementary_text_list,
+                ParameterName.supplementary_text_loc_list,
             ], None, repeat_default_value=True)
 
         (
@@ -148,6 +157,12 @@ class BasicBarDataFigure(DataFigure):
                 draw_text_by_axis_loc(
                     current_ax, subplot_name, self.text_axis_loc_pair, current_transform,
                     **self.figure_config_dict[ParameterName.subplot_name_text_format_dict])
+        if self.supplementary_text_list is not None:
+            for supplementary_text, supplementary_loc, (current_ax, current_transform) in zip(
+                    self.supplementary_text_list, self.supplementary_text_loc_list, ax_and_transform_list):
+                draw_text_by_axis_loc(
+                    current_ax, supplementary_text, supplementary_loc, current_transform,
+                    **self.figure_config_dict[ParameterName.supplementary_text_format_dict])
 
 
 class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
@@ -465,3 +480,66 @@ class BasicFluxErrorBarDataFigure(BasicBarDataFigure):
         super().__init__(
             figure_data_parameter_dict, bottom_left, size, **kwargs)
 
+
+class BasicSingleBarDataFigure(BasicBarDataFigure):
+    def __init__(
+            self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
+        array_len = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.array_len_list, None, force=True, pop=True)
+
+        x_label_format_dict = merge_axis_format_dict(
+            DataFigureConfig.x_label_format_dict_generator(),
+            {
+                ParameterName.axis_label_distance: 0.03,
+                ParameterName.font_size: GroupDataFigure.x_y_axis_label_font_size},
+            figure_data_parameter_dict, ParameterName.x_label_format_dict)
+        x_tick_label_format_dict = merge_axis_format_dict(
+            DataFigureConfig.x_tick_label_format_dict_generator(),
+            {ParameterName.font_size: GroupDataFigure.x_y_axis_tick_label_font_size},
+            figure_data_parameter_dict, ParameterName.x_tick_label_format_dict)
+        y_label_format_dict = merge_axis_format_dict(
+            DataFigureConfig.y_label_format_dict_generator(),
+            {
+                ParameterName.axis_label_distance: 0.05,
+                ParameterName.font_size: GroupDataFigure.x_y_axis_label_font_size},
+            figure_data_parameter_dict, ParameterName.y_label_format_dict)
+        y_tick_label_format_dict = merge_axis_format_dict(
+            DataFigureConfig.y_tick_label_format_dict_generator(),
+            {ParameterName.axis_tick_label_distance: 0.008},
+            figure_data_parameter_dict, ParameterName.y_tick_label_format_dict)
+
+        general_figure_config_dict = {
+            ParameterName.column_width: 0.5,
+            ParameterName.edge: 0.05,
+            ParameterName.x_label_format_dict: x_label_format_dict,
+            ParameterName.x_tick_label_format_dict: x_tick_label_format_dict,
+            ParameterName.y_label_format_dict: y_label_format_dict,
+            ParameterName.y_tick_label_format_dict: y_tick_label_format_dict,
+            ParameterName.bar_param_dict: {
+                ParameterName.z_order: DataFigureConfig.normal_figure_element_z_order,
+                ParameterName.alpha: DataFigureConfig.alpha_for_bar_plot
+            },
+            ParameterName.error_bar_param_dict: DataFigureConfig.common_error_bar_param_dict_generator(),
+            ParameterName.supplementary_text_format_dict: {
+                **CommonElementConfig.common_text_config,
+                ParameterName.font_size: 10,
+                ParameterName.width: 0.05,
+                ParameterName.height: 0.05,
+                ParameterName.horizontal_alignment: HorizontalAlignment.center,
+                ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+            }
+        }
+        specific_figure_config_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.figure_config_dict, {}, pop=True)
+        complete_figure_config_dict = merge_complete_config_dict(
+            general_figure_config_dict, specific_figure_config_dict)
+        expanded_axis_parameter_dict = expand_one_axis_dict(figure_data_parameter_dict)
+        figure_data_parameter_dict = {
+            ParameterName.array_len_list: [array_len],
+            ParameterName.figure_config_dict: complete_figure_config_dict,
+
+            **expanded_axis_parameter_dict,
+            **figure_data_parameter_dict
+        }
+        super().__init__(
+            figure_data_parameter_dict, bottom_left, size, **kwargs)

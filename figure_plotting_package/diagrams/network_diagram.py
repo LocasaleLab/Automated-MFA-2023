@@ -139,7 +139,7 @@ class NetworkDiagram(CompositeFigure):
         (
             metabolite_circle_config_dict, metabolite_ellipse_config_dict, reaction_location_tuple_dict,
             background_range, mito_background_range, tca_cycle_center, tca_cycle_radius) = layout_decorator(
-            diagram_layout_generator)(radius, self.total_width, self.height_to_width_ratio, mode)
+            default_diagram_layout_generator)(radius, self.total_width, self.height_to_width_ratio, mode)
 
         metabolite_circle_param_dict_list = [
             {
@@ -201,8 +201,6 @@ class NetworkDiagram(CompositeFigure):
                 kwargs_unused_set = current_kwargs_unused_set
             else:
                 kwargs_unused_set &= current_kwargs_unused_set
-        # for reaction_arrow_param_dict in reaction_arrow_param_dict_list:
-        #     move_and_scale_parameter_dict(reaction_arrow_param_dict, scale, bottom_left_offset, arrow=True)
         reaction_list = [
             current_class(**reaction_arrow_param_dict)
             for current_class, reaction_arrow_param_dict in zip(reaction_class_list, reaction_arrow_param_dict_list)]
@@ -224,7 +222,7 @@ class NetworkDiagram(CompositeFigure):
 center_name = ParameterName.center
 
 
-def diagram_layout_generator(metabolite_radius, width, height_to_width_ratio, mode):
+def default_diagram_layout_generator(metabolite_radius, width, height_to_width_ratio, mode):
     height = width * height_to_width_ratio
     left_right_margin = 0.05
     background_ratio = 0.6
@@ -436,4 +434,99 @@ def diagram_layout_generator(metabolite_radius, width, height_to_width_ratio, mo
 
     return metabolite_circle_config_dict, metabolite_ellipse_config_dict, reaction_location_dict, \
         background_range, mito_background_range, tca_cycle_center, tca_cycle_radius
+
+
+class FreeNetworkDiagram(CompositeFigure):
+    total_width = 1
+    total_height = 1.2
+
+    @staticmethod
+    def calculate_center(self, scale, *args):
+        return Vector(self.total_width, self.total_height) / 2 * scale
+
+    def __init__(self, diagram_layout_generator=None, **kwargs):
+        total_width = self.total_width
+        total_height = self.total_height
+        height_to_width_ratio = total_height / total_width
+        self.height_to_width_ratio = height_to_width_ratio
+        size_vector = Vector(self.total_width, total_height)
+
+        common_circle_param_dict = dict(NetworkDiagramConfig.metabolite_config)
+        radius = common_circle_param_dict[ParameterName.radius]
+
+        (
+            metabolite_circle_config_dict, metabolite_ellipse_config_dict, reaction_location_tuple_dict,
+            background_config_dict) = diagram_layout_generator(
+            radius, total_width, total_height)
+
+        metabolite_circle_param_dict_list = [
+            {
+                **common_circle_param_dict,
+                ParameterName.name: metabolite_name,
+                **metabolite_circle_config,
+            } for metabolite_name, metabolite_circle_config in metabolite_circle_config_dict.items()
+        ]
+        metabolite_list = [
+            Circle(**metabolite_circle_param_dict)
+            for metabolite_circle_param_dict in metabolite_circle_param_dict_list]
+        metabolite_list.extend([
+            Ellipse(**metabolite_ellipse_config)
+            for metabolite_ellipse_config in metabolite_ellipse_config_dict.values()
+        ])
+
+        reaction_class_list = []
+        reaction_arrow_param_dict_list = []
+        kwargs_unused_set = None
+        for reaction_name, (state, param1, param2, param_list, other_param_dict) in reaction_location_tuple_dict.items():
+            if len(param_list) == 0:
+                branch_list = None
+            else:
+                branch_list = [
+                    {
+                        ParameterName.stem_location: stem_location,
+                        ParameterName.terminal_location: terminal_location,
+                        ParameterName.arrow: arrow
+                    }
+                    for stem_location, terminal_location, arrow in param_list]
+            if state == ParameterName.normal:
+                current_param_dict = {
+                    ParameterName.tail: param1,
+                    ParameterName.head: param2,
+                    ParameterName.branch_list: branch_list,
+                    **other_param_dict,
+                }
+                current_class = Arrow
+            elif state == ParameterName.cycle:
+                current_param_dict = {
+                    ParameterName.theta_tail: param1,
+                    ParameterName.theta_head: param2,
+                    ParameterName.branch_list: branch_list,
+                    **other_param_dict,
+                }
+                current_class = ArcArrow
+            else:
+                raise ValueError()
+            complete_param_dict = {
+                **NetworkDiagramConfig.reaction_config,
+                **current_param_dict,
+            }
+            reaction_arrow_param_dict_list.append(complete_param_dict)
+            reaction_class_list.append(current_class)
+        reaction_list = [
+            current_class(**reaction_arrow_param_dict)
+            for current_class, reaction_arrow_param_dict in zip(reaction_class_list, reaction_arrow_param_dict_list)]
+
+        background_dict = {
+            name: RoundRectangle(**{
+                **NetworkDiagramConfig.background_config,
+                **config_dict,
+            }) for name, config_dict in background_config_dict.items()}
+
+        network_diagram_dict = {
+            ParameterName.metabolite: {metabolite_obj.name: metabolite_obj for metabolite_obj in metabolite_list},
+            ParameterName.reaction: {reaction_obj.name: reaction_obj for reaction_obj in reaction_list},
+            ParameterName.background: background_dict,
+        }
+        super().__init__(
+            network_diagram_dict, Vector(0, 0), size_vector, background=False, **kwargs)
 

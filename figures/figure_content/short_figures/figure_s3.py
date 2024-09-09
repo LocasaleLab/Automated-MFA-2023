@@ -202,7 +202,7 @@ class SubfigureE(Subfigure):
 
 class FigureS3(Figure):
     figure_label = 'short_figure_s3'
-    figure_title = 'Figure S3'
+    figure_title = 'Supplementary Figure 3'
 
     def __init__(self):
         subfigure_class_list = [
@@ -211,11 +211,6 @@ class FigureS3(Figure):
             SubfigureC,
             SubfigureD,
             SubfigureE,
-            # SubfigureF,
-            # SubfigureG,
-            # SubfigureH,
-            # SubfigureI,
-            # SubfigureJ,
         ]
 
         subfigure_a_height = 0.13

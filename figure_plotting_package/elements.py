@@ -6,6 +6,7 @@ from .data_figure.elements import element_dict as data_figure, ElementName as Da
     Elements as DataFigureElements
 from .diagrams import element_dict as diagram_elements, ElementName as DiagramName, \
     Elements as DiagramElements
+from .common.common_functions import convert_theta_to_coordinate
 
 
 class ElementName(BasicElementName, MetabolicNetworkName, DataFigureName, DiagramName):
@@ -17,6 +18,8 @@ class Elements(BasicElements, MetabolicNetworkElements, DataFigureElements, Diag
     MetabolicNetworkElements = MetabolicNetworkElements
     DataFigureElements = DataFigureElements
     DiagramElements = DiagramElements
+
+    convert_theta_to_coordinate = convert_theta_to_coordinate
 
 
 def merge_dict_with_conflict(*dict_list):

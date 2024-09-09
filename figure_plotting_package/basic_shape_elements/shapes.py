@@ -220,6 +220,9 @@ class PathStep(object):
     def __repr__(self):
         return "{}: {}".format(self.path_operation.name, ",".join([vertex.__str__() for vertex in self.vertex_list]))
 
+    def copy(self):
+        return PathStep(self.path_operation, *self.vertex_list)
+
 
 class EllipseArc(object):
     maximal_degree_each_segment = 30

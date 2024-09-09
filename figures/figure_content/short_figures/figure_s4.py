@@ -242,7 +242,7 @@ class SubfigureG(Subfigure):
 
 class FigureS4(Figure):
     figure_label = 'short_figure_s4'
-    figure_title = 'Figure S4'
+    figure_title = 'Supplementary Figure 4'
 
     def __init__(self):
         subfigure_class_list = [

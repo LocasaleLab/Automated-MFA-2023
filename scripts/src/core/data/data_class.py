@@ -67,12 +67,14 @@ class InputMetaboliteData(object):
 
 def vector_normalize(raw_data_vector, eps_for_mid, metabolite_name=None, total_sum_threshold=None, warn_func=None):
     raw_data_sum = np.sum(raw_data_vector)
+    # data_length = len(raw_data_vector)
     correct_sum = raw_data_sum * (1 + eps_for_mid)
     if correct_sum < 1000 * eps_for_mid or (total_sum_threshold is not None and correct_sum < total_sum_threshold):
         if warn_func is not None:
             warn_func('[Normalization] Data from {} is left out'.format(metabolite_name))
         return None
     return (raw_data_vector + raw_data_sum * eps_for_mid) / correct_sum
+    # return (raw_data_vector + raw_data_sum / data_length * eps_for_mid) / correct_sum
 
 
 class MIDData(object):

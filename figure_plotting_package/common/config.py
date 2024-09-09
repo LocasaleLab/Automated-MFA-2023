@@ -118,6 +118,7 @@ class ParameterName(object):
     ax_total_bottom_left = 'ax_total_bottom_left'
     ax_total_size = 'ax_total_size'
     ax_interval = 'ax_interval'
+    legend_height = 'legend_height'
     legend_center = 'legend_center'
     legend_area_size = 'legend_ax_size'
     legend_width_ratio = 'legend_width_ratio'
@@ -127,6 +128,8 @@ class ParameterName(object):
     twin_x_axis = 'twin_x_axis'
     broken_y_axis = 'broken_y_axis'
     broken_point_y_lim = 'broken_point_y_lim'
+    each_row_figure_height = 'each_row_figure_height'
+    figure_height = 'figure_height'
 
     total_width = 'total_width'
     scale = 'scale'
@@ -215,6 +218,7 @@ class ParameterName(object):
     small_data = 'small_data'
     medium_data = 'medium_data'
     different_simulated_distance = 'different_simulated_distance'
+    carbon_num = 'carbon_num'
 
     # Data figure specific parameter
     figure_data = 'figure_data'
@@ -222,6 +226,7 @@ class ParameterName(object):
     figure_class = 'figure_class'
     figure_type = 'figure_type'
     all_flux = 'all_flux'
+    data_vector = 'data_vector'
     raw_flux_diff_vector = 'raw_flux_diff_vector'
     net_euclidean_distance = 'net_euclidean_distance'
     flux_absolute_distance = 'flux_absolute_distance'

@@ -142,9 +142,12 @@ def specific_solver_constructor(
         solver_constructor = TF2SASolver
     else:
         raise ValueError()
-    solver_obj = solver_converter(base_solver, solver_constructor, mfa_config.solver_config_dict)
-    solver_obj.initialize_solver()
-    return solver_obj
+    if isinstance(base_solver, solver_constructor):
+        return base_solver
+    else:
+        solver_obj = solver_converter(base_solver, solver_constructor, mfa_config.solver_config_dict)
+        solver_obj.initialize_solver()
+        return solver_obj
 
 
 def common_solver_constructor(

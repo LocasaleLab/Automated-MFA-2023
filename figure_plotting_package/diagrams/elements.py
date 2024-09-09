@@ -1,5 +1,5 @@
 from .mid_diagram import MIDDiagram
-from .network_diagram import NetworkDiagram, NetworkDiagramConfig, construct_mixed_metabolite_obj
+from .network_diagram import NetworkDiagram, FreeNetworkDiagram, NetworkDiagramConfig, construct_mixed_metabolite_obj
 from .object_diagrams.element_dict import Mice, Human, CulturedCell
 from .carbon_backbone import CarbonBackbone
 from .axis_diagram import AxisDiagram, AxisDiagramConfig, CrossAxisDiagram, bidirectional_arrow_config_constructor
@@ -26,6 +26,7 @@ class Elements(object):
     MIDDiagram = MIDDiagram
     NetworkDiagram = NetworkDiagram
     NetworkDiagramConfig = NetworkDiagramConfig
+    FreeNetworkDiagram = FreeNetworkDiagram
     construct_mixed_metabolite_obj = construct_mixed_metabolite_obj
     Mice = Mice
     Human = Human

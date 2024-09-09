@@ -39,6 +39,9 @@ class ElementName(object):
 
 class Elements(object):
     Region = Region
+    PathShape = PathShape
+    PathStep = PathStep
+    PathOperation = PathOperation
     DataFigureAxes = DataFigureAxes
     TextBox = TextBox
     Circle = Circle

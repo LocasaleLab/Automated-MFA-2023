@@ -40,6 +40,7 @@ class ColorConfig(object):
     solid_dark_orange = Color(243, 160, 110, a=1)
     purple = Color(112, 48, 160)
     medium_purple = purple.transparency_mix(0.7)
+    light_purple = purple.transparency_mix(0.5)
     green = Color(44, 160, 44)
     light_green = Color(161, 209, 109)
     super_light_green = Color(184, 224, 140)

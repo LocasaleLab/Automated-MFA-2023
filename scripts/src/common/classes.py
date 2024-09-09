@@ -221,7 +221,8 @@ class FinalResult(object):
 
     def _save_data(
             self, current_result_label, final_solution_array, final_time_array, final_loss_array,
-            final_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict):
+            final_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict,
+            solution_id_array=None):
         (
             solution_array_path, time_array_path, loss_array_path, predicted_dict_path, information_path,
             flux_name_index_dict_path, target_experimental_mid_data_dict_path) = self._generate_path(
@@ -233,6 +234,8 @@ class FinalResult(object):
         pickle_save(current_result_information, information_path)
         pickle_save(flux_name_index_dict, flux_name_index_dict_path)
         pickle_save(target_experimental_mid_data_dict, target_experimental_mid_data_dict_path)
+        if solution_id_array is not None:
+            self._save_solution_id(current_result_label, solution_id_array)
 
     def _check_dim_of_new_solution_data(self, current_result_label, new_solution_array):
         current_solution_array_list = self.final_solution_data_dict[current_result_label]
@@ -291,11 +294,12 @@ class FinalResult(object):
                 current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
 
     def add_and_save_result(
-            self, current_result_label, current_result_information, result_list, flux_name_index_dict,
+            self, raw_result_label, current_result_information, result_list, flux_name_index_dict,
             target_experimental_mid_data_dict):
+        result_label = self._update_result_label(raw_result_label)
         final_solution_array, final_time_array, final_loss_array, final_predicted_dict = result_list
         self._save_data(
-            current_result_label, final_solution_array, final_time_array, final_loss_array,
+            result_label, final_solution_array, final_time_array, final_loss_array,
             final_predicted_dict, current_result_information, flux_name_index_dict, target_experimental_mid_data_dict)
 
     def iteration(self, raw_result_label, process_mid_name=True, result_label_suffix_tuple=()):
@@ -444,7 +448,7 @@ class FinalResult(object):
             other_final_result_obj.final_time_data_dict
         )
 
-    def load_current_result_label(self, result_label):
+    def load_current_result_label(self, result_label, result_label_suffix_tuple=()):
         (
             self.final_loss_data_dict[result_label], self.final_solution_data_dict[result_label],
             self.final_flux_name_index_dict[result_label],
@@ -452,7 +456,7 @@ class FinalResult(object):
             self.final_predicted_data_dict[result_label],
             self.final_target_experimental_mid_data_dict[result_label],
             self.final_time_data_dict[result_label]
-        ) = self.iteration(result_label)
+        ) = self.iteration(result_label, result_label_suffix_tuple)
 
     def load_previous_results(self, raw_result_label):
         result_label = self._update_result_label(raw_result_label)

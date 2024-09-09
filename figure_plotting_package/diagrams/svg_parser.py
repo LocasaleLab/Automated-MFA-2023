@@ -436,12 +436,31 @@ def multiple_similar_local_optima_path_str():
     return size_array, mice_dict, transform_dict, []
 
 
+def loss_function_curve_path_str():
+    size_array = np.array([1496, 928], dtype='float64')
+    mice_dict = {
+        'loss': [
+            "M2109.5 4757.99C2176.46 4697.08 2220.25 4679.11 2273.74 4685.03 2327.24 4690.94 2382.65 4738.52 2430.47 "
+            "4793.49 2478.29 4848.46 2526.3 4937.81 2560.68 5014.84 2595.06 5091.87 2611.36 5177.65 2636.76 5255.66 "
+            "2662.16 5333.67 2682.59 5425.78 2713.09 5482.9 2743.59 5540.02 2782 5601.32 2819.75 5598.4 2857.5 5595.48 "
+            "2897.31 5553.3 2939.6 5465.39 2981.9 5377.49 3025.51 5179.97 3073.51 5070.96 3121.52 4961.94 3165.54 "
+            "4841.94 3227.65 4811.32 3289.75 4780.7 3383.67 5006.88 3446.15 4990.3 3508.62 4973.72 3532.26 4681.32 "
+            "3602.5 4677.5"
+        ],
+    }
+    transform_dict = {
+        'loss': '1 0 0 1 -2107 -4674'
+    }
+    return size_array, mice_dict, transform_dict, []
+
+
 def main():
     offsets = []
     # size_array, path_dict, transform_dict, bounds = mice_path_str()
     # size_array, path_dict, transform_dict, bounds, offsets = human_path_str()
     # size_array, path_dict, transform_dict, bounds = one_dominant_global_optimum_path_str()
-    size_array, path_dict, transform_dict, bounds = multiple_similar_local_optima_path_str()
+    # size_array, path_dict, transform_dict, bounds = multiple_similar_local_optima_path_str()
+    size_array, path_dict, transform_dict, bounds = loss_function_curve_path_str()
     parse_func(path_dict, size_array, transform_dict, *bounds, *offsets)
 
 
