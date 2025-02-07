@@ -1,3 +1,5 @@
+import numpy as np
+
 from ...common.config import CoreConstants, ParamName
 from ...common.functions import np_log_eps
 from ..solver_construction_functions.common_construct_functions import apply_mix_equation, \
@@ -98,7 +100,13 @@ def loss_and_mix_operation_list_generator(
             mix_equation, mix_operation_list, complete_emu_name_index_size_dict,
             current_experimental_mid_data_obj.carbon_num, 1, flux_name_index_dict)
         current_experimental_mid_data_vector = current_experimental_mid_data_obj.data_vector
-        loss_operation_list.append((emu_name, emu_index, current_experimental_mid_data_vector))
+        current_invalid_index_list = current_experimental_mid_data_obj.invalid_index_list
+        if current_invalid_index_list is not None:
+            valid_index_set = set(range(len(current_experimental_mid_data_vector))) - set(current_invalid_index_list)
+            valid_index_array = np.array(sorted(valid_index_set))
+        else:
+            valid_index_array = np.array([], dtype=int)
+        loss_operation_list.append((emu_name, emu_index, current_experimental_mid_data_vector, valid_index_array))
         target_mid_data_dict[emu_name] = current_experimental_mid_data_vector
         emu_name_experimental_name_dict[emu_name] = current_experimental_mid_data_obj.name
         experimental_mid_data_vector_list.append(current_experimental_mid_data_vector)

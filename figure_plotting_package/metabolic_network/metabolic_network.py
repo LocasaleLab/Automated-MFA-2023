@@ -17,7 +17,7 @@ def set_and_convert_network_elements(
         boundary_flux_set=None, hidden_metabolite_set=None, hidden_reaction_set=None,
         metabolite_data_sensitivity_state_dict=None, reaction_data_sensitivity_state_dict=None,
         display_flux_name=False, reaction_text_dict=None, reaction_text_config_dict=None,
-        reaction_raw_value_dict=None, flux_value_mapper=None, extra_parameter_dict=None):
+        reaction_raw_value_dict=None, flux_value_mapper=None, extra_parameter_dict=None, **kwargs):
     """
     Priority:
     display_flux_name > reaction_text_dict > reaction_raw_value_dict

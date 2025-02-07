@@ -151,4 +151,19 @@ def check_if_mix_flux(flux_name: str):
 
 
 def check_if_biomass_flux(flux_name: str):
-    return flux_name == CoreConstants.biomass_flux_id
+    # return flux_name == CoreConstants.biomass_flux_id
+    return flux_name.startswith(CoreConstants.biomass_flux_id)
+
+
+def biomass_reaction_dict_constructor(biomass_metabolite_name_list):
+    biomass_reaction_dict_list = []
+    for biomass_reaction_index, biomass_metabolite_name in enumerate(biomass_metabolite_name_list):
+        biomass_reaction_dict_list.append(
+            {
+                'id': f'{CoreConstants.biomass_flux_id}_{biomass_reaction_index + 1}',
+                'sub': [
+                    (biomass_metabolite_name, '',),
+                    ],
+                'pro': [(CoreConstants.biomass_metabolite_id, '')],
+        },)
+    return biomass_reaction_dict_list

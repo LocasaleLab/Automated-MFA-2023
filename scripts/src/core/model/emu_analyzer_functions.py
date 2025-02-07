@@ -1,6 +1,7 @@
 from ..common.packages import Counter, PriorityQueue
 from ..common.classes import DefaultDict
 from ..common.config import CoreConstants
+from ..common.functions import check_if_biomass_flux
 
 from .model_class import EMUElement
 from ..common.classes import DictList
@@ -116,7 +117,8 @@ def emu_equation_analyzer(
         _, analyzing_emu = emu_need_to_add.get()
         for reaction in metabolite_reaction_dict[analyzing_emu.metabolite_name]:
             reaction_id = reaction.reaction_id
-            if reaction_id == CoreConstants.biomass_flux_id:
+            # if reaction_id == CoreConstants.biomass_flux_id:
+            if check_if_biomass_flux(reaction_id):
                 continue
             overlapped_emu_dict_combination_list = find_overlapped_emu(analyzing_emu, reaction)
             for coefficient, emu_dict_combination in overlapped_emu_dict_combination_list:
@@ -175,7 +177,8 @@ def emu_dependency_analyzer(metabolite_reaction_dict, input_metabolite_name_set,
             emu_name_dependency_dict[current_emu_full_name] = {}
         for reaction in metabolite_reaction_dict[current_emu_obj.metabolite_name]:
             reaction_id = reaction.reaction_id
-            if reaction_id == CoreConstants.biomass_flux_id:
+            # if reaction_id == CoreConstants.biomass_flux_id:
+            if check_if_biomass_flux(reaction_id):
                 continue
             overlapped_emu_dict_combination_list = find_overlapped_emu(current_emu_obj, reaction)
             """

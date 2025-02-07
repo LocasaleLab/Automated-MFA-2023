@@ -122,6 +122,8 @@ class PatchLegend(CompositeFigure):
             location_config_dict, ParameterName.total_verti_edge_ratio, LegendConfig.legend_verti_edge_ratio)
         row_verti_edge_ratio = default_parameter_extract(
             location_config_dict, ParameterName.row_verti_edge_ratio, LegendConfig.legend_row_verti_edge_ratio)
+        patch_text_distance_ratio = default_parameter_extract(
+            location_config_dict, ParameterName.patch_text_distance_ratio, LegendConfig.patch_text_distance_ratio)
         real_col_size = width / (col_num * (1 + 2 * col_horiz_edge_ratio) + 2 * total_horiz_edge_ratio)
         col_size_with_margin = real_col_size * (1 + 2 * col_horiz_edge_ratio)
         left_right_margin = real_col_size * total_horiz_edge_ratio
@@ -131,7 +133,7 @@ class PatchLegend(CompositeFigure):
         top_bottom_margin = real_row_size * total_verti_edge_ratio
         patch_height = real_row_size * LegendConfig.patch_height_shrink
         patch_width = patch_height / LegendConfig.patch_height_to_width_ratio
-        patch_text_distance = real_col_size * LegendConfig.patch_text_distance_ratio
+        patch_text_distance = real_col_size * patch_text_distance_ratio
         text_font_size = real_col_size * LegendConfig.text_font_size_ratio
         text_width = real_col_size - patch_width - patch_text_distance
 

@@ -59,6 +59,7 @@ def rotate_corner_offset_around_center(center, corner_offset_matrix, angle):
 
 
 def convert_theta_to_coordinate(theta, center, radius):
+    """radius could be Vector obj to calculate point in ellipse"""
     theta_cos_sin = cos_sin(theta)
     return center + radius * theta_cos_sin
 
@@ -248,6 +249,41 @@ def calculate_center_radius_angle_of_three_points_on_circle(tail: Vector, mid: V
     return center, radius, angle_triple
 
 
+def calculate_point_direction_to_center_radius_intersect_theta(point, direct_vector, center, radius):
+    """cycle center: (0, 0), direction_vector: (-1, 0)"""
+    relative_point = center - point
+    vertical_direct_vector = direct_vector.vertical_vector()
+
+    if vertical_direct_vector @ relative_point > 0:
+        to_center_vertical_direction_vector = vertical_direct_vector
+    else:
+        to_center_vertical_direction_vector = -vertical_direct_vector
+    to_center_chord_center_len = relative_point @ to_center_vertical_direction_vector
+    real_chord_loc = center - to_center_chord_center_len * to_center_vertical_direction_vector
+    real_chord_vector_angle = np.rad2deg(np.arccos((real_chord_loc[0] - center[0]) / to_center_chord_center_len))
+    if real_chord_loc[1] < center[1]:
+        real_chord_vector_angle += 180
+    abs_half_sector_angle = np.rad2deg(np.arccos(to_center_chord_center_len / radius))
+    smaller_start_angle = (real_chord_vector_angle - abs_half_sector_angle) % 360
+    larger_start_angle = (real_chord_vector_angle + abs_half_sector_angle) % 360
+
+    point_real_angle = np.rad2deg(np.arccos(-relative_point[0] / relative_point.length))
+    if -relative_point[1] < 0:
+        point_real_angle += 180
+    point_ccw_rotation = np.cross(-relative_point, direct_vector)
+    if point_ccw_rotation > 0:
+        if smaller_start_angle > point_real_angle:
+            start_angle = smaller_start_angle
+        else:
+            start_angle = larger_start_angle
+    else:
+        if larger_start_angle < point_real_angle:
+            start_angle = larger_start_angle
+        else:
+            start_angle = smaller_start_angle
+    return start_angle
+
+
 basic_shape_parameter_set = {
     ParameterName.name,
     ParameterName.edge_width,
@@ -300,3 +336,43 @@ def calculate_center_bottom_offset(insider_center: Vector, outsider_size: Vector
 
 def unit_decorator(func):
     return func
+
+
+def calculate_intersect_angle_between_ellipse(
+        e1_center, e1_half_width, e1_half_height, e2_center, e2_half_width, e2_half_height=None):
+    import sympy as sp
+    relative_e2_center = e2_center - e1_center
+    e2_center_x, e2_center_y = relative_e2_center
+    if e2_half_height is None:
+        e2_half_height = e2_half_width
+    """
+        e1_half_width * cos(theta1) = e2_center_x + e2_half_width * cos(theta2)
+        e1_half_height * sin(theta1) = e2_center_y + e2_half_height * sin(theta2)
+        
+        e11 * cos(theta1) = c1 + e21 * cos(theta2)
+        e12 * sin(theta1) = c2 + e22 * sin(theta2)
+        
+        (c1 + e21 * cos(theta2)) ** 2 / (e11) ** 2 + (c2 + e22 * sin(theta2)) ** 2 / (e12) ** 2 - 1 = 0
+        
+        (c1 / e11) ^ 2 + 2 * (c1 * e21 / e11 ^ 2) * cos(theta2) + (e21 / e11) ^ 2 * (cos(theta2)) ^ 2
+         + (c2 / e12) ^ 2 + 2 * (c2 * e22 / (e12) ^ 2) * sin(theta2) + (e22 / e12) ^ 2 * (sin(theta2)) ^ 2 - 1 = 0
+    """
+    middle_theta1 = calculate_degree_of_vector(relative_e2_center)
+    middle_theta2 = calculate_degree_of_vector(-relative_e2_center)
+    distance = relative_e2_center.length
+    theta1_delta = np.rad2deg(np.arctan((e2_half_width + e2_half_height) / 2 / distance))
+    theta2_delta = np.rad2deg(np.arctan((e1_half_width + e1_half_height) / 2 / distance))
+    if relative_e2_center.y > 0:
+        upper_initial_theta = (middle_theta1 + theta1_delta, 360 + middle_theta2 - theta2_delta)
+        lower_initial_theta = (middle_theta1 - theta1_delta, middle_theta2 + theta2_delta)
+    else:
+        upper_initial_theta = (middle_theta1 + theta1_delta, middle_theta2 - theta2_delta)
+        lower_initial_theta = (middle_theta1 - theta1_delta, middle_theta2 - 360 + theta2_delta)
+    theta1 = sp.Symbol('theta1')
+    theta2 = sp.Symbol('theta2')
+    pi_180 = sp.pi / 180
+    f1 = e1_half_width * sp.cos(theta1 * pi_180) - e2_center_x - e2_half_width * sp.cos(theta2 * pi_180)
+    f2 = e1_half_height * sp.sin(theta1 * pi_180) - e2_center_y - e2_half_height * sp.sin(theta2 * pi_180)
+    upper_theta1, upper_theta2 = sp.nsolve((f1, f2), (theta1, theta2), upper_initial_theta)
+    lower_theta1, lower_theta2 = sp.nsolve((f1, f2), (theta1, theta2), lower_initial_theta)
+    return float(upper_theta1), float(upper_theta2), float(lower_theta1), float(lower_theta2)

@@ -63,14 +63,6 @@ class OptimizationDiagramConfig(object):
     arc_chevron_width = CommonElementConfig.arc_chevron_width
     chevron_config = CommonElementConfig.chevron_config
 
-    # simulated_background_config_dict = {
-    #     ParameterName.text: TextConfig.main_text_font,
-    #     ParameterName.radius: 0.02,
-    #     # ParameterName.face_color: ColorConfig.medium_light_blue,
-    #     ParameterName.face_color: ColorConfig.medium_light_bright_blue,
-    #     ParameterName.edge_width: None,
-    #     ParameterName.z_order: bottom_z_order
-    # }
     simulated_background_config_dict = CommonElementConfig.simulated_background_config_dict
 
     no_1_string = CommonFigureString.no_1_string

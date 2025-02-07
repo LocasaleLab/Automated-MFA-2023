@@ -1,3 +1,5 @@
+from multiprocessing.dummy import current_process
+
 from .config import enum, np, mpath, mpatches, transforms, mlines, Color, Vector, black_color, LineStyle, JoinStyle
 from .config import rotate_corner_offset_around_center, calculate_top_right_point, \
     calculate_bottom_left_point, cos_sin, initialize_vector_input, check_enum_obj, \
@@ -39,7 +41,10 @@ class BasicShape(Region):
         if self.mpl_patch is None:
             self.convert_to_mpl_patch()
         assert self.mpl_patch is not None
-        current_patch = ax.add_patch(self.mpl_patch)
+        if isinstance(self.mpl_patch, mlines.Line2D):
+            current_patch = ax.add_line(self.mpl_patch)
+        else:
+            current_patch = ax.add_patch(self.mpl_patch)
         current_patch.set_transform(transformation)
         return current_patch
 
@@ -122,7 +127,7 @@ class Rectangle(BasicShape):
         self.mpl_patch = mpatches.Rectangle(
             # self.bottom_left.to_tuple(),
             self.square_bottom_left_point,
-            self.width, self.height, self.angle,
+            self.width, self.height, angle=self.angle,
             fill=self.fill, linestyle=self.edge_style, linewidth=self.edge_width,
             edgecolor=self.edge_color, facecolor=self.face_color, zorder=self.z_order, joinstyle=self.join_style)
 
@@ -223,6 +228,9 @@ class PathStep(object):
     def copy(self):
         return PathStep(self.path_operation, *self.vertex_list)
 
+    def offset_inplace(self, offset_vector: Vector):
+        self.vertex_list = [vertex + offset_vector for vertex in self.vertex_list]
+
 
 class EllipseArc(object):
     maximal_degree_each_segment = 30
@@ -261,17 +269,17 @@ class EllipseArc(object):
         assert half_width > 0
         if half_height is not None:
             assert half_height > 0
-        delta_theta = np.abs(theta2 - theta1)
+        delta_theta = np.round(np.abs(theta2 - theta1), decimals=6)
         if delta_theta in self.unit_circle_point_dict:
             unit_circle_point_list = self.unit_circle_point_dict[delta_theta]
         else:
             segment_num = int(np.ceil(delta_theta / self.maximal_degree_each_segment))
             each_segment_delta_theta = delta_theta / segment_num
             if each_segment_delta_theta in self.unit_circle_point_dict:
-                unit_circle_each_segment_point = self.unit_circle_point_dict[each_segment_delta_theta]
+                unit_circle_each_segment_point = self.unit_circle_point_dict[each_segment_delta_theta][0]
             else:
                 unit_circle_each_segment_point = EllipseArc.four_control_point(each_segment_delta_theta)
-                self.unit_circle_point_dict[each_segment_delta_theta] = unit_circle_each_segment_point
+                self.unit_circle_point_dict[each_segment_delta_theta] = [unit_circle_each_segment_point]
             unit_circle_point_list = [unit_circle_each_segment_point]
             segment_rotate_trans = transforms.Affine2D()
             for index in range(1, segment_num):
@@ -280,8 +288,6 @@ class EllipseArc(object):
                 unit_circle_point_list.append(updated_control_point)
             self.unit_circle_point_dict[delta_theta] = unit_circle_point_list
         if theta2 < theta1:
-            # unit_circle_point_list = [
-            #     unit_circle_point[::-1] for unit_circle_point in reversed(unit_circle_point_list)]
             unit_circle_point_list = [
                 unit_circle_point @ np.array([[1, 0], [0, -1]]) for unit_circle_point in unit_circle_point_list]
         theta1_rotate_trans = transforms.Affine2D().rotate_deg(theta1)
@@ -366,7 +372,8 @@ class PathRectangle(PathShape):
     def __init__(
             self, center: Vector, width: float, height: float, angle=0,
             scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
-        assert -45 <= angle <= 45
+        # assert -45 <= angle <= 45
+        assert -90 <= angle <= 90
         assert width > 0
         assert height > 0
         self.center = initialize_vector_input(center)
@@ -521,6 +528,52 @@ class Capsule(PathRectangle):
         return path_step_list
 
 
+class Hexagon(PathRectangle):
+    sqrt_3 = np.sqrt(3)
+
+    def __init__(
+            self, center: Vector, radius: float, angle=0, **kwargs):
+        assert radius > 0
+        assert -60 < angle <= 60
+        self.center = center
+        self.radius = radius
+        self.angle = angle
+        width = radius * self.sqrt_3
+        height = 2 * radius
+        PathRectangle.__init__(self, center, width, height, angle, **kwargs)
+
+    def path_step_generator(self):
+        center = self.center
+        radius = self.radius
+        angle = self.angle
+
+        top_point_offset = Vector(0, radius)
+        side_point_offset_y = radius / 2
+        side_point_offset_x = side_point_offset_y * self.sqrt_3
+
+        original_hexagon_point_list = [
+            top_point_offset,
+            Vector(-side_point_offset_x, side_point_offset_y),
+            Vector(-side_point_offset_x, -side_point_offset_y),
+            -top_point_offset,
+            Vector(side_point_offset_x, -side_point_offset_y),
+            Vector(side_point_offset_x, side_point_offset_y),
+        ]
+        rotate_trans = transforms.Affine2D().rotate_deg(angle)
+        hexagon_point_array = rotate_trans.transform(original_hexagon_point_list) + center
+
+        path_step_list = [
+            PathStep(PathOperation.moveto, hexagon_point_array[0]),
+            *[
+                PathStep(PathOperation.lineto, hexagon_point_array[i])
+                for i in range(1, 6)
+            ],
+            PathStep(PathOperation.lineto, hexagon_point_array[0]),
+            PathStep(PathOperation.closepoly)
+        ]
+        return path_step_list
+
+
 class Brace(PathShape):
     def __init__(
             self, head: Vector, left_tail: Vector, right_tail: Vector, radius: float,
@@ -598,4 +651,58 @@ class Brace(PathShape):
             head_to_right_straight_line,
             *right_tail_arc_path_list,
         ]
+        return path_step_list
+
+
+class Cross(PathShape):
+    def __init__(
+            self, center: Vector, width: float, stem_width: float, height=None, angle=0,
+            scale=1, bottom_left_offset=None, base_z_order=0, z_order_increment=1, **kwargs):
+        assert -45 <= angle <= 45
+        assert width > 0
+        assert stem_width > 0
+        assert width > stem_width
+        self.center = initialize_vector_input(center)
+        self.width = width
+        if height is None:
+            height = width
+        self.height = height
+        self.stem_width = stem_width
+        self.angle = angle
+        self.move_and_scale(scale, bottom_left_offset, base_z_order, z_order_increment, reset_vertex_array=False)
+        path_step_list = self.path_step_generator()
+        PathShape.__init__(self, path_step_list, **kwargs)
+
+    def path_step_generator(self):
+        half_width = self.width / 2
+        half_height = self.height / 2
+        half_stem_width = self.stem_width / 2
+
+        corner_offset_matrix = np.array([
+            [- half_width, half_stem_width],
+            [- half_width, - half_stem_width],
+            [- half_stem_width, - half_stem_width],
+            [- half_stem_width, - half_height],
+            [half_stem_width, - half_height],
+            [half_stem_width, - half_stem_width],
+            [half_width, - half_stem_width],
+            [half_width, half_stem_width],
+            [half_stem_width, half_stem_width],
+            [half_stem_width, half_height],
+            [- half_stem_width, half_height],
+            [- half_stem_width, half_stem_width],])
+
+        point_location_cross = rotate_corner_offset_around_center(
+            self.center, corner_offset_matrix, self.angle)
+        path_step_list = []
+        point_num = len(corner_offset_matrix)
+        for edge_index in range(point_num):
+            if edge_index == 0:
+                operation = PathOperation.moveto
+            else:
+                operation = PathOperation.lineto
+            path_step_list.append(PathStep(operation, point_location_cross[edge_index]))
+            if edge_index == point_num - 1:
+                path_step_list.append(PathStep(PathOperation.lineto, point_location_cross[0]))
+                path_step_list.append(PathStep(PathOperation.closepoly))
         return path_step_list

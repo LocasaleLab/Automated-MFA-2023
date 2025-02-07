@@ -1,8 +1,31 @@
 from .config import basic_shape_parameter_set, load_required_parameter, convert_theta_to_coordinate, \
     unit_decorator
 from .config import np, Vector, Arrow, ArcArrow, complete_arrow_parameter_set_dict, \
-    ParameterName, ZOrderConfig, ColorConfig
-from .config import CompositeFigure, Circle, RoundRectangle, Ellipse
+    ParameterName, ZOrderConfig, ColorConfig, common_text_config_dict, SegmentedLinearMappers
+from .config import CompositeFigure, Capsule, Circle, RoundRectangle, Ellipse, TextBox
+
+
+class SimpleTransparencyGenerator(SegmentedLinearMappers):
+    min_transparency = 0.3
+    max_transparency = 1
+    input_ratio_output_value_dict = {
+        0: 0.3,
+        0.6: 0.8,
+        1: 1
+    }
+
+    def __init__(self, flux_value_list, ):
+        flux_value_array = np.array(flux_value_list)
+        min_max_net_flux_value_pair = (np.min(flux_value_array), np.max(flux_value_array))
+        super().__init__(
+            min_max_input_value_pair=min_max_net_flux_value_pair,
+            relative_ratio_output_value_dict=self.input_ratio_output_value_dict,
+            min_max_output_value_pair=(self.min_transparency, self.max_transparency)
+        )
+
+    def __call__(self, net_flux_value):
+        output_transparency = self.segment_linear_mapper_func(net_flux_value)
+        return {ParameterName.alpha: output_transparency}
 
 
 class NetworkDiagramConfig(object):
@@ -24,6 +47,16 @@ class NetworkDiagramConfig(object):
         **metabolite_config,
         ParameterName.z_order: mixed_metabolite_z_order,
     }
+    metabolite_capsule_config_dict = {
+        ParameterName.width: 0.15,
+        ParameterName.height: 0.08
+    }
+    metabolite_capsule_text_config = {
+        **common_text_config_dict,
+        ParameterName.font_color: ColorConfig.white_color,
+        ParameterName.font_size: 29,
+        ParameterName.z_order: metabolite_z_order + ZOrderConfig.z_order_increment
+    }
 
     disabled_metabolite_color = ColorConfig.medium_light_gray
     measured_metabolite_color = ColorConfig.mid_metabolite_color
@@ -38,6 +71,17 @@ class NetworkDiagramConfig(object):
         ParameterName.z_order: reaction_z_order,
         ParameterName.tail_arrow: False
     }
+    cross_config = {
+        **reaction_config,
+        ParameterName.width: 0.07,
+        ParameterName.stem_width: 0.022,
+    }
+    reaction_text_config = {
+        **common_text_config_dict,
+        ParameterName.font_size: 11,
+        ParameterName.z_order: reaction_z_order + ZOrderConfig.z_order_increment
+    }
+    reaction_value_digit = 0
 
     common_background_config = {
         ParameterName.edge_width: None,
@@ -117,7 +161,7 @@ class NetworkDiagram(CompositeFigure):
         total_width, height_to_width_ratio = self._calculate_width_and_ratio(mode)
         return Vector(total_width, total_width * height_to_width_ratio) / 2 * scale
 
-    def __init__(self, mode=ParameterName.normal, layout_decorator=None, **kwargs):
+    def __init__(self, mode=ParameterName.normal, layout_decorator=None, visualize_flux_value=None, **kwargs):
         total_width, height_to_width_ratio = self._calculate_width_and_ratio(mode)
         self.total_width = total_width
         total_height = self.total_width * height_to_width_ratio
@@ -130,7 +174,14 @@ class NetworkDiagram(CompositeFigure):
         common_circle_param_dict = {}
         load_required_parameter(common_circle_param_dict, NetworkDiagramConfig.metabolite_config, circle_parameter_set)
         kwargs_unused_set1 = load_required_parameter(common_circle_param_dict, kwargs, circle_parameter_set)
+
         radius = common_circle_param_dict[ParameterName.radius]
+        if visualize_flux_value is not None:
+            flux_value_mapper = SimpleTransparencyGenerator(list(visualize_flux_value.values()))
+            radius -= 0.015
+            common_circle_param_dict[ParameterName.radius] = radius
+        else:
+            flux_value_mapper = None
 
         if layout_decorator is None:
             layout_decorator = unit_decorator
@@ -155,6 +206,7 @@ class NetworkDiagram(CompositeFigure):
             Ellipse(**metabolite_ellipse_config)
             for metabolite_ellipse_config in metabolite_ellipse_config_dict.values()
         ])
+        text_config_dict = {}
 
         reaction_class_list = []
         reaction_arrow_param_dict_list = []
@@ -179,6 +231,7 @@ class NetworkDiagram(CompositeFigure):
                 arrow_parameter_set = complete_arrow_parameter_set_dict[ParameterName.common] | \
                     complete_arrow_parameter_set_dict[Arrow.__name__] | basic_shape_parameter_set
                 current_class = Arrow
+                text_center = (param1 + param2) / 2
             elif state == ParameterName.cycle:
                 current_param_dict = {
                     ParameterName.theta_tail: param1,
@@ -190,11 +243,29 @@ class NetworkDiagram(CompositeFigure):
                 arrow_parameter_set = complete_arrow_parameter_set_dict[ParameterName.common] | \
                     complete_arrow_parameter_set_dict[ArcArrow.__name__] | basic_shape_parameter_set
                 current_class = ArcArrow
+                text_center = convert_theta_to_coordinate(
+                    (param1 + param2) / 2, tca_cycle_center, tca_cycle_radius)
             else:
                 raise ValueError()
             load_required_parameter(
                 current_param_dict, NetworkDiagramConfig.reaction_config, arrow_parameter_set)
             current_kwargs_unused_set = load_required_parameter(current_param_dict, kwargs, arrow_parameter_set)
+            if visualize_flux_value is not None and reaction_name in visualize_flux_value:
+                reaction_value = visualize_flux_value[reaction_name]
+                current_param_dict.update(flux_value_mapper(reaction_value))
+                if reaction_name in default_reaction_offset_dict:
+                    reaction_offset = default_reaction_offset_dict[reaction_name]
+                else:
+                    reaction_offset = Vector(0, 0)
+                format_string = f'{{:.{NetworkDiagramConfig.reaction_value_digit}f}}'
+                text_config_dict[f'{reaction_name}_value'] = {
+                    **NetworkDiagramConfig.reaction_text_config,
+                    ParameterName.font_size: 35,
+                    ParameterName.width: 0.05,
+                    ParameterName.height: 0.02,
+                    ParameterName.string: format_string.format(reaction_value),
+                    ParameterName.center: text_center + reaction_offset
+                }
             reaction_arrow_param_dict_list.append(current_param_dict)
             reaction_class_list.append(current_class)
             if kwargs_unused_set is None:
@@ -215,6 +286,10 @@ class NetworkDiagram(CompositeFigure):
             mito_background_obj = generate_background_obj(
                 mito_background_range, NetworkDiagramConfig.mito_background_config, kwargs)
             network_diagram_dict[ParameterName.background]['mitochondria_background'] = mito_background_obj
+        if len(text_config_dict) > 0:
+            network_diagram_dict[ParameterName.text] = {
+                name: TextBox(**text_config) for name, text_config in text_config_dict.items()
+            }
         super().__init__(
             network_diagram_dict, Vector(0, 0), size_vector, background=False, **kwargs)
 
@@ -436,6 +511,26 @@ def default_diagram_layout_generator(metabolite_radius, width, height_to_width_r
         background_range, mito_background_range, tca_cycle_center, tca_cycle_radius
 
 
+default_side_offset = 0.075
+default_top_offset = 0.065
+default_reaction_offset_dict = {
+    'glc_g6p': Vector(default_side_offset, 0),
+    'g6p_3pg': Vector(-default_side_offset, 0),
+    '3pg_pyr': Vector(default_side_offset, 0),
+    'g6p_rib': Vector(0, default_top_offset),
+    '3pg_ser': Vector(0, default_top_offset),
+    'pyr_lac': Vector(0, default_top_offset),
+    'glu_akg': Vector(default_side_offset, 0),
+    'oac_cit': Vector(0, -default_top_offset),
+    'cit_akg': Vector(default_side_offset, 0),
+    'akg_suc': Vector(0, -default_top_offset),
+    'suc_oac': Vector(-default_side_offset, 0),
+    'glu_c_akg': Vector(0, 0),
+    'glu_c_glu_e': Vector(0, 0),
+    'cit_exchange': Vector(0, 0),
+}
+
+
 class FreeNetworkDiagram(CompositeFigure):
     total_width = 1
     total_height = 1.2
@@ -476,8 +571,8 @@ class FreeNetworkDiagram(CompositeFigure):
 
         reaction_class_list = []
         reaction_arrow_param_dict_list = []
-        kwargs_unused_set = None
-        for reaction_name, (state, param1, param2, param_list, other_param_dict) in reaction_location_tuple_dict.items():
+        for reaction_name, (
+                state, param1, param2, param_list, other_param_dict) in reaction_location_tuple_dict.items():
             if len(param_list) == 0:
                 branch_list = None
             else:
@@ -530,3 +625,114 @@ class FreeNetworkDiagram(CompositeFigure):
         super().__init__(
             network_diagram_dict, Vector(0, 0), size_vector, background=False, **kwargs)
 
+
+class FreeNetworkWithTextDiagram(CompositeFigure):
+    total_width = 1
+    total_height = 1.2
+
+    def __init__(self, diagram_layout_generator=None, **kwargs):
+        common_circle_param_dict = dict(NetworkDiagramConfig.metabolite_config)
+        radius = common_circle_param_dict[ParameterName.radius]
+        (
+            total_width, total_height, metabolite_capsule_or_circle_config_dict, metabolite_text_config_dict,
+            reaction_location_tuple_dict, reaction_text_config_dict, background_config_dict, other_element_config_dict,
+        ) = diagram_layout_generator(radius)
+
+        self.total_width = total_width
+        self.total_height = total_height
+        height_to_width_ratio = total_height / total_width
+        self.height_to_width_ratio = height_to_width_ratio
+        size_vector = Vector(self.total_width, total_height)
+
+        metabolite_circle_param_dict_list = [
+            {
+                **common_circle_param_dict,
+                ParameterName.name: metabolite_name,
+                **metabolite_circle_config,
+            } for metabolite_name, metabolite_circle_config in metabolite_capsule_or_circle_config_dict.items()
+        ]
+        metabolite_list = [
+            Capsule(**metabolite_circle_param_dict)
+            if ParameterName.width in metabolite_circle_param_dict
+            else Circle(**metabolite_circle_param_dict)
+            for metabolite_circle_param_dict in metabolite_circle_param_dict_list]
+        metabolite_text_dict = {
+            text_name: TextBox(**{
+                **NetworkDiagramConfig.metabolite_capsule_text_config,
+                ParameterName.name: text_name,
+                **text_config_dict,
+            }) for text_name, text_config_dict in metabolite_text_config_dict.items()
+        }
+
+        reaction_class_list = []
+        reaction_arrow_param_dict_list = []
+        for reaction_name, (
+                state, param1, param2, param_list, other_param_dict) in reaction_location_tuple_dict.items():
+            if len(param_list) == 0:
+                branch_list = None
+            else:
+                branch_list = [
+                    {
+                        ParameterName.stem_location: stem_location,
+                        ParameterName.terminal_location: terminal_location,
+                        ParameterName.arrow: arrow
+                    }
+                    for stem_location, terminal_location, arrow in param_list]
+            if state == ParameterName.normal:
+                current_param_dict = {
+                    ParameterName.tail: param1,
+                    ParameterName.head: param2,
+                    ParameterName.branch_list: branch_list,
+                    **other_param_dict,
+                }
+                current_class = Arrow
+            elif state == ParameterName.cycle:
+                current_param_dict = {
+                    ParameterName.theta_tail: param1,
+                    ParameterName.theta_head: param2,
+                    ParameterName.branch_list: branch_list,
+                    **other_param_dict,
+                }
+                current_class = ArcArrow
+            else:
+                raise ValueError()
+            complete_param_dict = {
+                **NetworkDiagramConfig.reaction_config,
+                **current_param_dict,
+            }
+            reaction_arrow_param_dict_list.append(complete_param_dict)
+            reaction_class_list.append(current_class)
+        reaction_list = [
+            current_class(**reaction_arrow_param_dict)
+            for current_class, reaction_arrow_param_dict in zip(reaction_class_list, reaction_arrow_param_dict_list)]
+        reaction_text_dict = {
+            text_name: TextBox(**{
+                **NetworkDiagramConfig.reaction_text_config,
+                ParameterName.name: text_name,
+                **text_config_dict,
+            }) for text_name, text_config_dict in reaction_text_config_dict.items()
+        }
+
+        background_dict = {
+            name: RoundRectangle(**{
+                **NetworkDiagramConfig.background_config,
+                **config_dict,
+            }) for name, config_dict in background_config_dict.items()}
+
+        other_element_dict = {
+            name: element_class(**element_dict)
+            for name, (element_class, element_dict) in other_element_config_dict.items()
+        }
+
+        network_diagram_dict = {
+            ParameterName.metabolite: {metabolite_obj.name: metabolite_obj for metabolite_obj in metabolite_list},
+            ParameterName.reaction: {reaction_obj.name: reaction_obj for reaction_obj in reaction_list},
+            ParameterName.background: background_dict,
+            ParameterName.text: {
+                **metabolite_text_dict,
+                **reaction_text_dict,
+            },
+            ParameterName.other_obj: other_element_dict
+        }
+        super().__init__(
+            network_diagram_dict, Vector(0, 0), size_vector, **kwargs)

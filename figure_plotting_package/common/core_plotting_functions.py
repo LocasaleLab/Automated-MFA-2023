@@ -1,3 +1,5 @@
+from inspect import stack
+
 from .built_in_packages import enum, defaultdict, it
 from .third_party_packages import plt, np, mcolors, cm, mpatches
 from .light_weight_functions import round_to_str_with_fixed_point, default_parameter_extract
@@ -710,8 +712,8 @@ def get_twin_axis_numeric_parameters(target_parameter, assert_func):
 
 
 def bar_plot_warp_func(
-        ax, x_loc, data_array, width, face_color, label=None, error_bar_data_vector=None, error_bar_color=None,
-        cap_size=None, edge_width=None, z_order=None, alpha=None):
+        ax, x_loc, data_array, width, face_color, label=None, bar_bottom=0, error_bar_data_vector=None,
+        error_bar_color=None, cap_size=None, edge_width=None, z_order=None, alpha=None):
     if error_bar_color is None:
         try:
             error_bar_color = face_color.add_transparency(1)
@@ -730,7 +732,7 @@ def bar_plot_warp_func(
     if alpha_set:
         alpha = None
     ax.bar(
-        x_loc, data_array, width=width, label=label,
+        x_loc, data_array, width=width, bottom=bar_bottom, label=label,
         color=face_color, yerr=error_bar_data_vector, error_kw=error_bar_param_dict, zorder=z_order, alpha=alpha)
 
 
@@ -738,7 +740,8 @@ def core_single_ax_bar_plot(
         ax, array_data_dict, color_dict, error_bar_data_dict, array_len,
         bar_total_width, edge, y_lim=None, y_ticks=None, cmap=None, bar_param_dict=None, error_bar_param_dict=None,
         cutoff=None, cutoff_param_dict=None, twin_x_axis=False, max_bar_num_each_group=None,
-        raw_data_scatter_dict=None, raw_data_scatter_param_dict=None):
+        raw_data_scatter_dict=None, raw_data_scatter_param_dict=None,
+        isolate_color_bar_mode=False, stack_different_class=False, ):
     def right_y_ticks_verification(_right_y_ticks):
         if isinstance(_right_y_ticks, str) and _right_y_ticks == 'default':
             return True
@@ -746,13 +749,27 @@ def core_single_ax_bar_plot(
             return True
         return False
 
-    if max_bar_num_each_group is None:
-        max_bar_num_each_group = len(array_data_dict)
+    if isolate_color_bar_mode:
+        total_group_num = len(array_data_dict)
+        if max_bar_num_each_group is None:
+            max_bar_num_each_group = array_len
+    elif stack_different_class:
+        total_group_num = array_len
+        max_bar_num_each_group = 1
+    else:
+        total_group_num = array_len
+        if max_bar_num_each_group is None:
+            max_bar_num_each_group = len(array_data_dict)
+    # if max_bar_num_each_group is None:
+    #     if isolate_color_bar_mode:
+    #         max_bar_num_each_group = array_len
+    #     else:
+    #         max_bar_num_each_group = len(array_data_dict)
     if array_data_dict is None:
         bar_unit_width = bar_total_width
     else:
         bar_unit_width = bar_total_width / max_bar_num_each_group
-    x_tick_loc = np.arange(array_len) + 0.5
+    x_tick_loc = np.arange(total_group_num) + 0.5
     x_left_loc = x_tick_loc - bar_total_width / 2
     if bar_param_dict is None:
         bar_param_dict = {}
@@ -775,6 +792,7 @@ def core_single_ax_bar_plot(
         if marker_size_label in raw_data_scatter_param_dict:
             marker_size = raw_data_scatter_param_dict.pop(marker_size_label)
     if array_data_dict is not None:
+        bar_bottom = 0
         for index, (data_label, data_value) in enumerate(array_data_dict.items()):
             loc_index = index
             color_index = index
@@ -790,7 +808,8 @@ def core_single_ax_bar_plot(
                     data_array = data_value
             if data_array is None:
                 continue
-            assert len(data_array) == array_len
+            if not isolate_color_bar_mode:
+                assert len(data_array) == total_group_num
             if data_label in color_dict:
                 current_color = color_dict[data_label]
             else:
@@ -798,27 +817,45 @@ def core_single_ax_bar_plot(
             error_bar_vector = None
             if error_bar_data_dict is not None and data_label in error_bar_data_dict:
                 error_bar_vector = error_bar_data_dict[data_label]
-            x_loc = x_left_loc + loc_index * bar_unit_width + bar_unit_width / 2
+            if isolate_color_bar_mode:
+                x_loc = x_left_loc[loc_index] + (np.arange(max_bar_num_each_group) + 0.5) * bar_unit_width
+            elif stack_different_class:
+                x_loc = x_tick_loc
+            else:
+                x_loc = x_left_loc + loc_index * bar_unit_width + bar_unit_width / 2
             if twin_x_axis:
                 current_ax = ax[ax_index]
             else:
                 current_ax = ax
             bar_plot_warp_func(
-                current_ax, x_loc, data_array, width=bar_unit_width, face_color=current_color, label=data_label,
-                **bar_param_dict)
+                current_ax, x_loc, data_array, width=bar_unit_width, bar_bottom=bar_bottom,
+                face_color=current_color, label=data_label, **bar_param_dict)
             if error_bar_vector is not None:
+                if stack_different_class:
+                    error_bar_data_array = bar_bottom + data_array
+                else:
+                    error_bar_data_array = data_array
                 core_error_bar_plotting(
-                    current_ax, x_loc, data_array, error_bar_vector, edge_color=it.repeat(current_color),
+                    current_ax, x_loc, error_bar_data_array, error_bar_vector, edge_color=it.repeat(current_color),
                     **error_bar_param_dict)
             if raw_data_scatter_dict is not None and data_label in raw_data_scatter_dict:
                 raw_data_matrix = raw_data_scatter_dict[data_label]
-                assert raw_data_matrix.shape[1] == array_len
+                assert raw_data_matrix.shape[1] == total_group_num
                 raw_data_x_matrix = (random_seed.random((raw_data_matrix.shape[0], 1)) - 0.5) * bar_unit_width * 0.9 + x_loc
+                if stack_different_class:
+                    scatter_data_array = bar_bottom + raw_data_matrix.reshape([-1])
+                else:
+                    scatter_data_array = raw_data_matrix.reshape([-1])
                 core_scatter_plotting(
-                    current_ax, raw_data_x_matrix.reshape([-1]), raw_data_matrix.reshape([-1]),
+                    current_ax, raw_data_x_matrix.reshape([-1]), scatter_data_array,
                     marker_size=marker_size, marker_color=np.reshape(current_color, (1, -1)),
                     marker_shape='o', scatter_param_dict=raw_data_scatter_param_dict)
-    x_lim = [-edge, array_len + edge]
+            if stack_different_class:
+                if isinstance(bar_bottom, int) and bar_bottom == 0:
+                    bar_bottom = np.array(data_array)
+                else:
+                    bar_bottom += np.array(data_array)
+    x_lim = [-edge, total_group_num + edge]
     if twin_x_axis:
         ax, right_ax = ax
         y_lim, right_y_lim = get_twin_axis_numeric_parameters(y_lim, lambda _right_y_lim: len(_right_y_lim) == 2)

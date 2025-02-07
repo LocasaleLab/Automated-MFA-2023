@@ -288,6 +288,10 @@ mid_carbon_num_dict = {
     'FRU16BP_c': 6,
     'GLU_c': 5,
     'SUC_m': 4,
+    'PYR_c': 3,
+    'PRP_c': 3,
+    'OAC_c': 4,
+    'MMA_c': 4,
 }
 
 x_tick_label_dict = {

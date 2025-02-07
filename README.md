@@ -8,22 +8,23 @@ analysis, experimental data analysis, and visualization of results for publicati
 
 ## Requirements
 
-The tool is built for Python 3.8 and requires the following packages:
+This tool is developed for Python 3.8 or later. The following packages have been tested and are recommended for optimal performance:
 
-| Packages           | Version has been tested |
-|--------------------|-------------------------|
-| `numpy`            | 1.22                    |
-| `scipy`            | 1.7                     |
-| `matplotlib`       | 3.6                     |
-| `tqdm`             | 4.64                    |
-| `pandas`           | 1.5.2                   |
-| `sklearn`          | 3.0                     |
-| `xlsxwriter`       | 3.0                     |
-| `numba` (optional) | 0.56                    |
+| Packages           | Tested Version (x = any number) |
+|--------------------|---------------------------------|
+| `numpy`            | 1.22.x                          |
+| `scipy`            | 1.7.x                           |
+| `matplotlib`       | 3.6.x                           |
+| `tqdm`             | 4.64.x                          |
+| `pandas`           | 2.0.x                           |
+| `scikit-learn`     | 1.5.x                           |
+| `xlsxwriter`       | 3.0.x                           |
+| `openpyxl`         | 3.1.x                           |
+| `numba` (optional) | 0.56.x                          |
 
-[//]: # (For convenience, an out-of-the-box Docker image is provided to run this code. This docker image is tested on `docker-ce` in Ubuntu with Docker version `19.03.1`. &#40;See Usages part for details.&#41;)
+**Note:**
 
-[Anaconda](https://www.anaconda.com/) is recommended as it includes most of the necessary packages. The packages provided by Anaconda are also optimized for Intel CPUs, ensuring better performance.
+It is highly recommended to use [Anaconda](https://www.anaconda.com/) for installation, as it comes pre-packaged with all the necessary dependencies (except for `openpyxl`). Additionally, the packages provided by Anaconda are optimized for Intel CPUs, ensuring improved performance.
 
 ## Model
 

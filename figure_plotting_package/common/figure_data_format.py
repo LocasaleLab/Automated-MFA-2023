@@ -8,11 +8,14 @@ def pickle_save(obj, file_path):
 
 class RenameUnpickler(pickle.Unpickler):
     # This guarantee the movement of class
+
     def find_class(self, module, name):
         renamed_module = module
-        if module == 'common_and_plotting_functions.figure_data_format':
+        if module in {
+                'common_and_plotting_functions.figure_data_format',
+                'scripts.src.common.common.config', 'scripts.src.common.config', 'src.config'
+        }:
             renamed_module = 'figure_plotting_package.common.figure_data_format'
-
         return super(RenameUnpickler, self).find_class(renamed_module, name)
 
 
@@ -71,3 +74,25 @@ class BasicFigureData(object):
             current_figure_data = FigureData(self.data_direct, self.data_prefix, data_name).load_data()
             self.figure_raw_data_dict[data_name] = current_figure_data
             return current_figure_data
+
+
+class Result(object):
+    """
+    Class to contain results, which include necessary components as a result.
+    """
+
+    def __init__(
+            self, result_dict: dict, obj_value: float, success: bool, minimal_obj_value: float, label: dict):
+        self.result_dict = result_dict
+        self.obj_value = obj_value
+        self.success = success
+        self.minimal_obj_value = minimal_obj_value
+        self.label = label
+
+    def __repr__(self):
+        """
+        Overloading to provide a user-friendly display for result objects.
+        """
+        return "Result: {}\nObjective value: {}\nSuccess: {}\nMinimal objective value: {}".format(
+            self.result_dict, self.obj_value, self.success, self.minimal_obj_value)
+

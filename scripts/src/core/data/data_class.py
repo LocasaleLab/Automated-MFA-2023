@@ -80,8 +80,8 @@ def vector_normalize(raw_data_vector, eps_for_mid, metabolite_name=None, total_s
 class MIDData(object):
     def __init__(
             self, raw_data_list=None, raw_data_vector: np.ndarray = None, raw_name: str = None,
-            data_vector: np.ndarray = None, combined_raw_name_list=(), compartment_list=None,
-            tissue_list=None, to_standard_name_dict=None, ms_total_sum_threshold=None, excluded_from_mfa=False):
+            data_vector: np.ndarray = None, combined_raw_name_list=(), compartment_list=None, tissue_list=None,
+            to_standard_name_dict=None, ms_total_sum_threshold=None, excluded_from_mfa=False, invalid_index_list=None):
         if to_standard_name_dict is None:
             to_standard_name_dict = default_transform_dict
         combined = False
@@ -127,6 +127,7 @@ class MIDData(object):
             tissue_specific_name_constructor(metabolite_name, tissue_list),
             compartment_list)
         self.excluded_from_mfa = excluded_from_mfa
+        self.invalid_index_list = invalid_index_list
 
     def exclude_this_mid(self):
         self.excluded_from_mfa = True
@@ -146,7 +147,8 @@ class MIDData(object):
             raw_data_vector=np.copy(self.raw_data_vector),
             raw_name=self.name, combined_raw_name_list=list(self.combined_standard_name_list),
             compartment_list=self.compartment, tissue_list=self.tissue,
-            to_standard_name_dict=self.to_standard_name_dict, ms_total_sum_threshold=self.ms_total_sum_threshold)
+            to_standard_name_dict=self.to_standard_name_dict, ms_total_sum_threshold=self.ms_total_sum_threshold,
+            invalid_index_list=self.invalid_index_list)
         if self.data_vector is not None:
             new_mid_data_obj.data_vector = self.data_vector
         return new_mid_data_obj
@@ -187,7 +189,8 @@ def average_multiple_mid_data(mid_data_list, output_std=False):
         data_vector=final_data_vector, combined_raw_name_list=common_combined_standard_name_list,
         compartment_list=common_compartment,
         tissue_list=common_tissue, to_standard_name_dict=first_mid_obj.to_standard_name_dict,
-        ms_total_sum_threshold=first_mid_obj.ms_total_sum_threshold)
+        ms_total_sum_threshold=first_mid_obj.ms_total_sum_threshold,
+        invalid_index_list=first_mid_obj.invalid_index_list)
     if not output_std:
         return new_mid_data_obj
     else:

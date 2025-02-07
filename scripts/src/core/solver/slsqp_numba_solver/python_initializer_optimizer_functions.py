@@ -75,8 +75,19 @@ def entropy_loss_func_calculation(complete_predicted_mid_data_list, loss_operati
 
 def squared_loss_func_calculation(complete_predicted_mid_data_list, loss_operation_list):
     squared_loss = 0
-    for _, predicted_mid_index, experimental_mid_data in loss_operation_list:
-        squared_loss += np.sum((experimental_mid_data - complete_predicted_mid_data_list[predicted_mid_index]) ** 2)
+    for _, predicted_mid_index, experimental_mid_data, valid_index_array in loss_operation_list:
+        current_predicted_mid_vector = complete_predicted_mid_data_list[predicted_mid_index]
+        if len(valid_index_array) > 0:
+            current_valid_predicted_mid_vector = current_predicted_mid_vector[valid_index_array]
+            current_experimental_mid_normalization = np.sum(current_valid_predicted_mid_vector)
+            current_loss = np.sum((
+                experimental_mid_data[valid_index_array] * current_experimental_mid_normalization
+                - current_valid_predicted_mid_vector
+            ) ** 2)
+        else:
+            current_loss = np.sum((experimental_mid_data - current_predicted_mid_vector) ** 2)
+        squared_loss += current_loss
+        # squared_loss += np.sum((experimental_mid_data - complete_predicted_mid_data_list[predicted_mid_index]) ** 2)
     return squared_loss
 
 
@@ -88,7 +99,7 @@ def mid_prediction(complete_predicted_mid_data_list, loss_operation_list):
     # Must copy the vector, or any following modification will change the value of vector.
     target_predicted_mid_data_dict = {
         predicted_emu_name: complete_predicted_mid_data_list[predicted_mid_index].copy()
-        for predicted_emu_name, predicted_mid_index, _ in loss_operation_list}
+        for predicted_emu_name, predicted_mid_index, *_ in loss_operation_list}
     return target_predicted_mid_data_dict
 
 

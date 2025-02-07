@@ -69,6 +69,7 @@ class ColorConfig(object):
     darker_yellow = Color(252, 218, 105)
     mid_red = Color(255, 87, 87)
     mixed_mid_red = Color(242, 118, 118)
+    light_bright_mixed_mid_red = mixed_mid_red.transparency_mix(0.3)
     biomass_purple = Color(174, 127, 213)
     reaction_blue = Color(110, 170, 230)
     reaction_green = Color(192, 228, 152)

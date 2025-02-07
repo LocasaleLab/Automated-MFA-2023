@@ -208,14 +208,6 @@ class Mice(CompositeFigure):
                 **MiceConfig.mice_config
             )
         ]
-
-        background_box = Rectangle(**{
-            ParameterName.center: Vector(0.5, 0.5),
-            ParameterName.width: total_width,
-            ParameterName.height: total_height,
-            ParameterName.face_color: ColorConfig.light_gray,
-            ParameterName.z_order: 0
-        })
         mouse_path_param_dict_dict['ear1'].update({
             ParameterName.face_color: ColorConfig.white_color,
             ParameterName.z_order: MiceConfig.ear2_z_order

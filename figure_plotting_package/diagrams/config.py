@@ -1,13 +1,15 @@
 from ..common.config import ParameterName as GeneralParameterName
 from ..common.third_party_packages import np
-from ..common.built_in_packages import warnings
-from ..common.classes import Vector, LineStyle, JoinStyle, VerticalAlignment, HorizontalAlignment, FontWeight
+from ..common.built_in_packages import warnings, it
+from ..common.classes import (
+    Vector, LineStyle, JoinStyle, VerticalAlignment, HorizontalAlignment, FontWeight, SegmentedLinearMappers)
 from ..common.color import ZOrderConfig, ColorConfig, TextConfig
 from ..common.common_functions import default_parameter_extract, basic_shape_parameter_set, load_required_parameter, \
-    convert_theta_to_coordinate, unit_decorator, cos_sin
+    convert_theta_to_coordinate, unit_decorator, cos_sin, calculate_intersect_angle_between_ellipse
 
-from ..basic_shape_elements import ElementName, Arrow, ArcArrow, CompositeFigure, Circle, TextBox, \
-    Rectangle, RoundRectangle, PathStep, PathOperation, PathShape, Ellipse, ellipse_arc_obj, Line, Brace
+from ..basic_shape_elements import ElementName, Arrow, ArcArrow, CompositeFigure, Capsule, Circle, TextBox, \
+    Rectangle, RoundRectangle, PathStep, PathOperation, PathShape, Ellipse, ellipse_arc_obj, Line, Brace, \
+    ArcChevronArrow, ChevronArrow, ChevronArrowArcEnd
 
 
 class ParameterName(GeneralParameterName):

@@ -36,7 +36,6 @@ class BasicBarDataFigure(DataFigure):
             ParameterName.array_len_list,
             ParameterName.figure_config_dict,
         ]]
-        self.color_dict = color_dict
         twin_x_axis = default_parameter_extract(figure_data_parameter_dict, ParameterName.twin_x_axis, False)
         broken_y_axis = default_parameter_extract(figure_data_parameter_dict, ParameterName.broken_y_axis, None)
 
@@ -112,10 +111,18 @@ class BasicBarDataFigure(DataFigure):
         self.tick_separator_dict_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.tick_separator_dict_list, it.repeat({}))
 
-        if ParameterName.legend in figure_data_parameter_dict:
-            legend = figure_data_parameter_dict[ParameterName.legend]
-        else:
-            legend = False
+        # if ParameterName.legend in figure_data_parameter_dict:
+        #     legend = figure_data_parameter_dict[ParameterName.legend]
+        # else:
+        #     legend = False
+
+        self.color_dict = color_dict
+        (
+            legend, self.isolate_color_bar_mode, self.stack_different_class
+        ) = default_parameter_extract(
+            figure_data_parameter_dict, [
+                ParameterName.legend, ParameterName.isolate_color_bar_mode, ParameterName.stack_different_class
+            ], False, repeat_default_value=True)
         if legend:
             legend_config_dict = figure_data_parameter_dict[ParameterName.legend_config_dict]
             legend_obj = common_legend_generator(legend_config_dict, color_dict)
@@ -149,9 +156,10 @@ class BasicBarDataFigure(DataFigure):
                 color_dict=self.color_dict, x_label=x_label, x_tick_labels=x_tick_label_list, y_label=y_label,
                 y_tick_labels=y_tick_label_list, twin_x_axis=self.twin_x_axis, broken_y_axis=self.broken_y_axis,
                 max_bar_num_each_group=self.max_bar_num_each_group,
-                current_raw_scatter_data_dict=current_raw_scatter_data_dict, **tick_separator_dict)
+                current_raw_scatter_data_dict=current_raw_scatter_data_dict,
+                isolate_color_bar_mode=self.isolate_color_bar_mode, stack_different_class=self.stack_different_class,
+                **tick_separator_dict)
         if self.subplot_name_list is not None:
-            # for subplot_name, (current_ax, current_transform) in zip(self.subplot_name_list, ax_and_transform_list):
             for subplot_name, (current_ax, current_transform) in zip(
                     self.subplot_name_list, self.hidden_data_axes_transform_list):
                 draw_text_by_axis_loc(
@@ -187,11 +195,14 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
         ax_total_width = 1
         default_y_tick_label_list = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.default_y_tick_label_list,
-            ['0.00', '0.25', '0.50', '0.75', '1.00']
-        )
+            ['0.00', '0.25', '0.50', '0.75', '1.00'])
         default_y_tick_list = [float(y_tick_label) for y_tick_label in default_y_tick_label_list]
         common_y_label = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.common_y_label, 'Relative ratio')
+        common_y_lim = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.common_y_lim, (0, 1), pop=True)
+        common_x_tick_label_list = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.x_tick_labels_list, None, pop=True)
 
         x_tick_label_format_dict = merge_axis_format_dict(
             DataFigureConfig.x_tick_label_format_dict_generator(scale),
@@ -296,11 +307,14 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
                         all_data_point_array_dict = None
                     mid_name_data_error_bar_array_dict_pair_list.append(
                         (mid_array_revised_dict, error_bar_array_dict, all_data_point_array_dict))
-                    if mid_name in subplot_name_dict:
-                        subplot_name = subplot_name_dict[mid_name]
+                    if subplot_name_dict is not None:
+                        if mid_name in subplot_name_dict:
+                            subplot_name = subplot_name_dict[mid_name]
+                        else:
+                            subplot_name = mid_name
+                        subplot_name_list.append(subplot_name)
                     else:
-                        subplot_name = mid_name
-                    subplot_name_list.append(subplot_name)
+                        subplot_name_list.append(None)
                 elif mid_name is None or isinstance(mid_name, int) or mid_name not in mean_data_dict:
                     if isinstance(mid_name, int):
                         array_len = mid_name
@@ -323,7 +337,12 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
                 array_len_list.append(array_len)
                 this_row_array_len_list.append(array_len)
                 total_array_len_this_row += array_len
-                x_tick_labels_list.append([f'm+{mid_index}' for mid_index in range(array_len)])
+                if common_x_tick_label_list is not None:
+                    assert len(common_x_tick_label_list) == array_len
+                    current_x_tick_label_list = common_x_tick_label_list
+                else:
+                    current_x_tick_label_list = [f'm+{mid_index}' for mid_index in range(array_len)]
+                x_tick_labels_list.append(current_x_tick_label_list)
                 if col_index == 0:
                     y_label_list.append(common_y_label)
                     y_tick_labels_list.append(default_y_tick_label_list)
@@ -352,7 +371,7 @@ class BasicMIDComparisonGridBarDataFigure(BasicBarDataFigure):
             ParameterName.text_axis_loc_pair: text_axis_loc_pair,
 
             ParameterName.x_tick_labels_list: x_tick_labels_list,
-            ParameterName.y_lim_list: it.repeat((0, 1)),
+            ParameterName.y_lim_list: it.repeat(common_y_lim),
             ParameterName.y_label_list: y_label_list,
             ParameterName.y_ticks_list: y_ticks_list,
             ParameterName.y_tick_labels_list: y_tick_labels_list,
@@ -486,6 +505,8 @@ class BasicSingleBarDataFigure(BasicBarDataFigure):
             self, figure_data_parameter_dict, bottom_left: Vector, size: Vector, **kwargs):
         array_len = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.array_len_list, None, force=True, pop=True)
+        supplementary_text_format_dict = default_parameter_extract(
+            figure_data_parameter_dict, ParameterName.supplementary_text_format_dict, default_value={}, pop=True)
 
         x_label_format_dict = merge_axis_format_dict(
             DataFigureConfig.x_label_format_dict_generator(),
@@ -508,6 +529,29 @@ class BasicSingleBarDataFigure(BasicBarDataFigure):
             {ParameterName.axis_tick_label_distance: 0.008},
             figure_data_parameter_dict, ParameterName.y_tick_label_format_dict)
 
+        bar_param_dict = merge_axis_format_dict(
+            {
+                ParameterName.z_order: DataFigureConfig.normal_figure_element_z_order,
+                ParameterName.alpha: DataFigureConfig.alpha_for_bar_plot
+            },
+            {},
+            figure_data_parameter_dict, ParameterName.bar_param_dict, pop=True
+        )
+        error_bar_param_dict = merge_axis_format_dict(
+            DataFigureConfig.common_error_bar_param_dict_generator(),
+            {},
+            figure_data_parameter_dict, ParameterName.error_bar_param_dict, pop=True
+        )
+        cutoff_param_dict = merge_axis_format_dict(
+            {},
+            {
+                ParameterName.edge_width: DataFigureConfig.GroupDataFigure.axis_line_width_ratio,
+                ParameterName.edge_color: ColorConfig.normal_blue,
+                ParameterName.z_order: DataFigureConfig.line_z_order,
+                ParameterName.edge_style: LineStyle.thin_dash,
+            },
+            figure_data_parameter_dict, ParameterName.cutoff_param_dict, pop=True
+        )
         general_figure_config_dict = {
             ParameterName.column_width: 0.5,
             ParameterName.edge: 0.05,
@@ -515,11 +559,9 @@ class BasicSingleBarDataFigure(BasicBarDataFigure):
             ParameterName.x_tick_label_format_dict: x_tick_label_format_dict,
             ParameterName.y_label_format_dict: y_label_format_dict,
             ParameterName.y_tick_label_format_dict: y_tick_label_format_dict,
-            ParameterName.bar_param_dict: {
-                ParameterName.z_order: DataFigureConfig.normal_figure_element_z_order,
-                ParameterName.alpha: DataFigureConfig.alpha_for_bar_plot
-            },
-            ParameterName.error_bar_param_dict: DataFigureConfig.common_error_bar_param_dict_generator(),
+            ParameterName.bar_param_dict: bar_param_dict,
+            ParameterName.error_bar_param_dict: error_bar_param_dict,
+            ParameterName.cutoff_param_dict: cutoff_param_dict,
             ParameterName.supplementary_text_format_dict: {
                 **CommonElementConfig.common_text_config,
                 ParameterName.font_size: 10,
@@ -527,12 +569,14 @@ class BasicSingleBarDataFigure(BasicBarDataFigure):
                 ParameterName.height: 0.05,
                 ParameterName.horizontal_alignment: HorizontalAlignment.center,
                 ParameterName.vertical_alignment: VerticalAlignment.center_baseline,
+                **supplementary_text_format_dict,
             }
         }
         specific_figure_config_dict = default_parameter_extract(
             figure_data_parameter_dict, ParameterName.figure_config_dict, {}, pop=True)
         complete_figure_config_dict = merge_complete_config_dict(
             general_figure_config_dict, specific_figure_config_dict)
+        """Data item (e.g., data_nested_list) will not be expanded"""
         expanded_axis_parameter_dict = expand_one_axis_dict(figure_data_parameter_dict)
         figure_data_parameter_dict = {
             ParameterName.array_len_list: [array_len],

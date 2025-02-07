@@ -2,7 +2,7 @@ from .config import np, Vector, Constants, ParameterName
 from .config import initialize_vector_input, \
     calculate_line_intersect_to_ratio, union_of_segment_on_line, cos_sin, convert_theta_to_coordinate, \
     calculate_degree_of_vector, calculate_center_radius_angle_of_three_points_on_circle, \
-    solve_intersect_by_slope_point_line
+    solve_intersect_by_slope_point_line, calculate_point_direction_to_center_radius_intersect_theta
 
 from .shapes import PathShape, PathStep, PathOperation, ellipse_arc_obj
 
@@ -154,74 +154,88 @@ def calculate_necessary_vector(head_coordinate, tail_coordinate):
     return arrow_direction_vector, arrow_direction_len, arrow_direction_unit_vector, arrow_side_unit_vector
 
 
+def draw_chevron_path_step_list(
+        arrow_bool, arrow_coordinate, reverse, head_marker, head_vector, arrow_side_unit_vector, width):
+    if arrow_bool:
+        if head_marker:
+            arrow_center_coordinate = arrow_coordinate - head_vector
+            arrow_peak_coordinate = arrow_coordinate
+        else:
+            arrow_center_coordinate = arrow_coordinate
+            arrow_peak_coordinate = arrow_coordinate + head_vector
+    else:
+        arrow_center_coordinate = arrow_peak_coordinate = arrow_coordinate
+    arrow_side_coordinate_1, arrow_side_coordinate_2 = side_coordinate_pair_generator(
+        arrow_center_coordinate, arrow_side_unit_vector, width)
+    if arrow_bool:
+        arrow_vertex_list = [
+            arrow_side_coordinate_2,
+            arrow_peak_coordinate,
+            arrow_side_coordinate_1,
+        ]
+    else:
+        arrow_vertex_list = [
+            arrow_side_coordinate_2,
+            arrow_side_coordinate_1,
+        ]
+    if reverse:
+        arrow_vertex_list.reverse()
+    arrow_start_point = arrow_vertex_list[0]
+    arrow_path_step_list = [PathStep(PathOperation.lineto, vertex) for vertex in arrow_vertex_list[1:]]
+    return arrow_start_point, arrow_path_step_list, arrow_vertex_list
+
+
 def draw_chevron_head_and_tail(tail_end_center, head, head_len, width, tail_arrow, head_arrow):
-    def draw_chevron_path_step_list(arrow_bool, arrow_coordinate, reverse, head_marker):
-        if arrow_bool:
-            if head_marker:
-                arrow_center_coordinate = arrow_coordinate - head_vector
-                arrow_peak_coordinate = arrow_coordinate
-            else:
-                arrow_center_coordinate = arrow_coordinate
-                arrow_peak_coordinate = arrow_coordinate + head_vector
-        else:
-            arrow_center_coordinate = arrow_peak_coordinate = arrow_coordinate
-        arrow_side_coordinate_1, arrow_side_coordinate_2 = side_coordinate_pair_generator(
-            arrow_center_coordinate, arrow_side_unit_vector, width)
-        if arrow_bool:
-            arrow_vertex_list = [
-                arrow_side_coordinate_2,
-                arrow_peak_coordinate,
-                arrow_side_coordinate_1,
-            ]
-        else:
-            arrow_vertex_list = [
-                arrow_side_coordinate_2,
-                arrow_side_coordinate_1,
-            ]
-        if reverse:
-            arrow_vertex_list.reverse()
-        arrow_start_point = arrow_vertex_list[0]
-        arrow_path_step_list = [PathStep(PathOperation.lineto, vertex) for vertex in arrow_vertex_list[1:]]
-        return arrow_start_point, arrow_path_step_list
 
     (
         arrow_direction_vector, arrow_direction_len, arrow_direction_unit_vector,
         arrow_side_unit_vector) = calculate_necessary_vector(head, tail_end_center)
     head_vector = head_len * arrow_direction_unit_vector
 
-    tail_start_point, tail_path_step_list = draw_chevron_path_step_list(tail_arrow, tail_end_center, True, False)
-    head_start_point, head_path_step_list = draw_chevron_path_step_list(head_arrow, head, False, True)
+    tail_start_point, tail_path_step_list, _ = draw_chevron_path_step_list(
+        tail_arrow, tail_end_center, True, False, head_vector, arrow_side_unit_vector, width)
+    head_start_point, head_path_step_list, _ = draw_chevron_path_step_list(
+        head_arrow, head, False, True, head_vector, arrow_side_unit_vector, width)
     return head_path_step_list, tail_path_step_list, head_start_point, tail_start_point, arrow_side_unit_vector
 
 
-def draw_chevron_head_and_tail_old(tail_end_center, head, head_len, width):
+def draw_chevron_head_and_tail_with_arc_end(
+        tail_end_center, head, head_len, width, tail_arrow, head_arrow, center, radius, tail_or_head_arc):
     (
         arrow_direction_vector, arrow_direction_len, arrow_direction_unit_vector,
         arrow_side_unit_vector) = calculate_necessary_vector(head, tail_end_center)
-    assert head_len < arrow_direction_len
-    head_end_center_coordinate = head - head_len * arrow_direction_unit_vector
-    tail_inner_coordinate = tail_end_center + head_len * arrow_direction_unit_vector
-
-    head_side_coordinate_1, head_side_coordinate_2 = side_coordinate_pair_generator(
-        head_end_center_coordinate, arrow_side_unit_vector, width)
-    tail_side_coordinate_1, tail_side_coordinate_2 = side_coordinate_pair_generator(
-        tail_end_center, arrow_side_unit_vector, width)
-
-    head_vertex_list = [
-        head_side_coordinate_2,
-        head,
-        head_side_coordinate_1,
-    ]
-    tail_vertex_list = [
-        tail_side_coordinate_1,
-        tail_inner_coordinate,
-        tail_side_coordinate_2,
-    ]
-    head_path_step_list = [PathStep(PathOperation.lineto, vertex) for vertex in head_vertex_list[1:]]
-    tail_path_step_list = [PathStep(PathOperation.lineto, vertex) for vertex in tail_vertex_list]
-    head_start_point = head_side_coordinate_2
-    tail_start_point = tail_side_coordinate_1
-    return tail_path_step_list, head_path_step_list, head_start_point, tail_start_point
+    head_vector = head_len * arrow_direction_unit_vector
+    if tail_or_head_arc == ParameterName.head:
+        tail_start_point, tail_path_step_list, tail_vertex_list = draw_chevron_path_step_list(
+            tail_arrow, tail_end_center, True, False, head_vector, arrow_side_unit_vector, width)
+        head_start_point = None
+        head_path_step_list = []
+        vertex_list = tail_vertex_list
+        arc_arrow_direction_unit_vector = arrow_direction_unit_vector
+    elif tail_or_head_arc == ParameterName.tail:
+        head_start_point, head_path_step_list, head_vertex_list = draw_chevron_path_step_list(
+            head_arrow, head, False, True, head_vector, arrow_side_unit_vector, width)
+        tail_start_point = None
+        tail_path_step_list = []
+        vertex_list = head_vertex_list
+        arc_arrow_direction_unit_vector = -arrow_direction_unit_vector
+    else:
+        raise ValueError()
+    arc_theta_1 = calculate_point_direction_to_center_radius_intersect_theta(
+        vertex_list[-1], arc_arrow_direction_unit_vector, center, radius)
+    arc_theta_2 = calculate_point_direction_to_center_radius_intersect_theta(
+        vertex_list[0], arc_arrow_direction_unit_vector, center, radius)
+    arc_path_list = ellipse_arc_obj.generator(center, arc_theta_1, arc_theta_2, radius)
+    start_point_location = convert_theta_to_coordinate(arc_theta_1, center, radius)
+    if tail_or_head_arc == ParameterName.head:
+        head_start_point = start_point_location
+        head_path_step_list = [PathStep(PathOperation.lineto, start_point_location), *arc_path_list]
+    elif tail_or_head_arc == ParameterName.tail:
+        tail_start_point = start_point_location
+        tail_path_step_list = arc_path_list
+    else:
+        raise ValueError()
+    return head_path_step_list, tail_path_step_list, head_start_point, tail_start_point, arrow_side_unit_vector
 
 
 def draw_head_and_tail(
@@ -479,9 +493,6 @@ class ChevronArrow(ArrowBase):
             arrow_side_unit_vector) = draw_chevron_head_and_tail(
             tail_end_center, head, head_len, width, tail_arrow, head_arrow)
 
-        # tail_path_step_list, head_path_step_list, head_start_point, tail_start_point = draw_chevron_head_and_tail(
-        #     tail_end_center, head, head_len, width)
-
         path_step_list = construct_arrow_path_list(
             head_path_step_list, tail_path_step_list, head_start_point, tail_start_point, [])
         return path_step_list
@@ -706,6 +717,45 @@ def analyze_branch_arc(
                 False, arc_branch_obj.arrow, gap_line_pair_list, branch_dash_solid_empty_width)
             branch_arrow_path_step_list.extend(current_branch_arrow_path_step_list)
     return branch_arrow_path_step_list
+
+
+class ChevronArrowArcEnd(ArrowBase):
+    def __init__(
+            self, tail_end_center: Vector, head: Vector, head_len_width_ratio: float, width: float,
+            center: Vector, radius: float, tail_or_head,
+            scale=1, bottom_left_offset=None, tail_arrow=True, head_arrow=True, **kwargs):
+        assert head_len_width_ratio > 0
+        assert width > 0
+        self.tail_end_center = initialize_vector_input(tail_end_center)
+        self.head = initialize_vector_input(head)
+        self.head_len_width_ratio = head_len_width_ratio
+        self.width = width
+        self.center = center
+        self.radius = radius
+        self.tail_or_head = tail_or_head
+        self.tail_arrow = tail_arrow
+        self.head_arrow = head_arrow
+        super().__init__(scale, bottom_left_offset, **kwargs)
+
+    def path_step_generator(self):
+        head = self.head
+        tail_end_center = self.tail_end_center
+        width = self.width
+        head_len = width * self.head_len_width_ratio
+        center = self.center
+        radius = self.radius
+        tail_or_head = self.tail_or_head
+        tail_arrow = self.tail_arrow
+        head_arrow = self.head_arrow
+
+        (
+            head_path_step_list, tail_path_step_list, head_start_point, tail_start_point, arrow_side_unit_vector
+        ) = draw_chevron_head_and_tail_with_arc_end(
+            tail_end_center, head, head_len, width, tail_arrow, head_arrow, center, radius, tail_or_head)
+
+        path_step_list = construct_arrow_path_list(
+            head_path_step_list, tail_path_step_list, head_start_point, tail_start_point, [])
+        return path_step_list
 
 
 class ArcChevronArrow(ArrowBase):

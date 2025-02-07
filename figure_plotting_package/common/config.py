@@ -39,6 +39,7 @@ class ParameterName(object):
     end = 'end'
     patch = 'patch'
     grid_shape = 'grid_shape'
+    flip = 'flip'
 
     # Text
     text = 'text'
@@ -65,6 +66,7 @@ class ParameterName(object):
     head_len_width_ratio = 'head_len_width_ratio'
     head_arrow = 'head_arrow'
     tail_arrow = 'tail_arrow'
+    tail_or_head = 'tail_or_head'
     stem_location = 'stem_location'
     terminal_location = 'terminal_location'
     arrow = 'arrow'
@@ -219,6 +221,7 @@ class ParameterName(object):
     medium_data = 'medium_data'
     different_simulated_distance = 'different_simulated_distance'
     carbon_num = 'carbon_num'
+    diagram_layout_generator = 'diagram_layout_generator'
 
     # Data figure specific parameter
     figure_data = 'figure_data'
@@ -236,6 +239,7 @@ class ParameterName(object):
     low_height = 'low_height'
     solution_distance_data = 'solution_distance_data'
     comparison_name = 'comparison_name'
+    tissue_name = 'tissue_name'
     mean = 'mean'
     std = 'std'
     flux_name = 'flux_name'
@@ -302,6 +306,8 @@ class ParameterName(object):
     data_figure_axes = 'data_figure_axes'
     hidden_data_axes = 'hidden_data_axes'
     legend = 'legend'
+    isolate_color_bar_mode = 'isolate_color_bar_mode'
+    stack_different_class = 'stack_different_class'
     name_dict = 'name_dict'
     horiz_or_vertical = 'horiz_or_vertical'
     supplementary_text_list = 'supplementary_text_list'
@@ -332,6 +338,7 @@ class ParameterName(object):
     col_horiz_edge_ratio = 'col_horiz_edge_ratio'
     total_verti_edge_ratio = 'total_verti_edge_ratio'
     row_verti_edge_ratio = 'row_verti_edge_ratio'
+    patch_text_distance_ratio = 'patch_text_distance_ratio'
     legend_patch_config_dict = 'legend_patch_config_dict'
     location_config_dict = 'location_config_dict'
 

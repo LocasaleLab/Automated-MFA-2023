@@ -122,7 +122,7 @@ class OptimizedAllFluxComparisonBarDataFigure(CompositeFigure):
     @staticmethod
     def calculate_bar_height(self, row_num):
         bar_height = (
-                self.each_row_gap_height * (row_num - 1) + self.bar_axis_height * row_num)
+            self.each_row_gap_height * (row_num - 1) + self.bar_axis_height * row_num)
         return bar_height
 
     @staticmethod

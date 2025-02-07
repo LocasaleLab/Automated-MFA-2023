@@ -36,6 +36,7 @@ class CoreConstants(object):
 
     # biomass_flux_id = 'BIOMASS_maintenance'
     biomass_flux_id = 'BIOMASS_REACTION'
+    biomass_metabolite_id = 'BIOMASS'
     convolution_id = 'CONV'
     cycle_solve_id = 'CYCLE_SOLVE'
     single_emu_id = 'SINGLE_EMU'

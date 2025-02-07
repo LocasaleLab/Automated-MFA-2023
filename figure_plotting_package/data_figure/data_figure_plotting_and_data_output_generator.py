@@ -266,7 +266,7 @@ def single_bar_plotting(
         twin_x_axis=False, broken_y_axis=None, max_bar_num_each_group=None,
         x_tick_separator_locs=None, x_tick_separator_labels=None, x_tick_separator_label_locs=None,
         y_tick_separator_locs=None, y_tick_separator_labels=None, y_tick_separator_label_locs=None,
-        current_raw_scatter_data_dict=None,
+        current_raw_scatter_data_dict=None, isolate_color_bar_mode=False, stack_different_class=False,
         **kwargs):
     def separate_arguments_for_two_axis(argument, total_axis_num=2, extra_value_list=()):
         if argument is None or argument in extra_value_list:
@@ -330,7 +330,8 @@ def single_bar_plotting(
                 bar_param_dict=bar_param_dict, error_bar_param_dict=error_bar_param_dict,
                 cutoff=cutoff_value, cutoff_param_dict=cutoff_param_dict,
                 max_bar_num_each_group=max_bar_num_each_group, raw_data_scatter_dict=current_raw_scatter_data_dict,
-                raw_data_scatter_param_dict=raw_data_scatter_param_dict)
+                raw_data_scatter_param_dict=raw_data_scatter_param_dict,
+                isolate_color_bar_mode=isolate_color_bar_mode, stack_different_class=stack_different_class)
             if ax_index == 0:
                 draw_axis_tick_and_tick_separator_label(
                     this_ax, this_transform, figure_config_dict,
@@ -358,7 +359,8 @@ def single_bar_plotting(
                 bar_param_dict=bar_param_dict, error_bar_param_dict=error_bar_param_dict,
                 cutoff=cutoff_value, cutoff_param_dict=cutoff_param_dict, twin_x_axis=twin_x_axis,
                 max_bar_num_each_group=max_bar_num_each_group, raw_data_scatter_dict=current_raw_scatter_data_dict,
-                raw_data_scatter_param_dict=raw_data_scatter_param_dict)
+                raw_data_scatter_param_dict=raw_data_scatter_param_dict,
+                isolate_color_bar_mode=isolate_color_bar_mode, stack_different_class=stack_different_class)
         if twin_x_axis:
             current_ax, right_side_ax = current_ax
             if current_array_data_dict is None:
