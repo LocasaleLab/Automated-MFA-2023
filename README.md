@@ -8,6 +8,18 @@ analysis, experimental data analysis, and visualization of results for publicati
 
 ## Requirements
 
+### Anaconda (Recommended)
+
+It is highly recommended to use [Anaconda](https://www.anaconda.com/) for installation, as it comes pre-packaged with all the necessary dependencies (except for `openpyxl`). Additionally, the packages provided by Anaconda are optimized for Intel CPUs, ensuring improved performance.
+
+After installing the latest Anaconda, activate the base environment (which will display the `(base)` prefix in your command line), and then install `openpyxl` using `pip`:
+
+```shell script
+pip install openpyxl
+```
+
+### Pure Python
+
 This tool is developed for Python 3.8 or later. The following packages have been tested and are recommended for optimal performance:
 
 | Packages           | Tested Version (x = any number) |
@@ -22,9 +34,6 @@ This tool is developed for Python 3.8 or later. The following packages have been
 | `openpyxl`         | 3.1.x                           |
 | `numba` (optional) | 0.56.x                          |
 
-**Note:**
-
-It is highly recommended to use [Anaconda](https://www.anaconda.com/) for installation, as it comes pre-packaged with all the necessary dependencies (except for `openpyxl`). Additionally, the packages provided by Anaconda are optimized for Intel CPUs, ensuring improved performance.
 
 ## Model
 

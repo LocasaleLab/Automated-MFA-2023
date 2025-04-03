@@ -216,6 +216,7 @@ class ModelKeyword(object):
     pancreas = 'pancreas'
     lung = 'lung'
     small_intestine = 'small_intestine'
+    colon = 'colon'
     muscle = 'muscle'
     q_muscle = 'quadriceps_muscle'
     vastus_muscle = 'vastus_muscle'
