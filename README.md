@@ -20,7 +20,7 @@ pip install openpyxl
 
 ### Pure Python
 
-This tool is developed for Python 3.8 or later. The following packages have been tested and are recommended for optimal performance:
+This tool is developed for Python 3.9 or later. The following packages have been tested and are recommended for optimal performance:
 
 | Packages           | Tested Version (x = any number) |
 |--------------------|---------------------------------|

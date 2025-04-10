@@ -67,7 +67,7 @@ def mix_mid_data_list(
 
 def entropy_loss_func_calculation(complete_predicted_mid_data_list, loss_operation_list, optimal_cross_entropy):
     cross_entropy = -optimal_cross_entropy
-    for _, predicted_mid_index, experimental_mid_data in loss_operation_list:
+    for _, predicted_mid_index, experimental_mid_data, _ in loss_operation_list:
         cross_entropy += np_log_eps(
             experimental_mid_data, complete_predicted_mid_data_list[predicted_mid_index], eps_for_log)
     return cross_entropy
