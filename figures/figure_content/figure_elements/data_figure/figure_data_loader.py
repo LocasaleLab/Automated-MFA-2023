@@ -369,7 +369,27 @@ class MIDComparisonFigureData(BasicFigureData):
     def _figure_data_preprocess(self, data_name, result_label):
         if data_name not in self.processed_data_dict:
             self.processed_data_dict[data_name] = self._return_figure_data(data_name).final_complete_data_dict
-        current_mean_data_dict, current_error_bar_data_dict = self.processed_data_dict[data_name][result_label]
+        target_obj = self.processed_data_dict[data_name][result_label]
+        if isinstance(target_obj, tuple):
+            current_mean_data_dict, current_error_bar_data_dict = target_obj
+        elif isinstance(target_obj, dict):
+            current_mean_data_dict = {}
+            current_error_bar_data_dict = {}
+            for raw_mid_name, each_mid_data_dict in target_obj.items():
+                mid_name = self.mid_name_process(raw_mid_name)
+                if mid_name not in current_mean_data_dict:
+                    current_mean_data_dict[mid_name] = {}
+                    current_error_bar_data_dict[mid_name] = {}
+                for condition_name, each_condition_data_array in each_mid_data_dict.items():
+                    row_num = each_condition_data_array.shape[0]
+                    if row_num == 1:
+                        current_mean_data_dict[mid_name][condition_name] = each_condition_data_array[0]
+                    else:
+                        current_mean_data_dict[mid_name][condition_name] = np.mean(each_condition_data_array, axis=0)
+                        current_error_bar_data_dict[mid_name][condition_name] = np.std(each_condition_data_array, axis=0)
+        else:
+            raise ValueError()
+        # current_mean_data_dict, current_error_bar_data_dict = self.processed_data_dict[data_name][result_label]
         return current_mean_data_dict, current_error_bar_data_dict
 
     def return_data(self, data_name, result_label, **kwargs):
