@@ -59,7 +59,7 @@ traditional_method_loss_percentile = 1 / 80
 traditional_method_select_num = 5
 
 
-def running_settings(test_mode=False):
+def running_settings(data_model_name, test_mode=False):
     parallel_parameter_dict = {
         Keywords.max_optimization_each_generation: 10000,
         Keywords.each_process_optimization_num: 50,

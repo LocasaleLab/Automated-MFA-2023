@@ -160,7 +160,7 @@ class Ellipse(BasicShape):
 
     def convert_to_mpl_patch(self):
         self.mpl_patch = mpatches.Ellipse(
-            self.center.to_tuple(), self.width, self.height, self.angle,
+            self.center.to_tuple(), self.width, self.height, angle=self.angle,
             fill=self.fill, linestyle=self.edge_style, linewidth=self.edge_width,
             edgecolor=self.edge_color, facecolor=self.face_color, zorder=self.z_order, joinstyle=self.join_style)
 

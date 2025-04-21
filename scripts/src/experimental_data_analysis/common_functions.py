@@ -93,7 +93,7 @@ def experimental_data_analysis_common_dispatcher(
         common_parameter.common_mix_ratio_range, common_parameter.mix_ratio_multiplier, config.solver_type,
         common_parameter.solver_config_dict)
 
-    each_case_target_optimization_num, parallel_parameter_dict = config.running_settings(test_mode)
+    each_case_target_optimization_num, parallel_parameter_dict = config.running_settings(data_model_name, test_mode)
     if parallel_parameter_dict is not None and parallel_num is not None:
         parallel_parameter_dict[Keywords.processes_num] = parallel_num
 
